@@ -1,0 +1,174 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Models\CheckoutConsent;
+use App\Models\OrderConsent;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\User;
+use App\Services\ActivityLogger;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+class OrderController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Order::with(['user', 'items.course'])->latest();
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('order_number', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', '%' . $request->search . '%'));
+            });
+        }
+
+        $orders = $query->paginate(20)->withQueryString();
+
+        return view('admin.orders.index', compact('orders'));
+    }
+
+    public function create()
+    {
+        $learners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))->orderBy('name')->get();
+        $courses = Course::where('status', 'published')->orderBy('title')->get();
+        $coupons = Coupon::where('is_active', true)->get();
+        $consents = CheckoutConsent::active()->get();
+
+        return view('admin.orders.create', compact('learners', 'courses', 'coupons', 'consents'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'course_ids' => ['required', 'array', 'min:1'],
+            'course_ids.*' => ['exists:courses,id'],
+            'coupon_id' => ['nullable', 'exists:coupons,id'],
+            'discount' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['required', 'in:razorpay,manual,free'],
+            'payment_status' => ['required', 'in:pending,paid,failed'],
+            'notes' => ['nullable', 'string'],
+            'consents' => ['nullable', 'array'],
+            'consents.*' => ['boolean'],
+        ]);
+
+        DB::transaction(function () use ($validated, $request) {
+            $courses = Course::whereIn('id', $validated['course_ids'])->get();
+            $subtotal = $courses->sum('price');
+            $discount = $validated['discount'] ?? 0;
+            $tax = ($subtotal - $discount) * 0.18;
+            $total = max(0, $subtotal - $discount + $tax);
+
+            $activeConsents = CheckoutConsent::active()->get();
+            foreach ($activeConsents as $consent) {
+                if ($consent->is_required && !$request->boolean("consents.{$consent->id}")) {
+                    throw ValidationException::withMessages([
+                        'consents' => "Required consent \"{$consent->title}\" must be accepted.",
+                    ]);
+                }
+            }
+
+            $order = Order::create([
+                'user_id' => $validated['user_id'],
+                'coupon_id' => $validated['coupon_id'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'tax' => $tax,
+                'total' => $total,
+                'payment_status' => $validated['payment_status'],
+                'payment_method' => $validated['payment_method'],
+                'notes' => $validated['notes'] ?? null,
+                'paid_at' => $validated['payment_status'] === 'paid' ? now() : null,
+            ]);
+
+            foreach ($courses as $course) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'course_id' => $course->id,
+                    'price' => $course->price,
+                    'discount' => 0,
+                    'total' => $course->price,
+                ]);
+
+                if ($validated['payment_status'] === 'paid') {
+                    CourseEnrollment::updateOrCreate(
+                        ['user_id' => $validated['user_id'], 'course_id' => $course->id, 'enrollment_type' => 'course'],
+                        ['order_id' => $order->id, 'status' => 'active', 'enrolled_at' => now(), 'access_starts_at' => now()]
+                    );
+                }
+            }
+
+            if ($validated['payment_status'] === 'paid') {
+                Payment::create([
+                    'order_id' => $order->id,
+                    'user_id' => $validated['user_id'],
+                    'gateway' => $validated['payment_method'],
+                    'amount' => $total,
+                    'status' => 'success',
+                    'paid_at' => now(),
+                ]);
+
+                User::find($validated['user_id'])->increment('total_spent', $total);
+            }
+
+            $activeConsents = CheckoutConsent::active()->get();
+            foreach ($activeConsents as $consent) {
+                $accepted = $request->boolean("consents.{$consent->id}");
+                OrderConsent::create([
+                    'order_id' => $order->id,
+                    'checkout_consent_id' => $consent->id,
+                    'user_id' => $validated['user_id'],
+                    'accepted' => $accepted,
+                    'accepted_at' => $accepted ? now() : null,
+                    'ip_address' => $request->ip(),
+                ]);
+            }
+
+            ActivityLogger::log('order_created', "Order {$order->order_number} created", $order);
+        });
+
+        return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
+    }
+
+    public function show(Order $order)
+    {
+        $order->load(['user', 'items.course', 'payments', 'coupon']);
+
+        return view('admin.orders.show', compact('order'));
+    }
+
+    public function invoice(Order $order)
+    {
+        $order->load(['user', 'items.course']);
+
+        return view('admin.orders.invoice', compact('order'));
+    }
+
+    public function refund(Request $request, Order $order)
+    {
+        $order->update([
+            'payment_status' => 'refunded',
+            'refund_status' => 'processed',
+        ]);
+
+        ActivityLogger::log('order_refunded', "Order {$order->order_number} refunded", $order);
+
+        return back()->with('success', 'Refund processed.');
+    }
+}

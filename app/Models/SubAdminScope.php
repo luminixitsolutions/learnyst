@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SubAdminScope extends Model
+{
+    protected $fillable = ['user_id', 'scope_type', 'scope_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function scopeable()
+    {
+        return $this->morphTo(__FUNCTION__, 'scope_type', 'scope_id');
+    }
+}
