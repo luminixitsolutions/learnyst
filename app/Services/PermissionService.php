@@ -16,6 +16,7 @@ class PermissionService
             'sales' => 'Sales',
             'batches' => 'Batches',
             'reports' => 'Reports',
+            'insights' => 'Insights',
             'settings' => 'Settings',
             'community' => 'Community',
             'instructors' => 'Instructors',

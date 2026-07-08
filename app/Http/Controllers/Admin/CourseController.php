@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ExportsReportCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\CourseSection;
+use App\Models\LiveClass;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -17,9 +20,11 @@ use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
+    use ExportsReportCsv;
+
     public function index(Request $request)
     {
-        $query = Course::with(['category', 'creator'])->latest();
+        $query = Course::with(['category', 'creator'])->withCount('lessons')->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -30,11 +35,42 @@ class CourseController extends Controller
         if ($request->filled('product_type')) {
             $query->where('product_type', $request->product_type);
         }
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        if ($request->filled('access_type')) {
+            $query->where('access_type', $request->access_type);
+        }
 
-        $courses = $query->paginate(15)->withQueryString();
+        if ($request->get('export') === '1') {
+            $courses = $query->get();
+
+            return $this->exportCsv('courses', [
+                'Title', 'Type', 'Category', 'Status', 'Lessons', 'Enrollments', 'Price', 'Created',
+            ], $courses->map(fn ($c) => [
+                $c->title,
+                $c->product_type,
+                $c->category?->name ?? '—',
+                $c->status,
+                $c->lessons_count,
+                $c->enrollment_count,
+                $c->is_free ? 'Free' : $c->price,
+                $c->created_at->format('Y-m-d'),
+            ]));
+        }
+
+        $courses = $query->paginate(12)->withQueryString();
         $productTypes = ['course', 'ebook', 'podcast', 'webinar', 'custom', 'free_resource'];
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.courses.index', compact('courses', 'productTypes'));
+        $stats = [
+            'total' => Course::count(),
+            'active' => Course::where('status', 'published')->count(),
+            'suspended' => Course::whereIn('status', ['unpublished', 'draft'])->count(),
+            'enrolled_users' => CourseEnrollment::distinct('user_id')->count('user_id'),
+        ];
+
+        return view('admin.courses.index', compact('courses', 'productTypes', 'categories', 'stats'));
     }
 
     public function create(Request $request)
@@ -62,6 +98,7 @@ class CourseController extends Controller
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(5);
 
         $course = Course::create($validated);
+        $course->settings()->create([]);
 
         if ($request->filled('tags')) {
             $course->tags()->sync($request->tags);
@@ -74,7 +111,7 @@ class CourseController extends Controller
 
         ActivityLogger::log('course_created', "Course {$course->title} created", $course);
 
-        return redirect()->route('admin.courses.edit', $course)->with('success', 'Course created. Add curriculum below.');
+        return redirect()->route('admin.courses.builder', $course)->with('success', 'Course created. Build your curriculum below.');
     }
 
     public function show(Course $course)
@@ -84,14 +121,20 @@ class CourseController extends Controller
         return view('admin.courses.show', compact('course'));
     }
 
-    public function edit(Course $course)
+    public function builder(Course $course, Request $request)
     {
-        $course->load('sections.lessons');
+        $course->load(['sections.lessons', 'settings']);
         $categories = Category::where('is_active', true)->orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
         $instructors = User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->orderBy('name')->get();
+        $tab = $request->get('tab', 'curriculum');
 
-        return view('admin.courses.edit', compact('course', 'categories', 'tags', 'instructors'));
+        return view('admin.courses.builder', compact('course', 'categories', 'tags', 'instructors', 'tab'));
+    }
+
+    public function edit(Course $course)
+    {
+        return redirect()->route('admin.courses.builder', ['course' => $course, 'tab' => 'settings']);
     }
 
     public function update(Request $request, Course $course)
@@ -129,11 +172,21 @@ class CourseController extends Controller
 
     public function duplicate(Course $course)
     {
+        $course->load(['sections.lessons.liveClass', 'settings', 'tags']);
+
         $newCourse = $course->replicate();
         $newCourse->title = $course->title . ' (Copy)';
         $newCourse->slug = Str::slug($newCourse->title) . '-' . Str::random(5);
         $newCourse->status = 'draft';
         $newCourse->save();
+
+        if ($course->settings) {
+            $newSettings = $course->settings->replicate();
+            $newSettings->course_id = $newCourse->id;
+            $newSettings->save();
+        } else {
+            $newCourse->settings()->create([]);
+        }
 
         foreach ($course->sections as $section) {
             $newSection = $section->replicate();
@@ -144,6 +197,12 @@ class CourseController extends Controller
                 $newLesson = $lesson->replicate();
                 $newLesson->course_section_id = $newSection->id;
                 $newLesson->save();
+
+                if ($lesson->liveClass) {
+                    $newLive = $lesson->liveClass->replicate();
+                    $newLive->course_lesson_id = $newLesson->id;
+                    $newLive->save();
+                }
             }
         }
 
@@ -151,7 +210,7 @@ class CourseController extends Controller
 
         ActivityLogger::log('course_duplicated', "Course duplicated from {$course->title}", $newCourse);
 
-        return redirect()->route('admin.courses.edit', $newCourse)->with('success', 'Course duplicated successfully.');
+        return redirect()->route('admin.courses.builder', $newCourse)->with('success', 'Course duplicated successfully.');
     }
 
     public function publish(Course $course)
@@ -174,57 +233,115 @@ class CourseController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'status' => ['required', 'in:active,inactive'],
             'drip_days' => ['nullable', 'integer', 'min:0'],
             'drip_date' => ['nullable', 'date'],
         ]);
 
         $validated['course_id'] = $course->id;
-        $validated['sort_order'] = $course->sections()->max('sort_order') + 1;
+        $validated['sort_order'] = $validated['sort_order'] ?? ($course->sections()->max('sort_order') + 1);
 
-        CourseSection::create($validated);
+        $section = CourseSection::create($validated);
+
+        ActivityLogger::log('section_created', "Section {$section->title} added to {$course->title}", $section);
 
         return back()->with('success', 'Section added.');
+    }
+
+    public function updateSection(Request $request, CourseSection $section)
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'status' => ['required', 'in:active,inactive'],
+            'drip_days' => ['nullable', 'integer', 'min:0'],
+            'drip_date' => ['nullable', 'date'],
+        ]);
+
+        $section->update($validated);
+
+        ActivityLogger::log('section_updated', "Section {$section->title} updated", $section);
+
+        return back()->with('success', 'Section updated.');
     }
 
     public function storeLesson(Request $request, CourseSection $section)
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'lesson_type' => ['required', 'in:video,pdf,text,quiz,assignment,live_class'],
-            'content' => ['nullable', 'string'],
-            'video_url' => ['nullable', 'url'],
-            'file_path' => ['nullable', 'file', 'max:51200'],
-            'duration_minutes' => ['nullable', 'integer'],
-            'is_preview' => ['boolean'],
-            'is_locked' => ['boolean'],
-            'drip_date' => ['nullable', 'date'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'title' => ['required', 'string', 'max:60'],
+            'lesson_type' => ['required', 'in:video,audio,pdf,slides,text,quiz,assignment,live_class,external_link,code'],
         ]);
 
-        if ($request->hasFile('file_path')) {
-            $validated['file_path'] = $request->file('file_path')->store('lessons', 'public');
+        $settings = null;
+        if ($validated['lesson_type'] === 'slides') {
+            $validated['lesson_type'] = 'pdf';
+            $settings = ['sub_type' => 'slides'];
         }
 
         $validated['course_section_id'] = $section->id;
-        $validated['sort_order'] = $request->input('sort_order') ?? ($section->lessons()->max('sort_order') + 1);
-        $validated['is_preview'] = $request->boolean('is_preview');
-        $validated['is_locked'] = $request->boolean('is_locked');
+        $validated['sort_order'] = $section->lessons()->max('sort_order') + 1;
+        $validated['status'] = 'draft';
+        if ($settings) {
+            $validated['settings'] = $settings;
+        }
 
-        CourseLesson::create($validated);
+        $lesson = CourseLesson::create($validated);
 
-        return back()->with('success', 'Lesson added.');
+        if ($lesson->lesson_type === 'live_class') {
+            LiveClass::create(['course_lesson_id' => $lesson->id]);
+        }
+
+        ActivityLogger::log('lesson_created', "Lesson {$lesson->title} created", $lesson);
+
+        return redirect()->route('admin.lessons.edit', $lesson);
+    }
+
+    public function reorderSections(Request $request, Course $course)
+    {
+        $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
+
+        foreach ($request->order as $index => $sectionId) {
+            CourseSection::where('id', $sectionId)->where('course_id', $course->id)->update(['sort_order' => $index]);
+        }
+
+        ActivityLogger::log('sections_reordered', "Sections reordered for {$course->title}", $course);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function reorderLessons(Request $request, CourseSection $section)
+    {
+        $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
+
+        foreach ($request->order as $index => $lessonId) {
+            CourseLesson::where('id', $lessonId)->where('course_section_id', $section->id)->update(['sort_order' => $index]);
+        }
+
+        ActivityLogger::log('lessons_reordered', "Lessons reordered in {$section->title}", $section);
+
+        return response()->json(['success' => true]);
     }
 
     public function destroySection(CourseSection $section)
     {
+        $title = $section->title;
+        $course = $section->course;
         $section->delete();
+
+        ActivityLogger::log('section_deleted', "Section {$title} deleted from {$course->title}", $course);
 
         return back()->with('success', 'Section deleted.');
     }
 
     public function destroyLesson(CourseLesson $lesson)
     {
+        $title = $lesson->title;
+        $course = $lesson->section->course;
         $lesson->delete();
+
+        ActivityLogger::log('lesson_deleted', "Lesson {$title} deleted", $course);
 
         return back()->with('success', 'Lesson deleted.');
     }

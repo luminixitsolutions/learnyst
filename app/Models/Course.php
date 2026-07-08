@@ -80,6 +80,16 @@ class Course extends Model
         return $this->hasMany(Batch::class);
     }
 
+    public function settings()
+    {
+        return $this->hasOne(CourseSetting::class);
+    }
+
+    public function lessonCount(): int
+    {
+        return $this->lessons()->count();
+    }
+
     public function segments()
     {
         return $this->belongsToMany(Segment::class, 'segment_course');

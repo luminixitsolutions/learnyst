@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
+use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DiscussionController;
 use App\Http\Controllers\Admin\InstructorController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Admin\ProductModuleController;
 use App\Http\Controllers\Admin\TestSeriesController;
 use App\Http\Controllers\Admin\TrackController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\InsightController;
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\SegmentController;
 use App\Http\Controllers\Admin\UserModuleController;
@@ -49,6 +51,12 @@ use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardCo
 use App\Http\Controllers\Learner\CommunityController as LearnerCommunityController;
 use App\Http\Controllers\Learner\CourseController as LearnerCourseController;
 use App\Http\Controllers\Learner\DashboardController as LearnerDashboardController;
+use App\Http\Controllers\Platform\PlatformActivityController;
+use App\Http\Controllers\Platform\PlatformCompanyController;
+use App\Http\Controllers\Platform\PlatformDashboardController;
+use App\Http\Controllers\Platform\PlatformSettingController;
+use App\Http\Controllers\Platform\PlatformUserController;
+use App\Http\Controllers\Admin\UtilitiesController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +69,8 @@ Route::get('/verify-certificate', [CertificateController::class, 'verify'])->nam
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
+    Route::get('/admin/login', [LoginController::class, 'showPlatformLoginForm'])->name('platform.login');
+    Route::post('/admin/login', [LoginController::class, 'loginPlatform'])->name('platform.login.submit');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 });
@@ -73,17 +83,30 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,sub-admin'])->group(function () {
+Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-admin'])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('courses', AdminCourseController::class);
+    Route::get('courses/{course}/builder', [AdminCourseController::class, 'builder'])->name('courses.builder');
     Route::post('courses/{course}/duplicate', [AdminCourseController::class, 'duplicate'])->name('courses.duplicate');
     Route::post('courses/{course}/publish', [AdminCourseController::class, 'publish'])->name('courses.publish');
     Route::post('courses/{course}/unpublish', [AdminCourseController::class, 'unpublish'])->name('courses.unpublish');
     Route::post('courses/{course}/sections', [AdminCourseController::class, 'storeSection'])->name('courses.sections.store');
+    Route::post('courses/{course}/sections/reorder', [AdminCourseController::class, 'reorderSections'])->name('courses.sections.reorder');
+    Route::put('sections/{section}', [AdminCourseController::class, 'updateSection'])->name('sections.update');
     Route::post('sections/{section}/lessons', [AdminCourseController::class, 'storeLesson'])->name('sections.lessons.store');
+    Route::post('sections/{section}/lessons/reorder', [AdminCourseController::class, 'reorderLessons'])->name('sections.lessons.reorder');
     Route::delete('sections/{section}', [AdminCourseController::class, 'destroySection'])->name('sections.destroy');
     Route::delete('lessons/{lesson}', [AdminCourseController::class, 'destroyLesson'])->name('lessons.destroy');
+
+    Route::get('lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
+    Route::put('lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+    Route::put('lessons/{lesson}/settings', [LessonController::class, 'updateSettings'])->name('lessons.settings.update');
+    Route::post('lessons/{lesson}/media', [LessonController::class, 'uploadMedia'])->name('lessons.media.upload');
+    Route::post('lessons/{lesson}/attachments', [LessonController::class, 'storeAttachment'])->name('lessons.attachments.store');
+    Route::delete('attachments/{attachment}', [LessonController::class, 'destroyAttachment'])->name('attachments.destroy');
+    Route::put('lessons/{lesson}/live-class', [LessonController::class, 'updateLiveClass'])->name('lessons.live-class.update');
+    Route::delete('lessons/{lesson}/remove', [LessonController::class, 'destroy'])->name('lessons.remove');
 
     Route::resource('bundles', BundleController::class);
 
@@ -227,14 +250,63 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,sub-admi
     Route::post('segments/{segment}/courses', [SegmentController::class, 'assignCourse'])->name('segments.courses.assign');
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/sales', [ReportController::class, 'salesIndex'])->name('reports.sales.index');
+    Route::get('reports/sales/orders', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/sales/product', [ReportController::class, 'productSales'])->name('reports.product-sales');
+    Route::get('reports/sales/referral-wallet', [ReportController::class, 'referralWallet'])->name('reports.referral-wallet');
+    Route::get('reports/sales/affiliate-products', [ReportController::class, 'affiliateProducts'])->name('reports.affiliate-products');
+    Route::get('reports/sales/affiliates', [ReportController::class, 'affiliates'])->name('reports.affiliates');
+    Route::get('reports/sales/coupons', [ReportController::class, 'coupons'])->name('reports.coupons');
+    Route::get('reports/sales/broadcast', [ReportController::class, 'broadcastMessages'])->name('reports.broadcast');
     Route::get('reports/learners', [ReportController::class, 'learners'])->name('reports.learners');
+    Route::get('reports/learners/{user}', [ReportController::class, 'learnerProfile'])->name('reports.learner-profile');
     Route::get('reports/courses', [ReportController::class, 'courses'])->name('reports.courses');
     Route::get('reports/enrollments', [ReportController::class, 'enrollments'])->name('reports.enrollments');
+    Route::get('reports/transactions', [ReportController::class, 'transactions'])->name('reports.transactions');
+    Route::get('reports/payment-gateways', [ReportController::class, 'paymentGateways'])->name('reports.payment-gateways');
+    Route::get('reports/school-payouts', [ReportController::class, 'schoolPayouts'])->name('reports.school-payouts');
+    Route::get('reports/progress', [ReportController::class, 'progressIndex'])->name('reports.progress.index');
+    Route::get('reports/progress/{type}', [ReportController::class, 'productProgress'])->name('reports.progress.type');
+    Route::get('reports/bundle-progress', [ReportController::class, 'bundleProgress'])->name('reports.bundle-progress');
+    Route::get('reports/custom-product-progress', [ReportController::class, 'customProductProgress'])->name('reports.custom-product-progress');
+    Route::get('reports/test-series-scores', [ReportController::class, 'testSeriesScores'])->name('reports.test-series-scores');
     Route::get('reports/bundles', [ReportController::class, 'bundles'])->name('reports.bundles');
     Route::get('reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
     Route::get('reports/batches', [ReportController::class, 'batches'])->name('reports.batches');
     Route::get('reports/certificates', [ReportController::class, 'certificates'])->name('reports.certificates');
+    Route::get('reports/zoom-insights', [ReportController::class, 'zoomInsights'])->name('reports.zoom-insights');
+    Route::get('reports/live-class-attendance', [ReportController::class, 'liveClassAttendance'])->name('reports.live-class-attendance');
+    Route::get('reports/resource-usage', [ReportController::class, 'resourceUsage'])->name('reports.resource-usage');
+    Route::get('reports/super-live-lessons', [ReportController::class, 'superLiveLessons'])->name('reports.super-live-lessons');
+
+    Route::prefix('insights')->name('insights.')->group(function () {
+        Route::get('/', [InsightController::class, 'dashboard'])->name('dashboard');
+        Route::get('school-vitals', [InsightController::class, 'schoolVitals'])->name('school-vitals');
+        Route::get('monthly-revenue', [InsightController::class, 'monthlyRevenue'])->name('monthly-revenue');
+        Route::get('active-learners', [InsightController::class, 'activeLearners'])->name('active-learners');
+        Route::get('conversions', [InsightController::class, 'conversions'])->name('conversions');
+        Route::get('time-spent', [InsightController::class, 'timeSpent'])->name('time-spent');
+        Route::get('sales', [InsightController::class, 'salesIndex'])->name('sales.index');
+        Route::get('sales/fresh-trial', [InsightController::class, 'freshTrial'])->name('sales.fresh-trial');
+        Route::get('sales/upsell-trial', [InsightController::class, 'upsellTrial'])->name('sales.upsell-trial');
+        Route::get('sales/renewal-trial', [InsightController::class, 'renewalTrial'])->name('sales.renewal-trial');
+        Route::get('sales/free-users', [InsightController::class, 'freeUsers'])->name('sales.free-users');
+        Route::get('live', [InsightController::class, 'liveIndex'])->name('live.index');
+        Route::get('live/classes', [InsightController::class, 'liveClasses'])->name('live.classes');
+        Route::get('live/checkout', [InsightController::class, 'checkout'])->name('live.checkout');
+        Route::get('live/test-takes', [InsightController::class, 'testTakes'])->name('live.test-takes');
+        Route::get('marketing', [InsightController::class, 'marketingIndex'])->name('marketing.index');
+        Route::get('marketing/cta', [InsightController::class, 'ctaInsights'])->name('marketing.cta');
+        Route::get('messenger', [InsightController::class, 'messengerIndex'])->name('messenger.index');
+        Route::get('messenger/system-mails', [InsightController::class, 'systemMails'])->name('messenger.system-mails');
+        Route::get('messenger/marketing-mails', [InsightController::class, 'marketingMails'])->name('messenger.marketing-mails');
+        Route::get('messenger/push-messages', [InsightController::class, 'pushMessages'])->name('messenger.push-messages');
+        Route::get('messenger/workflow-mails', [InsightController::class, 'workflowMails'])->name('messenger.workflow-mails');
+        Route::get('messenger/email-delivery', [InsightController::class, 'emailDelivery'])->name('messenger.email-delivery');
+        Route::get('messenger/bounces-complaints', [InsightController::class, 'bouncesComplaints'])->name('messenger.bounces-complaints');
+        Route::get('messenger/whatsapp-messages', [InsightController::class, 'whatsappMessages'])->name('messenger.whatsapp-messages');
+        Route::get('messenger/whatsapp-workflow', [InsightController::class, 'whatsappWorkflow'])->name('messenger.whatsapp-workflow');
+    });
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
@@ -242,6 +314,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,sub-admi
     Route::get('settings/social', [SettingController::class, 'socialLinks'])->name('settings.social');
     Route::put('settings/social', [SettingController::class, 'updateSocialLinks'])->name('settings.social.update');
 });
+
+Route::prefix('admin')->name('platform.')->middleware(['auth', 'role:super-admin'])->group(function () {
+    Route::get('/', [PlatformDashboardController::class, 'index'])->name('dashboard');
+    Route::get('companies', [PlatformCompanyController::class, 'index'])->name('companies.index');
+    Route::get('users', [PlatformUserController::class, 'index'])->name('users.index');
+    Route::get('activity-logs', [PlatformActivityController::class, 'index'])->name('activity.index');
+    Route::get('settings', [PlatformSettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [PlatformSettingController::class, 'update'])->name('settings.update');
+});
+
+Route::get('/admin/{path}', function (string $path) {
+    return redirect('/company/' . ltrim($path, '/'), 301);
+})->where('path', '.*')->middleware('auth');
 
 Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor'])->group(function () {
     Route::get('/', [InstructorDashboardController::class, 'index'])->name('dashboard');

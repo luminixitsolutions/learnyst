@@ -1,93 +1,145 @@
 @extends('layouts.app')
 
 @section('title', 'Courses')
-@section('page-title', 'Products & Courses')
-@section('breadcrumb', 'Manage all courses and products')
+@section('page-title', 'Courses')
+@section('breadcrumb', 'Manage all courses and curriculum')
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <form method="GET" class="flex flex-wrap items-center gap-3">
-            <input type="search" name="search" value="{{ request('search') }}" placeholder="Search courses..."
-                   class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-            <select name="status" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm focus:outline-none">
+<div class="space-y-6" x-data="{ showFilters: false, openManage: null }">
+    {{-- Stats --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <x-stat-card title="Total Courses" :value="$stats['total']" />
+        <x-stat-card title="Active Courses" :value="$stats['active']" />
+        <x-stat-card title="Suspended Courses" :value="$stats['suspended']" />
+        <x-stat-card title="Enrolled Users" :value="number_format($stats['enrolled_users'])" />
+    </div>
+
+    {{-- Toolbar --}}
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <form method="GET" class="flex flex-1 flex-wrap items-center gap-3">
+            <input type="search" name="search" value="{{ request('search') }}" placeholder="Search course..."
+                   class="flex-1 min-w-[200px] px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+            <button type="button" @click="showFilters = !showFilters"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 hover:bg-slate-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                Filters
+            </button>
+            <button type="submit" class="panel-btn-secondary">Search</button>
+        </form>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.courses.index', array_merge(request()->query(), ['export' => '1'])) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 hover:bg-slate-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download Now
+            </a>
+            <a href="{{ route('admin.bundles.create') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-700 hover:bg-amber-100">
+                Add Trial Bundle
+            </a>
+            <a href="{{ route('admin.courses.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl panel-btn-primary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Create
+            </a>
+        </div>
+    </div>
+
+    {{-- Filters panel --}}
+    <div x-show="showFilters" x-cloak class="glass-card rounded-2xl p-5">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <x-form-input label="Status" name="status" type="select" :value="request('status')">
                 <option value="">All Status</option>
                 @foreach(['draft','published','unpublished'] as $st)
                     <option value="{{ $st }}" @selected(request('status') === $st)>{{ ucfirst($st) }}</option>
                 @endforeach
-            </select>
-            <select name="product_type" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm focus:outline-none">
+            </x-form-input>
+            <x-form-input label="Product Type" name="product_type" type="select" :value="request('product_type')">
                 <option value="">All Types</option>
                 @foreach($productTypes as $type)
                     <option value="{{ $type }}" @selected(request('product_type') === $type)>{{ ucfirst(str_replace('_',' ', $type)) }}</option>
                 @endforeach
-            </select>
-            <button type="submit" class="panel-btn-secondary hover:bg-slate-700">Filter</button>
+            </x-form-input>
+            <x-form-input label="Category" name="category_id" type="select" :value="request('category_id')">
+                <option value="">All Categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" @selected(request('category_id') == $cat->id)>{{ $cat->name }}</option>
+                @endforeach
+            </x-form-input>
+            <x-form-input label="Access Type" name="access_type" type="select" :value="request('access_type')">
+                <option value="">All Access</option>
+                @foreach(['free','trial','paid'] as $access)
+                    <option value="{{ $access }}" @selected(request('access_type') === $access)>{{ ucfirst($access) }}</option>
+                @endforeach
+            </x-form-input>
+            <div class="md:col-span-4 flex gap-2">
+                <button type="submit" class="panel-btn-primary px-4 py-2 rounded-xl text-sm">Apply Filters</button>
+                <a href="{{ route('admin.courses.index') }}" class="panel-btn-secondary px-4 py-2 rounded-xl text-sm">Clear</a>
+            </div>
         </form>
-        <a href="{{ route('admin.courses.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl panel-btn-primary transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Create Course
-        </a>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($courses->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                        <th class="px-6 py-4 font-medium">Course</th>
-                        <th class="px-6 py-4 font-medium">Type</th>
-                        <th class="px-6 py-4 font-medium">Category</th>
-                        <th class="px-6 py-4 font-medium">Price</th>
-                        <th class="px-6 py-4 font-medium">Status</th>
-                        <th class="px-6 py-4 font-medium text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($courses as $course)
-                    <tr class="hover:bg-indigo-50/40">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                @if($course->thumbnail)
-                                    <img src="{{ Storage::url($course->thumbnail) }}" alt="" class="w-10 h-10 rounded-lg object-cover">
-                                @else
-                                    <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-indigo-600 text-xs font-bold">{{ strtoupper(substr($course->title,0,2)) }}</div>
-                                @endif
-                                <div>
-                                    <a href="{{ route('admin.courses.show', $course) }}" class="text-slate-800 font-semibold hover:text-indigo-600">{{ $course->title }}</a>
-                                    <p class="text-xs text-slate-500">{{ $course->created_at->format('M d, Y') }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-slate-300">{{ ucfirst(str_replace('_',' ', $course->product_type)) }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $course->category?->name ?? '—' }}</td>
-                        <td class="px-6 py-4 text-white">{{ $course->is_free ? 'Free' : '₹'.number_format($course->price, 0) }}</td>
-                        <td class="px-6 py-4">
-                            <x-badge :type="match($course->status) { 'published' => 'success', 'draft' => 'warning', default => 'default' }">{{ ucfirst($course->status) }}</x-badge>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('admin.courses.edit', $course) }}" class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-100" title="Edit">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                </a>
-                                <form method="POST" action="{{ route('admin.courses.duplicate', $course) }}" class="inline">@csrf<button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100" title="Duplicate"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></form>
-                                @if($course->status !== 'published')
-                                <form method="POST" action="{{ route('admin.courses.publish', $course) }}" class="inline">@csrf<button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100" title="Publish"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button></form>
-                                @else
-                                <form method="POST" action="{{ route('admin.courses.unpublish', $course) }}" class="inline">@csrf<button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-slate-100" title="Unpublish"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg></button></form>
-                                @endif
-                                <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" class="inline">@csrf @method('DELETE')<button type="button" @click="deleteForm = $el.closest('form'); deleteModal = true" class="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-100" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    {{-- Course cards --}}
+    @if($courses->count())
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        @foreach($courses as $course)
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
+            <div class="relative h-40 bg-slate-100">
+                @if($course->thumbnail)
+                    <img src="{{ Storage::url($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                @else
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
+                        <span class="text-3xl font-bold text-indigo-400">{{ strtoupper(substr($course->title, 0, 2)) }}</span>
+                    </div>
+                @endif
+                <div class="absolute top-3 right-3">
+                    <x-badge :type="match($course->status) { 'published' => 'success', 'draft' => 'warning', default => 'default' }">{{ ucfirst($course->status) }}</x-badge>
+                </div>
+            </div>
+            <div class="p-5 flex-1 flex flex-col">
+                <h3 class="font-bold text-slate-800 text-lg leading-tight">{{ $course->title }}</h3>
+                <p class="text-sm text-slate-500 mt-1">{{ $course->lessons_count }} {{ Str::plural('lesson', $course->lessons_count) }}</p>
+                <p class="text-xs text-slate-400 mt-1">{{ $course->category?->name ?? 'Uncategorized' }} · {{ ucfirst(str_replace('_', ' ', $course->product_type)) }}</p>
+
+                <div class="mt-4 flex items-center gap-2 mt-auto pt-4">
+                    <a href="{{ route('admin.courses.builder', $course) }}"
+                       class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl panel-btn-primary text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Course Builder
+                    </a>
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">
+                            Manage ▾
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-cloak
+                             class="absolute right-0 bottom-full mb-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1">
+                            <a href="{{ route('admin.courses.show', $course) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">View Details</a>
+                            <a href="{{ route('admin.courses.builder', ['course' => $course, 'tab' => 'settings']) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Settings</a>
+                            <form method="POST" action="{{ route('admin.courses.duplicate', $course) }}">@csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Duplicate</button>
+                            </form>
+                            @if($course->status !== 'published')
+                            <form method="POST" action="{{ route('admin.courses.publish', $course) }}">@csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-slate-50">Publish</button>
+                            </form>
+                            @else
+                            <form method="POST" action="{{ route('admin.courses.unpublish', $course) }}">@csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-slate-50">Unpublish</button>
+                            </form>
+                            @endif
+                            <form method="POST" action="{{ route('admin.courses.destroy', $course) }}">@csrf @method('DELETE')
+                                <button type="button" @click="deleteForm = $el.closest('form'); deleteModal = true; open = false"
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-50">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $courses->links() }}</div>
-        @else
-        <x-empty-state title="No courses yet" description="Create your first course to get started." :action="route('admin.courses.create')" actionLabel="Create Course" />
-        @endif
+        @endforeach
     </div>
+    <div class="mt-4">{{ $courses->links() }}</div>
+    @else
+    <x-empty-state title="No courses yet" description="Create your first course to get started." :action="route('admin.courses.create')" actionLabel="Create Course" />
+    @endif
 </div>
 @endsection

@@ -72,7 +72,8 @@ class DatabaseSeeder extends Seeder
     protected function seedRolesAndPermissions(): void
     {
         $roles = [
-            ['name' => 'Administrator', 'slug' => 'admin', 'description' => 'Full platform access', 'is_system' => true],
+            ['name' => 'Super Administrator', 'slug' => 'super-admin', 'description' => 'Platform-level administration', 'is_system' => true],
+            ['name' => 'Administrator', 'slug' => 'admin', 'description' => 'Company / school administration', 'is_system' => true],
             ['name' => 'Sub Administrator', 'slug' => 'sub-admin', 'description' => 'Limited admin with assigned permissions', 'is_system' => true],
             ['name' => 'Instructor', 'slug' => 'instructor', 'description' => 'Manage assigned courses and batches', 'is_system' => true],
             ['name' => 'Learner', 'slug' => 'learner', 'description' => 'Access enrolled courses', 'is_system' => true],
@@ -103,6 +104,9 @@ class DatabaseSeeder extends Seeder
 
         $adminRole->permissions()->sync($permissionIds);
 
+        $superAdminRole = Role::where('slug', 'super-admin')->first();
+        $superAdminRole?->permissions()->sync($permissionIds);
+
         $subAdminPermissions = Permission::whereIn('module', ['dashboard', 'learners', 'products', 'sales'])
             ->where('action', 'view')
             ->pluck('id');
@@ -117,11 +121,22 @@ class DatabaseSeeder extends Seeder
 
         User::firstOrCreate(['email' => 'admin@learnyst.com'], [
             'role_id' => $adminRole->id,
-            'name' => 'Platform Admin',
+            'name' => 'Company Admin',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'is_active' => true,
         ]);
+
+        $superAdminRole = Role::where('slug', 'super-admin')->first();
+        if ($superAdminRole) {
+            User::firstOrCreate(['email' => 'superadmin@learnyst.com'], [
+                'role_id' => $superAdminRole->id,
+                'name' => 'Platform Super Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]);
+        }
 
         User::firstOrCreate(['email' => 'instructor@learnyst.com'], [
             'role_id' => $instructorRole->id,
