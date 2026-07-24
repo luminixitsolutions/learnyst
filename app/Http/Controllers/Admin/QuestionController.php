@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Services\ActivityLogger;
@@ -9,9 +10,11 @@ use Illuminate\Http\Request;
 
 class QuestionController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Question::with(['questionPool', 'creator']);
+        $query = $this->owned(Question::query())->with(['questionPool', 'creator']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -50,6 +53,7 @@ class QuestionController extends Controller
 
     public function destroy(Question $question)
     {
+        $this->authorizeOwner($question);
         $text = str($question->question_text)->limit(50);
         $pool = $question->questionPool;
 

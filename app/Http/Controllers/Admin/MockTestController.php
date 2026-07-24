@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\MockTest;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class MockTestController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = MockTest::with('creator')->latest();
+        $query = $this->owned(MockTest::query())->with('creator')->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -84,6 +87,7 @@ class MockTestController extends Controller
 
     public function destroy(MockTest $mockTest)
     {
+        $this->authorizeOwner($mockTest);
         $title = $mockTest->title;
         $mockTest->delete();
 

@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
-use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
-use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class SubAdminController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $subAdminRole = Role::where('slug', 'sub-admin')->first();
-
-        $query = User::where('role_id', $subAdminRole?->id)->with('role')->latest();
+        $query = $this->ownedUsersQuery('sub-admin')->with('role')->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -34,6 +33,7 @@ class SubAdminController extends Controller
 
     public function show(User $subAdmin)
     {
+        $this->authorizeOwner($subAdmin);
         $subAdmin->load(['role.permissions', 'permissions', 'subAdminScopes']);
 
         return view('admin.sub-admins.show', compact('subAdmin'));
@@ -41,6 +41,7 @@ class SubAdminController extends Controller
 
     public function edit(User $subAdmin)
     {
+        $this->authorizeOwner($subAdmin);
         $roles = Role::where('slug', 'like', 'sub-admin%')->orWhere('is_system', false)->get();
 
         return view('admin.sub-admins.edit', compact('subAdmin', 'roles'));
@@ -48,6 +49,8 @@ class SubAdminController extends Controller
 
     public function update(Request $request, User $subAdmin)
     {
+        $this->authorizeOwner($subAdmin);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $subAdmin->id],
@@ -79,6 +82,7 @@ class SubAdminController extends Controller
 
     public function destroy(User $subAdmin)
     {
+        $this->authorizeOwner($subAdmin);
         $subAdmin->delete();
 
         return redirect()->route('admin.sub-admins.index')->with('success', 'Sub-admin deleted.');
@@ -86,6 +90,7 @@ class SubAdminController extends Controller
 
     public function toggleStatus(User $subAdmin)
     {
+        $this->authorizeOwner($subAdmin);
         $subAdmin->update(['is_active' => !$subAdmin->is_active]);
 
         return back()->with('success', 'Status updated.');

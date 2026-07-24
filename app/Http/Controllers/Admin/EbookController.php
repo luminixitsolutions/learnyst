@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Ebook;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class EbookController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Ebook::with('creator');
+        $query = $this->owned(Ebook::query())->with('creator');
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -76,6 +79,7 @@ class EbookController extends Controller
 
     public function destroy(Ebook $ebook)
     {
+        $this->authorizeOwner($ebook);
         $title = $ebook->title;
         $ebook->delete();
 

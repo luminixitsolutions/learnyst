@@ -2,18 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Course;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BatchController extends Controller
 {
+    use ScopesToCurrentUser;
+
+    protected function authorizeBatch(Batch $batch): void
+    {
+        $batch->loadMissing('course');
+        abort_unless($batch->course, 404);
+        $this->authorizeOwner($batch->course);
+    }
+
     public function index(Request $request)
     {
-        $query = Batch::with(['course', 'instructor'])->latest();
+        $query = Batch::with(['course', 'instructor'])
+            ->whereIn('course_id', $this->ownedCourseIds())
+            ->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -26,18 +39,20 @@ class BatchController extends Controller
 
     public function create()
     {
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
-        $instructors = User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
+        $instructors = $this->ownedUsersQuery('instructor')->get();
 
         return view('admin.batches.create', compact('courses', 'instructors'));
     }
 
     public function store(Request $request)
     {
+        $ownedInstructorIds = $this->ownedUsersQuery('instructor')->pluck('id');
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'course_id' => ['required', 'exists:courses,id'],
-            'instructor_id' => ['nullable', 'exists:users,id'],
+            'course_id' => ['required', Rule::in($this->ownedCourseIds())],
+            'instructor_id' => ['nullable', Rule::in($ownedInstructorIds)],
             'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
@@ -61,8 +76,9 @@ class BatchController extends Controller
 
     public function show(Batch $batch)
     {
+        $this->authorizeBatch($batch);
         $batch->load(['course', 'instructor', 'learners']);
-        $availableLearners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))
+        $availableLearners = $this->ownedUsersQuery('learner')
             ->whereNotIn('id', $batch->learners->pluck('id'))
             ->orderBy('name')
             ->get();
@@ -72,18 +88,22 @@ class BatchController extends Controller
 
     public function edit(Batch $batch)
     {
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
-        $instructors = User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->get();
+        $this->authorizeBatch($batch);
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
+        $instructors = $this->ownedUsersQuery('instructor')->get();
 
         return view('admin.batches.edit', compact('batch', 'courses', 'instructors'));
     }
 
     public function update(Request $request, Batch $batch)
     {
+        $this->authorizeBatch($batch);
+        $ownedInstructorIds = $this->ownedUsersQuery('instructor')->pluck('id');
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'course_id' => ['required', 'exists:courses,id'],
-            'instructor_id' => ['nullable', 'exists:users,id'],
+            'course_id' => ['required', Rule::in($this->ownedCourseIds())],
+            'instructor_id' => ['nullable', Rule::in($ownedInstructorIds)],
             'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
@@ -100,6 +120,7 @@ class BatchController extends Controller
 
     public function destroy(Batch $batch)
     {
+        $this->authorizeBatch($batch);
         $batch->delete();
 
         return redirect()->route('admin.batches.index')->with('success', 'Batch deleted.');
@@ -107,7 +128,11 @@ class BatchController extends Controller
 
     public function addLearner(Request $request, Batch $batch)
     {
-        $validated = $request->validate(['user_id' => ['required', 'exists:users,id']]);
+        $this->authorizeBatch($batch);
+
+        $validated = $request->validate([
+            'user_id' => ['required', Rule::in($this->ownedUsersQuery('learner')->pluck('id'))],
+        ]);
         $batch->learners()->syncWithoutDetaching([$validated['user_id'] => ['status' => 'active']]);
 
         return back()->with('success', 'Learner added to batch.');
@@ -115,6 +140,8 @@ class BatchController extends Controller
 
     public function removeLearner(Batch $batch, User $user)
     {
+        $this->authorizeBatch($batch);
+        $this->authorizeOwner($user);
         $batch->learners()->detach($user->id);
 
         return back()->with('success', 'Learner removed from batch.');

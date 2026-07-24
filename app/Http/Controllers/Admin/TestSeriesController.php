@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\TestSeries;
 use App\Services\ActivityLogger;
@@ -10,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class TestSeriesController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = TestSeries::with('creator')->latest();
+        $query = $this->owned(TestSeries::query())->with('creator')->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -67,6 +70,7 @@ class TestSeriesController extends Controller
 
     public function destroy(TestSeries $testSeries)
     {
+        $this->authorizeOwner($testSeries);
         $title = $testSeries->title;
         $testSeries->delete();
 

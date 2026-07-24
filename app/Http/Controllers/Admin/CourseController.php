@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\ExportsReportCsv;
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
@@ -11,7 +12,6 @@ use App\Models\CourseLesson;
 use App\Models\CourseSection;
 use App\Models\LiveClass;
 use App\Models\Tag;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,10 +21,11 @@ use Illuminate\Support\Str;
 class CourseController extends Controller
 {
     use ExportsReportCsv;
+    use ScopesToCurrentUser;
 
     public function index(Request $request)
     {
-        $query = Course::with(['category', 'creator'])->withCount('lessons')->latest();
+        $query = $this->owned(Course::query())->with(['category', 'creator'])->withCount('lessons')->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -64,10 +65,10 @@ class CourseController extends Controller
         $categories = Category::where('is_active', true)->orderBy('name')->get();
 
         $stats = [
-            'total' => Course::count(),
-            'active' => Course::where('status', 'published')->count(),
-            'suspended' => Course::whereIn('status', ['unpublished', 'draft'])->count(),
-            'enrolled_users' => CourseEnrollment::distinct('user_id')->count('user_id'),
+            'total' => $this->owned(Course::query())->count(),
+            'active' => $this->owned(Course::query())->where('status', 'published')->count(),
+            'suspended' => $this->owned(Course::query())->whereIn('status', ['unpublished', 'draft'])->count(),
+            'enrolled_users' => $this->ownedEnrollmentsConstraint(CourseEnrollment::query())->distinct('user_id')->count('user_id'),
         ];
 
         return view('admin.courses.index', compact('courses', 'productTypes', 'categories', 'stats'));
@@ -77,7 +78,7 @@ class CourseController extends Controller
     {
         $categories = Category::where('is_active', true)->orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
-        $instructors = User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->orderBy('name')->get();
+        $instructors = $this->ownedUsersQuery('instructor')->orderBy('name')->get();
         $productType = $request->get('type', 'course');
 
         return view('admin.courses.create', compact('categories', 'tags', 'instructors', 'productType'));
@@ -116,6 +117,7 @@ class CourseController extends Controller
 
     public function show(Course $course)
     {
+        $this->authorizeOwner($course);
         $course->load(['sections.lessons', 'category', 'instructors', 'enrollments.user']);
 
         return view('admin.courses.show', compact('course'));
@@ -123,10 +125,11 @@ class CourseController extends Controller
 
     public function builder(Course $course, Request $request)
     {
+        $this->authorizeOwner($course);
         $course->load(['sections.lessons', 'settings']);
         $categories = Category::where('is_active', true)->orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
-        $instructors = User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->orderBy('name')->get();
+        $instructors = $this->ownedUsersQuery('instructor')->orderBy('name')->get();
         $tab = $request->get('tab', 'curriculum');
 
         return view('admin.courses.builder', compact('course', 'categories', 'tags', 'instructors', 'tab'));
@@ -134,11 +137,14 @@ class CourseController extends Controller
 
     public function edit(Course $course)
     {
+        $this->authorizeOwner($course);
+
         return redirect()->route('admin.courses.builder', ['course' => $course, 'tab' => 'settings']);
     }
 
     public function update(Request $request, Course $course)
     {
+        $this->authorizeOwner($course);
         $validated = $this->validateCourse($request, $course->id);
 
         $validated['is_free'] = $request->boolean('is_free');
@@ -164,6 +170,7 @@ class CourseController extends Controller
 
     public function destroy(Course $course)
     {
+        $this->authorizeOwner($course);
         ActivityLogger::log('course_deleted', "Course {$course->title} deleted", $course);
         $course->delete();
 
@@ -172,12 +179,14 @@ class CourseController extends Controller
 
     public function duplicate(Course $course)
     {
+        $this->authorizeOwner($course);
         $course->load(['sections.lessons.liveClass', 'settings', 'tags']);
 
         $newCourse = $course->replicate();
         $newCourse->title = $course->title . ' (Copy)';
         $newCourse->slug = Str::slug($newCourse->title) . '-' . Str::random(5);
         $newCourse->status = 'draft';
+        $newCourse->created_by = Auth::id();
         $newCourse->save();
 
         if ($course->settings) {
@@ -215,6 +224,7 @@ class CourseController extends Controller
 
     public function publish(Course $course)
     {
+        $this->authorizeOwner($course);
         $course->update(['status' => 'published']);
         ActivityLogger::log('course_published', "Course {$course->title} published", $course);
 
@@ -223,6 +233,7 @@ class CourseController extends Controller
 
     public function unpublish(Course $course)
     {
+        $this->authorizeOwner($course);
         $course->update(['status' => 'unpublished']);
 
         return back()->with('success', 'Course unpublished.');
@@ -230,6 +241,7 @@ class CourseController extends Controller
 
     public function storeSection(Request $request, Course $course)
     {
+        $this->authorizeOwner($course);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -251,6 +263,7 @@ class CourseController extends Controller
 
     public function updateSection(Request $request, CourseSection $section)
     {
+        $this->authorizeOwner($section->course);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -269,6 +282,7 @@ class CourseController extends Controller
 
     public function storeLesson(Request $request, CourseSection $section)
     {
+        $this->authorizeOwner($section->course);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:60'],
             'lesson_type' => ['required', 'in:video,audio,pdf,slides,text,quiz,assignment,live_class,external_link,code'],
@@ -300,6 +314,7 @@ class CourseController extends Controller
 
     public function reorderSections(Request $request, Course $course)
     {
+        $this->authorizeOwner($course);
         $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
 
         foreach ($request->order as $index => $sectionId) {
@@ -313,6 +328,7 @@ class CourseController extends Controller
 
     public function reorderLessons(Request $request, CourseSection $section)
     {
+        $this->authorizeOwner($section->course);
         $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
 
         foreach ($request->order as $index => $lessonId) {
@@ -326,6 +342,7 @@ class CourseController extends Controller
 
     public function destroySection(CourseSection $section)
     {
+        $this->authorizeOwner($section->course);
         $title = $section->title;
         $course = $section->course;
         $section->delete();
@@ -337,6 +354,7 @@ class CourseController extends Controller
 
     public function destroyLesson(CourseLesson $lesson)
     {
+        $this->authorizeOwner($lesson->section->course);
         $title = $lesson->title;
         $course = $lesson->section->course;
         $lesson->delete();

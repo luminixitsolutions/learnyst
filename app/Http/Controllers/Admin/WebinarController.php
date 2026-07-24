@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Webinar;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class WebinarController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Webinar::with('creator');
+        $query = $this->owned(Webinar::query())->with('creator');
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -76,6 +79,7 @@ class WebinarController extends Controller
 
     public function destroy(Webinar $webinar)
     {
+        $this->authorizeOwner($webinar);
         $title = $webinar->title;
         $webinar->delete();
 

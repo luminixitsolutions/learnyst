@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Podcast;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class PodcastController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Podcast::with('creator');
+        $query = $this->owned(Podcast::query())->with('creator');
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -76,6 +79,7 @@ class PodcastController extends Controller
 
     public function destroy(Podcast $podcast)
     {
+        $this->authorizeOwner($podcast);
         $title = $podcast->title;
         $podcast->delete();
 

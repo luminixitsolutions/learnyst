@@ -11,8 +11,8 @@ class Order extends Model
 
     protected $fillable = [
         'order_number', 'user_id', 'coupon_id', 'subtotal', 'discount',
-        'tax', 'total', 'payment_status', 'payment_method', 'refund_status',
-        'notes', 'paid_at',
+        'tax', 'total', 'payment_status', 'payment_method', 'gateway_order_id',
+        'refund_status', 'notes', 'paid_at',
     ];
 
     protected function casts(): array

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\InstructorTrack;
-use App\Models\Role;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class TrackController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = InstructorTrack::with(['instructor', 'creator'])->latest();
+        $query = $this->owned(InstructorTrack::query())->with(['instructor', 'creator'])->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -32,8 +33,7 @@ class TrackController extends Controller
 
     public function create()
     {
-        $instructorRole = Role::where('slug', 'instructor')->first();
-        $instructors = User::where('role_id', $instructorRole?->id)
+        $instructors = $this->ownedUsersQuery('instructor')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
@@ -42,8 +42,7 @@ class TrackController extends Controller
 
     public function store(Request $request)
     {
-        $instructorRole = Role::where('slug', 'instructor')->firstOrFail();
-        $instructorIds = User::where('role_id', $instructorRole->id)->pluck('id')->all();
+        $instructorIds = $this->ownedUsersQuery('instructor')->pluck('id')->all();
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:60'],
@@ -66,6 +65,7 @@ class TrackController extends Controller
 
     public function destroy(InstructorTrack $track)
     {
+        $this->authorizeOwner($track);
         $title = $track->title;
         $track->delete();
 

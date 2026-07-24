@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Bundle;
@@ -10,12 +11,24 @@ use App\Models\CourseEnrollment;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EnrollmentController extends Controller
 {
+    use ScopesToCurrentUser;
+
+    protected function authorizeEnrollment(CourseEnrollment $enrollment): void
+    {
+        abort_unless(
+            $this->ownedEnrollmentsConstraint(CourseEnrollment::query()->whereKey($enrollment->id))->exists(),
+            403
+        );
+    }
+
     public function index(Request $request)
     {
         $query = CourseEnrollment::with(['user', 'course', 'batch', 'bundle'])->latest();
+        $this->ownedEnrollmentsConstraint($query);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -29,23 +42,28 @@ class EnrollmentController extends Controller
         }
 
         $enrollments = $query->paginate(20)->withQueryString();
-        $learners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))->orderBy('name')->get();
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
-        $batches = Batch::orderBy('title')->get();
-        $bundles = Bundle::where('status', 'published')->orderBy('title')->get();
+        $learners = $this->visibleLearnersQuery()->orderBy('name')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
+        $batches = Batch::whereIn('course_id', $this->ownedCourseIds())->orderBy('title')->get();
+        $bundles = $this->owned(Bundle::query())->where('status', 'published')->orderBy('title')->get();
 
         return view('admin.enrollments.index', compact('enrollments', 'learners', 'courses', 'batches', 'bundles'));
     }
 
     public function store(Request $request)
     {
+        $ownedLearnerIds = $this->visibleLearnersQuery()->pluck('id');
+        $ownedCourseIds = $this->ownedCourseIds();
+        $ownedBatchIds = $this->ownedBatchIds();
+        $ownedBundleIds = $this->ownedBundleIds();
+
         $validated = $request->validate([
             'user_ids' => ['required', 'array', 'min:1'],
-            'user_ids.*' => ['exists:users,id'],
+            'user_ids.*' => ['required', Rule::in($ownedLearnerIds)],
             'enrollment_type' => ['required', 'in:course,batch,bundle'],
-            'course_id' => ['required_if:enrollment_type,course', 'nullable', 'exists:courses,id'],
-            'batch_id' => ['required_if:enrollment_type,batch', 'nullable', 'exists:batches,id'],
-            'bundle_id' => ['required_if:enrollment_type,bundle', 'nullable', 'exists:bundles,id'],
+            'course_id' => ['required_if:enrollment_type,course', 'nullable', Rule::in($ownedCourseIds)],
+            'batch_id' => ['required_if:enrollment_type,batch', 'nullable', Rule::in($ownedBatchIds)],
+            'bundle_id' => ['required_if:enrollment_type,bundle', 'nullable', Rule::in($ownedBundleIds)],
             'access_starts_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date'],
             'status' => ['required', 'in:active,expired,revoked'],
@@ -112,6 +130,8 @@ class EnrollmentController extends Controller
 
     public function update(Request $request, CourseEnrollment $enrollment)
     {
+        $this->authorizeEnrollment($enrollment);
+
         $validated = $request->validate([
             'status' => ['required', 'in:active,expired,revoked'],
             'access_starts_at' => ['nullable', 'date'],
@@ -126,6 +146,7 @@ class EnrollmentController extends Controller
 
     public function destroy(CourseEnrollment $enrollment)
     {
+        $this->authorizeEnrollment($enrollment);
         ActivityLogger::log('enrollment_removed', 'Enrollment removed', $enrollment);
         $enrollment->delete();
 
@@ -134,10 +155,12 @@ class EnrollmentController extends Controller
 
     public function history(User $learner)
     {
+        $this->authorizeOwner($learner);
+
         $enrollments = CourseEnrollment::with(['course', 'batch', 'bundle', 'order'])
-            ->where('user_id', $learner->id)
-            ->latest()
-            ->paginate(20);
+            ->where('user_id', $learner->id);
+        $this->ownedEnrollmentsConstraint($enrollments);
+        $enrollments = $enrollments->latest()->paginate(20);
 
         return view('admin.enrollments.history', compact('learner', 'enrollments'));
     }

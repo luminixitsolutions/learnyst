@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Community;
 use App\Models\Course;
@@ -11,12 +12,16 @@ use App\Models\SubAdminScope;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class SubAdminWizardController extends Controller
 {
+    use ScopesToCurrentUser;
+
     protected function sessionKey(): string
     {
         return 'sub_admin_wizard';
@@ -41,15 +46,15 @@ class SubAdminWizardController extends Controller
             ]),
             3 => view('admin.sub-admins.wizard.step3', [
                 'data' => $data,
-                'courses' => Course::orderBy('title')->get(),
+                'courses' => $this->owned(Course::query())->orderBy('title')->get(),
             ]),
             4 => view('admin.sub-admins.wizard.step4', [
                 'data' => $data,
-                'bundles' => Bundle::orderBy('title')->get(),
+                'bundles' => $this->owned(Bundle::query())->orderBy('title')->get(),
             ]),
             5 => view('admin.sub-admins.wizard.step5', [
                 'data' => $data,
-                'communities' => Community::orderBy('name')->get(),
+                'communities' => $this->owned(Community::query())->orderBy('name')->get(),
             ]),
             6 => view('admin.sub-admins.wizard.step6', compact('data')),
             default => redirect()->route('admin.sub-admins.wizard.step', 1),
@@ -70,9 +75,18 @@ class SubAdminWizardController extends Controller
                 'social_links' => ['nullable', 'array'],
             ]),
             2 => $data['role_id'] = $request->validate(['role_id' => ['required', 'exists:roles,id']])['role_id'],
-            3 => $data['course_ids'] = $request->validate(['course_ids' => ['nullable', 'array'], 'course_ids.*' => ['exists:courses,id']])['course_ids'] ?? [],
-            4 => $data['bundle_ids'] = $request->validate(['bundle_ids' => ['nullable', 'array'], 'bundle_ids.*' => ['exists:bundles,id']])['bundle_ids'] ?? [],
-            5 => $data['community_ids'] = $request->validate(['community_ids' => ['nullable', 'array'], 'community_ids.*' => ['exists:communities,id']])['community_ids'] ?? [],
+            3 => $data['course_ids'] = $request->validate([
+                'course_ids' => ['nullable', 'array'],
+                'course_ids.*' => [Rule::in($this->ownedCourseIds())],
+            ])['course_ids'] ?? [],
+            4 => $data['bundle_ids'] = $request->validate([
+                'bundle_ids' => ['nullable', 'array'],
+                'bundle_ids.*' => [Rule::in($this->ownedBundleIds())],
+            ])['bundle_ids'] ?? [],
+            5 => $data['community_ids'] = $request->validate([
+                'community_ids' => ['nullable', 'array'],
+                'community_ids.*' => [Rule::in($this->owned(Community::query())->pluck('id'))],
+            ])['community_ids'] ?? [],
             default => null,
         };
 
@@ -112,6 +126,7 @@ class SubAdminWizardController extends Controller
             'role_id' => $roleId,
             'is_active' => true,
             'email_verified_at' => now(),
+            'created_by' => Auth::id(),
         ]);
 
         foreach ($data['course_ids'] ?? [] as $courseId) {

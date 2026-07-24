@@ -28,7 +28,15 @@ class CourseController extends Controller
         $enrollment = CourseEnrollment::where('user_id', Auth::id())
             ->where('course_id', $course->id)
             ->where('status', 'active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $enrollment) {
+            return redirect()
+                ->route('public.course', $course)
+                ->with('error', $course->requiresPayment()
+                    ? 'Please complete payment to access this course.'
+                    : 'Please enroll to access this course.');
+        }
 
         $course->load(['sections.lessons']);
 
@@ -40,10 +48,16 @@ class CourseController extends Controller
         $lesson->load('section.course');
         $course = $lesson->section->course;
 
-        CourseEnrollment::where('user_id', Auth::id())
+        $enrollment = CourseEnrollment::where('user_id', Auth::id())
             ->where('course_id', $course->id)
             ->where('status', 'active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $enrollment) {
+            return redirect()
+                ->route('public.course', $course)
+                ->with('error', 'Please enroll to access this lesson.');
+        }
 
         return view('learner.courses.lesson', compact('lesson', 'course'));
     }

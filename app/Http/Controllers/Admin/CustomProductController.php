@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\CustomProduct;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class CustomProductController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = CustomProduct::with('creator');
+        $query = $this->owned(CustomProduct::query())->with('creator');
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -76,6 +79,7 @@ class CustomProductController extends Controller
 
     public function destroy(CustomProduct $customProduct)
     {
+        $this->authorizeOwner($customProduct);
         $title = $customProduct->title;
         $customProduct->delete();
 

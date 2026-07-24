@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\SubAdminWizardController;
 use App\Http\Controllers\Admin\BatchController as AdminBatchController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CertificateController;
+use App\Http\Controllers\Admin\CompanyPageContentController;
+use App\Http\Controllers\Admin\CompanyProfileController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\LessonController;
@@ -47,6 +49,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardController;
 use App\Http\Controllers\Learner\CommunityController as LearnerCommunityController;
 use App\Http\Controllers\Learner\CourseController as LearnerCourseController;
@@ -55,24 +58,83 @@ use App\Http\Controllers\Platform\PlatformActivityController;
 use App\Http\Controllers\Platform\PlatformCompanyController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
 use App\Http\Controllers\Platform\PlatformSettingController;
+use App\Http\Controllers\Platform\PlatformWebsiteContentController;
+use App\Http\Controllers\Platform\PlatformSignupFormController;
+use App\Http\Controllers\Platform\PlatformProductPageController;
+use App\Http\Controllers\Platform\PlatformSolutionPageController;
+use App\Http\Controllers\Platform\PlatformCustomerPageController;
+use App\Http\Controllers\Platform\PlatformResourcePageController;
+use App\Http\Controllers\Platform\PlatformBlogController;
 use App\Http\Controllers\Platform\PlatformUserController;
 use App\Http\Controllers\Admin\UtilitiesController;
+use App\Http\Controllers\Auth\SignupController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\CompanyDirectoryController;
+use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicController::class, 'home'])->name('home');
+/*
+|--------------------------------------------------------------------------
+| Marketing website (Kingster HTML + Learnyst content)
+| Assets: public/website  |  Views: resources/views/website
+|--------------------------------------------------------------------------
+*/
+Route::get('/', [WebsiteController::class, 'home'])->name('home');
+Route::get('/products/{slug}', [WebsiteController::class, 'product'])->name('website.product');
+Route::get('/solutions/{slug}', [WebsiteController::class, 'solution'])->name('website.solution');
+Route::get('/customers/{slug}', [WebsiteController::class, 'customer'])->name('website.customer');
+Route::get('/companies', [CompanyDirectoryController::class, 'index'])->name('website.companies.index');
+Route::get('/companies/{slug}', [CompanyDirectoryController::class, 'show'])->name('website.companies.show');
+Route::get('/companies/{slug}/blogs/{blogSlug}', [CompanyDirectoryController::class, 'blog'])->name('website.companies.blog');
+Route::post('/companies/{slug}/reviews', [CompanyDirectoryController::class, 'storeReview'])->name('website.companies.reviews.store');
+Route::post('/companies/{slug}/enquiries', [CompanyDirectoryController::class, 'storeEnquiry'])->name('website.companies.enquiries.store');
+Route::get('/comparison/{slug}', [WebsiteController::class, 'comparison'])->name('website.comparison');
+Route::get('/help-center', [WebsiteController::class, 'helpCenter'])->name('website.help-center');
+Route::get('/whats-new', [WebsiteController::class, 'whatsNew'])->name('website.whats-new');
+Route::get('/blogs', [WebsiteController::class, 'blogs'])->name('website.blogs');
+Route::get('/blogs/{slug}', [WebsiteController::class, 'blogShow'])->name('website.blog.show');
+Route::get('/{slug}', [WebsiteController::class, 'page'])
+    ->where('slug', 'about-us|pricing|product-demo|drm-security|corporate-lms|ai|careers|privacy-policy|terms-and-conditions|support-migration|guides')
+    ->name('website.page');
+
+Route::get('/home-lms', [PublicController::class, 'home'])->name('home.lms');
 Route::get('/courses', [PublicController::class, 'courses'])->name('public.courses');
 Route::get('/courses/{course:slug}', [PublicController::class, 'courseShow'])->name('public.course');
+Route::post('/courses/{course:slug}/reviews', [PublicController::class, 'storeCourseReview'])->name('public.course.reviews.store');
+Route::post('/courses/{course:slug}/enquiries', [PublicController::class, 'storeCourseEnquiry'])->name('public.course.enquiries.store');
+Route::middleware(['auth', 'role:learner'])->group(function () {
+    Route::post('/courses/{course:slug}/checkout', [\App\Http\Controllers\CourseCheckoutController::class, 'start'])->name('courses.checkout.start');
+    Route::post('/courses/checkout/complete', [\App\Http\Controllers\CourseCheckoutController::class, 'complete'])->name('courses.checkout.complete');
+});
 Route::post('/leads', [PublicController::class, 'captureLead'])->name('leads.capture');
 Route::get('/verify-certificate', [CertificateController::class, 'verify'])->name('certificates.verify');
+
+// Signup is public so "Get Started" always opens (not blocked by guest redirect when already logged in).
+Route::get('/signup/{step?}', [SignupController::class, 'show'])->name('signup.show');
+Route::post('/signup/account', [SignupController::class, 'storeAccount'])->name('signup.account');
+Route::post('/signup/company', [SignupController::class, 'storeCompany'])->name('signup.company');
+Route::post('/signup/business-type', [SignupController::class, 'storeBusinessType'])->name('signup.business_type');
+Route::post('/signup/teach', [SignupController::class, 'storeTeach'])->name('signup.teach');
+Route::post('/signup/goal', [SignupController::class, 'storeGoal'])->name('signup.goal');
+Route::post('/signup/content-ready', [SignupController::class, 'storeContentReady'])->name('signup.content_ready');
+Route::post('/signup/audience', [SignupController::class, 'storeAudience'])->name('signup.audience');
+Route::post('/signup/source', [SignupController::class, 'storeSource'])->name('signup.source');
+Route::post('/signup/resend', [SignupController::class, 'resendVerification'])->name('signup.resend');
+Route::post('/signup/verified', [SignupController::class, 'markVerifiedAndLogin'])->name('signup.verified');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
     Route::get('/admin/login', [LoginController::class, 'showPlatformLoginForm'])->name('platform.login');
     Route::post('/admin/login', [LoginController::class, 'loginPlatform'])->name('platform.login.submit');
+    Route::get('/student/login', [StudentAuthController::class, 'showLoginForm'])->name('student.login');
+    Route::post('/student/login', [StudentAuthController::class, 'login'])->name('student.login.submit');
+    Route::get('/student/register', [StudentAuthController::class, 'showRegisterForm'])->name('student.register');
+    Route::post('/student/register', [StudentAuthController::class, 'register'])->name('student.register.submit');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.update');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
@@ -91,6 +153,24 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('courses/{course}/duplicate', [AdminCourseController::class, 'duplicate'])->name('courses.duplicate');
     Route::post('courses/{course}/publish', [AdminCourseController::class, 'publish'])->name('courses.publish');
     Route::post('courses/{course}/unpublish', [AdminCourseController::class, 'unpublish'])->name('courses.unpublish');
+
+    Route::get('courses/{course}/settings', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'hub'])->name('courses.settings.hub');
+    Route::get('courses/{course}/settings/{panel}', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'show'])->name('courses.settings.show');
+    Route::put('courses/{course}/settings/{panel}', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'update'])->name('courses.settings.update');
+    Route::post('courses/{course}/settings/publish', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'publish'])->name('courses.settings.publish');
+    Route::post('courses/{course}/settings/trash', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'trash'])->name('courses.settings.trash');
+    Route::post('courses/{course}/settings/restore', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'restore'])->name('courses.settings.restore');
+    Route::post('courses/{course}/settings/remove-learners', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'removeLearners'])->name('courses.settings.remove-learners');
+    Route::post('courses/{course}/settings/removals/{removal}/restore', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'restoreLearner'])->name('courses.settings.removals.restore');
+    Route::post('courses/{course}/settings/pricing-plans', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'storePricingPlan'])->name('courses.settings.pricing-plans.store');
+    Route::post('courses/{course}/settings/pricing-plans/{plan}/status', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'updatePricingPlanStatus'])->name('courses.settings.pricing-plans.status');
+    Route::post('courses/{course}/settings/pricing-plans/{plan}/duplicate', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'duplicatePricingPlan'])->name('courses.settings.pricing-plans.duplicate');
+    Route::delete('courses/{course}/settings/pricing-plans/{plan}', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'destroyPricingPlan'])->name('courses.settings.pricing-plans.destroy');
+    Route::post('courses/{course}/settings/faqs', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'storeFaq'])->name('courses.settings.faqs.store');
+    Route::delete('courses/{course}/settings/faqs/{faq}', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'destroyFaq'])->name('courses.settings.faqs.destroy');
+    Route::post('courses/{course}/settings/certificate-criteria', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'storeCertificateCriterion'])->name('courses.settings.criteria.store');
+    Route::delete('courses/{course}/settings/certificate-criteria/{criterion}', [\App\Http\Controllers\Admin\CourseSettingsController::class, 'destroyCertificateCriterion'])->name('courses.settings.criteria.destroy');
+
     Route::post('courses/{course}/sections', [AdminCourseController::class, 'storeSection'])->name('courses.sections.store');
     Route::post('courses/{course}/sections/reorder', [AdminCourseController::class, 'reorderSections'])->name('courses.sections.reorder');
     Route::put('sections/{section}', [AdminCourseController::class, 'updateSection'])->name('sections.update');
@@ -313,6 +393,42 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('settings/logo', [SettingController::class, 'uploadLogo'])->name('settings.logo');
     Route::get('settings/social', [SettingController::class, 'socialLinks'])->name('settings.social');
     Route::put('settings/social', [SettingController::class, 'updateSocialLinks'])->name('settings.social.update');
+    Route::get('profile', [CompanyProfileController::class, 'edit'])->name('company-profile.edit');
+    Route::put('profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
+
+    Route::get('page/testimonials', [CompanyPageContentController::class, 'testimonialsIndex'])->name('company-page.testimonials');
+    Route::post('page/testimonials', [CompanyPageContentController::class, 'testimonialsStore'])->name('company-page.testimonials.store');
+    Route::put('page/testimonials/{testimonial}', [CompanyPageContentController::class, 'testimonialsUpdate'])->name('company-page.testimonials.update');
+    Route::delete('page/testimonials/{testimonial}', [CompanyPageContentController::class, 'testimonialsDestroy'])->name('company-page.testimonials.destroy');
+
+    Route::get('page/reviews', [CompanyPageContentController::class, 'reviewsIndex'])->name('company-page.reviews');
+    Route::post('page/reviews/{review}/approve', [CompanyPageContentController::class, 'reviewsApprove'])->name('company-page.reviews.approve');
+    Route::post('page/reviews/{review}/reject', [CompanyPageContentController::class, 'reviewsReject'])->name('company-page.reviews.reject');
+    Route::delete('page/reviews/{review}', [CompanyPageContentController::class, 'reviewsDestroy'])->name('company-page.reviews.destroy');
+
+    Route::get('page/enquiries', [CompanyPageContentController::class, 'enquiriesIndex'])->name('company-page.enquiries');
+    Route::post('page/enquiries/{enquiry}/{status}', [CompanyPageContentController::class, 'enquiriesMark'])->name('company-page.enquiries.mark');
+    Route::delete('page/enquiries/{enquiry}', [CompanyPageContentController::class, 'enquiriesDestroy'])->name('company-page.enquiries.destroy');
+
+    Route::get('page/gallery', [CompanyPageContentController::class, 'galleryIndex'])->name('company-page.gallery');
+    Route::post('page/gallery', [CompanyPageContentController::class, 'galleryStore'])->name('company-page.gallery.store');
+    Route::put('page/gallery/{gallery}', [CompanyPageContentController::class, 'galleryUpdate'])->name('company-page.gallery.update');
+    Route::delete('page/gallery/{gallery}', [CompanyPageContentController::class, 'galleryDestroy'])->name('company-page.gallery.destroy');
+
+    Route::get('page/videos', [CompanyPageContentController::class, 'videosIndex'])->name('company-page.videos');
+    Route::post('page/videos', [CompanyPageContentController::class, 'videosStore'])->name('company-page.videos.store');
+    Route::put('page/videos/{video}', [CompanyPageContentController::class, 'videosUpdate'])->name('company-page.videos.update');
+    Route::delete('page/videos/{video}', [CompanyPageContentController::class, 'videosDestroy'])->name('company-page.videos.destroy');
+
+    Route::get('page/blogs', [CompanyPageContentController::class, 'blogsIndex'])->name('company-page.blogs');
+    Route::post('page/blogs', [CompanyPageContentController::class, 'blogsStore'])->name('company-page.blogs.store');
+    Route::put('page/blogs/{blog}', [CompanyPageContentController::class, 'blogsUpdate'])->name('company-page.blogs.update');
+    Route::delete('page/blogs/{blog}', [CompanyPageContentController::class, 'blogsDestroy'])->name('company-page.blogs.destroy');
+
+    Route::get('page/team', [CompanyPageContentController::class, 'teamIndex'])->name('company-page.team');
+    Route::post('page/team', [CompanyPageContentController::class, 'teamStore'])->name('company-page.team.store');
+    Route::put('page/team/{member}', [CompanyPageContentController::class, 'teamUpdate'])->name('company-page.team.update');
+    Route::delete('page/team/{member}', [CompanyPageContentController::class, 'teamDestroy'])->name('company-page.team.destroy');
 });
 
 Route::prefix('admin')->name('platform.')->middleware(['auth', 'role:super-admin'])->group(function () {
@@ -320,6 +436,33 @@ Route::prefix('admin')->name('platform.')->middleware(['auth', 'role:super-admin
     Route::get('companies', [PlatformCompanyController::class, 'index'])->name('companies.index');
     Route::get('users', [PlatformUserController::class, 'index'])->name('users.index');
     Route::get('activity-logs', [PlatformActivityController::class, 'index'])->name('activity.index');
+    Route::get('website-content', [PlatformWebsiteContentController::class, 'index'])->name('website-content.index');
+    Route::get('website-content/{section}', [PlatformWebsiteContentController::class, 'edit'])->name('website-content.edit');
+    Route::put('website-content/{section}', [PlatformWebsiteContentController::class, 'update'])->name('website-content.update');
+    Route::delete('website-content/{section}', [PlatformWebsiteContentController::class, 'reset'])->name('website-content.reset');
+    Route::get('signup-form', [PlatformSignupFormController::class, 'index'])->name('signup-form.index');
+    Route::get('signup-form/{signupQuestion}', [PlatformSignupFormController::class, 'edit'])->name('signup-form.edit');
+    Route::put('signup-form/{signupQuestion}', [PlatformSignupFormController::class, 'update'])->name('signup-form.update');
+    Route::delete('signup-form/{signupQuestion}', [PlatformSignupFormController::class, 'reset'])->name('signup-form.reset');
+    Route::get('product-pages', [PlatformProductPageController::class, 'index'])->name('product-pages.index');
+    Route::get('product-pages/{productSlug}', [PlatformProductPageController::class, 'edit'])->name('product-pages.edit');
+    Route::put('product-pages/{productSlug}', [PlatformProductPageController::class, 'update'])->name('product-pages.update');
+    Route::delete('product-pages/{productSlug}', [PlatformProductPageController::class, 'reset'])->name('product-pages.reset');
+    Route::get('solution-pages', [PlatformSolutionPageController::class, 'index'])->name('solution-pages.index');
+    Route::get('solution-pages/{solutionSlug}', [PlatformSolutionPageController::class, 'edit'])->name('solution-pages.edit');
+    Route::put('solution-pages/{solutionSlug}', [PlatformSolutionPageController::class, 'update'])->name('solution-pages.update');
+    Route::delete('solution-pages/{solutionSlug}', [PlatformSolutionPageController::class, 'reset'])->name('solution-pages.reset');
+    Route::get('customer-pages', [PlatformCustomerPageController::class, 'index'])->name('customer-pages.index');
+    Route::get('customer-pages/{customerSlug}', [PlatformCustomerPageController::class, 'edit'])->name('customer-pages.edit');
+    Route::put('customer-pages/{customerSlug}', [PlatformCustomerPageController::class, 'update'])->name('customer-pages.update');
+    Route::delete('customer-pages/{customerSlug}', [PlatformCustomerPageController::class, 'reset'])->name('customer-pages.reset');
+    Route::get('resource-pages', [PlatformResourcePageController::class, 'index'])->name('resource-pages.index');
+    Route::get('resource-pages/{resourceSlug}', [PlatformResourcePageController::class, 'edit'])->name('resource-pages.edit');
+    Route::put('resource-pages/{resourceSlug}', [PlatformResourcePageController::class, 'update'])->name('resource-pages.update');
+    Route::delete('resource-pages/{resourceSlug}', [PlatformResourcePageController::class, 'reset'])->name('resource-pages.reset');
+    Route::get('blogs', [PlatformBlogController::class, 'edit'])->name('blogs.edit');
+    Route::put('blogs', [PlatformBlogController::class, 'update'])->name('blogs.update');
+    Route::delete('blogs', [PlatformBlogController::class, 'reset'])->name('blogs.reset');
     Route::get('settings', [PlatformSettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [PlatformSettingController::class, 'update'])->name('settings.update');
 });
@@ -337,6 +480,7 @@ Route::prefix('learner')->name('learner.')->middleware(['auth', 'role:learner'])
     Route::get('/courses', [LearnerCourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/{course:slug}', [LearnerCourseController::class, 'show'])->name('courses.show');
     Route::get('/lessons/{lesson}', [LearnerCourseController::class, 'lesson'])->name('lessons.show');
+    Route::get('/certificates', [LearnerDashboardController::class, 'certificates'])->name('certificates');
     Route::get('/communities', [LearnerCommunityController::class, 'index'])->name('communities.index');
     Route::get('/communities/{community:slug}', [LearnerCommunityController::class, 'show'])->name('communities.show');
 });

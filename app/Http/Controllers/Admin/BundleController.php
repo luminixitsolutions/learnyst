@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Bundle;
 use App\Models\Course;
@@ -10,12 +11,15 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BundleController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Bundle::withCount('courses')->latest();
+        $query = $this->owned(Bundle::query())->withCount('courses')->latest();
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -31,20 +35,22 @@ class BundleController extends Controller
 
     public function create()
     {
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
 
         return view('admin.bundles.create', compact('courses'));
     }
 
     public function store(Request $request)
     {
+        $ownedCourseIds = $this->ownedCourseIds()->all();
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:draft,published,unpublished'],
             'course_ids' => ['required', 'array', 'min:2'],
-            'course_ids.*' => ['exists:courses,id'],
+            'course_ids.*' => ['integer', Rule::in($ownedCourseIds)],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -66,6 +72,7 @@ class BundleController extends Controller
 
     public function show(Bundle $bundle)
     {
+        $this->authorizeOwner($bundle);
         $bundle->load(['courses', 'enrollments.user']);
 
         $salesTotal = OrderItem::whereHas('course', fn ($q) => $q->whereIn('id', $bundle->courses->pluck('id')))->sum('total');
@@ -75,21 +82,25 @@ class BundleController extends Controller
 
     public function edit(Bundle $bundle)
     {
+        $this->authorizeOwner($bundle);
         $bundle->load('courses');
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
 
         return view('admin.bundles.edit', compact('bundle', 'courses'));
     }
 
     public function update(Request $request, Bundle $bundle)
     {
+        $this->authorizeOwner($bundle);
+        $ownedCourseIds = $this->ownedCourseIds()->all();
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:draft,published,unpublished'],
             'course_ids' => ['required', 'array', 'min:2'],
-            'course_ids.*' => ['exists:courses,id'],
+            'course_ids.*' => ['integer', Rule::in($ownedCourseIds)],
         ]);
 
         $bundle->update(collect($validated)->except('course_ids')->toArray());
@@ -100,6 +111,7 @@ class BundleController extends Controller
 
     public function destroy(Bundle $bundle)
     {
+        $this->authorizeOwner($bundle);
         $bundle->delete();
 
         return redirect()->route('admin.bundles.index')->with('success', 'Bundle deleted.');

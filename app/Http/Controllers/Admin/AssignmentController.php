@@ -2,19 +2,26 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseLesson;
 use App\Models\CourseSection;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AssignmentController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
+        $courseIds = $this->ownedCourseIds();
+
         $assignments = CourseLesson::with('section.course')
             ->where('lesson_type', 'assignment')
+            ->whereHas('section', fn ($q) => $q->whereIn('course_id', $courseIds))
             ->when($request->search, fn ($q) => $q->where('title', 'like', '%'.$request->search.'%'))
             ->latest()
             ->paginate(15)
@@ -26,14 +33,16 @@ class AssignmentController extends Controller
     public function create()
     {
         return view('admin.assignments.create', [
-            'courses' => Course::with('sections')->orderBy('title')->get(),
+            'courses' => $this->owned(Course::query())->with('sections')->orderBy('title')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
+        $ownedCourseIds = $this->ownedCourseIds();
+
         $validated = $request->validate([
-            'course_id' => ['required', 'exists:courses,id'],
+            'course_id' => ['required', Rule::in($ownedCourseIds)],
             'section_id' => ['required', 'exists:course_sections,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -43,12 +52,16 @@ class AssignmentController extends Controller
             'file_path' => ['nullable', 'file', 'max:51200'],
         ]);
 
+        $section = CourseSection::where('id', $validated['section_id'])
+            ->whereIn('course_id', $ownedCourseIds)
+            ->firstOrFail();
+
         if ($request->hasFile('file_path')) {
             $validated['file_path'] = $request->file('file_path')->store('assignments', 'public');
         }
 
         $lesson = CourseLesson::create([
-            'course_section_id' => $validated['section_id'],
+            'course_section_id' => $section->id,
             'title' => $validated['title'],
             'lesson_type' => 'assignment',
             'content' => $validated['description'] ?? null,
@@ -58,7 +71,7 @@ class AssignmentController extends Controller
                 'marks' => $validated['marks'] ?? null,
                 'status' => $validated['status'],
             ],
-            'sort_order' => CourseSection::find($validated['section_id'])?->lessons()->max('sort_order') + 1,
+            'sort_order' => $section->lessons()->max('sort_order') + 1,
         ]);
 
         ActivityLogger::log('assignment_created', "Assignment {$lesson->title} created", $lesson);

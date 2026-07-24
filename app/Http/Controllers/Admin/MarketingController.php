@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Coupon;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 
 class MarketingController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function coupons(Request $request)
     {
         $coupons = Coupon::latest()->paginate(15);
@@ -46,7 +49,7 @@ class MarketingController extends Controller
 
     public function campaigns()
     {
-        $campaigns = Campaign::latest()->paginate(15);
+        $campaigns = $this->owned(Campaign::query())->latest()->paginate(15);
 
         return view('admin.marketing.campaigns', compact('campaigns'));
     }

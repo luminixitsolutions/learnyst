@@ -7,7 +7,7 @@
 @section('content')
 <div class="space-y-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <x-stat-card title="Companies" :value="number_format($stats['companies'])" :href="route('platform.companies.index')" />
+        <x-stat-card title="Institutes" :value="number_format($stats['companies'])" :href="route('platform.companies.index')" />
         <x-stat-card title="Platform Users" :value="number_format($stats['total_users'])" :href="route('platform.users.index')" />
         <x-stat-card title="Total Courses" :value="number_format($stats['total_courses'])" />
         <x-stat-card title="Platform Revenue" :value="'₹'.number_format($stats['platform_revenue'], 0)" />

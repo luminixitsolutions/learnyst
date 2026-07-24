@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Course;
 use App\Models\ScheduledEvent;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class LiveClassController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $classes = ScheduledEvent::with(['course', 'batch', 'instructor'])
+        $classes = $this->owned(ScheduledEvent::query())
+            ->with(['course', 'batch', 'instructor'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest('starts_at')
             ->paginate(15)
@@ -27,9 +31,9 @@ class LiveClassController extends Controller
     public function create()
     {
         return view('admin.live-classes.create', [
-            'courses' => Course::orderBy('title')->get(),
-            'batches' => Batch::orderBy('title')->get(),
-            'instructors' => User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->orderBy('name')->get(),
+            'courses' => $this->owned(Course::query())->orderBy('title')->get(),
+            'batches' => Batch::whereIn('course_id', $this->ownedCourseIds())->orderBy('title')->get(),
+            'instructors' => $this->ownedUsersQuery('instructor')->orderBy('name')->get(),
         ]);
     }
 
@@ -47,16 +51,19 @@ class LiveClassController extends Controller
 
     public function edit(ScheduledEvent $liveClass)
     {
+        $this->authorizeOwner($liveClass);
+
         return view('admin.live-classes.edit', [
             'liveClass' => $liveClass,
-            'courses' => Course::orderBy('title')->get(),
-            'batches' => Batch::orderBy('title')->get(),
-            'instructors' => User::whereHas('role', fn ($q) => $q->where('slug', 'instructor'))->orderBy('name')->get(),
+            'courses' => $this->owned(Course::query())->orderBy('title')->get(),
+            'batches' => Batch::whereIn('course_id', $this->ownedCourseIds())->orderBy('title')->get(),
+            'instructors' => $this->ownedUsersQuery('instructor')->orderBy('name')->get(),
         ]);
     }
 
     public function update(Request $request, ScheduledEvent $liveClass)
     {
+        $this->authorizeOwner($liveClass);
         $liveClass->update($this->validateClass($request));
         ActivityLogger::log('live_class_updated', "Live class {$liveClass->title} updated", $liveClass);
 
@@ -65,6 +72,7 @@ class LiveClassController extends Controller
 
     public function destroy(ScheduledEvent $liveClass)
     {
+        $this->authorizeOwner($liveClass);
         ActivityLogger::log('live_class_deleted', "Live class {$liveClass->title} deleted", $liveClass);
         $liveClass->delete();
 
@@ -73,11 +81,15 @@ class LiveClassController extends Controller
 
     protected function validateClass(Request $request): array
     {
+        $ownedCourseIds = $this->ownedCourseIds()->all();
+        $ownedBatchIds = $this->ownedBatchIds()->all();
+        $ownedInstructorIds = $this->ownedUsersQuery('instructor')->pluck('id')->all();
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'course_id' => ['nullable', 'exists:courses,id'],
-            'batch_id' => ['nullable', 'exists:batches,id'],
-            'instructor_id' => ['nullable', 'exists:users,id'],
+            'course_id' => ['nullable', 'integer', Rule::in($ownedCourseIds)],
+            'batch_id' => ['nullable', 'integer', Rule::in($ownedBatchIds)],
+            'instructor_id' => ['nullable', 'integer', Rule::in($ownedInstructorIds)],
             'starts_at' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i'],

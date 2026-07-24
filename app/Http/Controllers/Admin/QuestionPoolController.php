@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\QuestionPool;
 use App\Services\ActivityLogger;
@@ -10,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class QuestionPoolController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = QuestionPool::with('creator');
+        $query = $this->owned(QuestionPool::query())->with('creator');
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -58,6 +61,7 @@ class QuestionPoolController extends Controller
 
     public function destroy(QuestionPool $questionPool)
     {
+        $this->authorizeOwner($questionPool);
         $title = $questionPool->title;
         $questionPool->delete();
 

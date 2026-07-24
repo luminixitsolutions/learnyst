@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\ExportsReportCsv;
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\Lead;
 use App\Models\MockTest;
-use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ScheduledEvent;
 use App\Models\TestSeries;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,11 +20,7 @@ use Illuminate\Support\Facades\DB;
 class InsightController extends Controller
 {
     use ExportsReportCsv;
-
-    protected function learnerRoleId(): ?int
-    {
-        return DB::table('roles')->where('slug', 'learner')->value('id');
-    }
+    use ScopesToCurrentUser;
 
     protected function dateBounds(Request $request): array
     {
@@ -37,25 +32,35 @@ class InsightController extends Controller
 
     protected function vitalsSummary(): array
     {
-        $learnerRoleId = $this->learnerRoleId();
         $monthStart = now()->startOfMonth();
+        $ownedCourseIds = $this->ownedCourseIds();
 
-        $monthlyRevenue = Order::where('payment_status', 'paid')
+        $monthlyRevenue = $this->ownedOrdersQuery()
+            ->where('payment_status', 'paid')
             ->where('created_at', '>=', $monthStart)
             ->sum('total');
 
-        $activeLearners = User::where('role_id', $learnerRoleId)
+        $activeLearners = $this->ownedUsersQuery('learner')
             ->where(function ($q) use ($monthStart) {
                 $q->where('last_login_at', '>=', $monthStart)
                     ->orWhereHas('enrollments', fn ($e) => $e->where('status', 'active'));
             })
             ->count();
 
-        $totalLeads = Lead::where('created_at', '>=', $monthStart)->count();
-        $convertedLeads = Lead::where('status', 'converted')->where('updated_at', '>=', $monthStart)->count();
+        $totalLeads = Lead::where('created_at', '>=', $monthStart)
+            ->where(function ($q) use ($ownedCourseIds) {
+                $q->whereIn('course_id', $ownedCourseIds)->orWhereNull('course_id');
+            })
+            ->count();
+        $convertedLeads = Lead::where('status', 'converted')
+            ->where('updated_at', '>=', $monthStart)
+            ->where(function ($q) use ($ownedCourseIds) {
+                $q->whereIn('course_id', $ownedCourseIds)->orWhereNull('course_id');
+            })
+            ->count();
         $conversions = $totalLeads > 0 ? round(($convertedLeads / $totalLeads) * 100, 1) : 0;
 
-        $avgProgress = CourseEnrollment::where('status', 'active')->avg('progress') ?? 0;
+        $avgProgress = $this->ownedEnrollmentsConstraint(CourseEnrollment::query()->where('status', 'active'))->avg('progress') ?? 0;
         $timeSpent = round($avgProgress * 0.6, 1) . ' hrs avg';
 
         return compact('monthlyRevenue', 'activeLearners', 'conversions', 'timeSpent');
@@ -63,9 +68,9 @@ class InsightController extends Controller
 
     protected function revenueChartData(string $from, string $to, string $period): Collection
     {
-        $query = Order::where('payment_status', 'paid')
+        $query = $this->ownedOrdersQuery()
+            ->where('payment_status', 'paid')
             ->whereBetween('created_at', [$from, $to . ' 23:59:59']);
-
         return match ($period) {
             'weeks' => $query->selectRaw('YEARWEEK(created_at) as label, SUM(total) as value')
                 ->groupBy('label')->orderBy('label')->get(),
@@ -78,10 +83,8 @@ class InsightController extends Controller
 
     protected function learnerChartData(string $from, string $to, string $period): Collection
     {
-        $learnerRoleId = $this->learnerRoleId();
-        $query = User::where('role_id', $learnerRoleId)
+        $query = $this->ownedUsersQuery('learner')
             ->whereBetween('created_at', [$from, $to . ' 23:59:59']);
-
         return match ($period) {
             'weeks' => $query->selectRaw('YEARWEEK(created_at) as label, COUNT(*) as value')
                 ->groupBy('label')->orderBy('label')->get(),
@@ -111,10 +114,10 @@ class InsightController extends Controller
         [$from, $to] = $this->dateBounds($request);
         $period = $request->get('period', 'days');
 
-        $orders = Order::where('payment_status', 'paid')
+        $orders = $this->ownedOrdersQuery()
+            ->where('payment_status', 'paid')
             ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
             ->get();
-
         $totals = $orders->groupBy(fn ($o) => $o->created_at->format('Y-m-d'))->map->sum('total');
         $summary = [
             'total' => $orders->sum('total'),
@@ -136,16 +139,14 @@ class InsightController extends Controller
     {
         [$from, $to] = $this->dateBounds($request);
         $period = $request->get('period', 'days');
-        $learnerRoleId = $this->learnerRoleId();
 
-        $signups = User::where('role_id', $learnerRoleId)
+        $signups = $this->ownedUsersQuery('learner')
             ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
             ->count();
 
-        $activeCount = User::where('role_id', $learnerRoleId)
+        $activeCount = $this->ownedUsersQuery('learner')
             ->whereBetween('last_login_at', [$from, $to . ' 23:59:59'])
             ->count();
-
         $chartData = $this->learnerChartData($from, $to, $period);
 
         if ($request->boolean('export')) {
@@ -160,12 +161,14 @@ class InsightController extends Controller
         [$from, $to] = $this->dateBounds($request);
         $period = $request->get('period', 'days');
 
-        $paidEnrollments = CourseEnrollment::where('access_type', 'paid')
-            ->whereBetween('enrolled_at', [$from, $to . ' 23:59:59'])
-            ->count();
+        $paidQuery = $this->ownedEnrollmentsConstraint(
+            CourseEnrollment::query()->where('access_type', 'paid')
+                ->whereBetween('enrolled_at', [$from, $to . ' 23:59:59'])
+        );
 
-        $chartData = CourseEnrollment::where('access_type', 'paid')
-            ->whereBetween('enrolled_at', [$from, $to . ' 23:59:59'])
+        $paidEnrollments = (clone $paidQuery)->count();
+
+        $chartData = (clone $paidQuery)
             ->selectRaw(match ($period) {
                 'weeks' => 'YEARWEEK(enrolled_at) as label, COUNT(*) as value',
                 'months' => 'DATE_FORMAT(enrolled_at, "%Y-%m") as label, COUNT(*) as value',
@@ -174,7 +177,6 @@ class InsightController extends Controller
             ->groupBy('label')
             ->orderBy('label')
             ->get();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('conversions', ['Period', 'Paid Enrollments'], $chartData->map(fn ($r) => [$r->label, $r->value]));
         }
@@ -186,20 +188,21 @@ class InsightController extends Controller
     {
         [$from, $to] = $this->dateBounds($request);
         $period = $request->get('period', 'days');
-        $learnerRoleId = $this->learnerRoleId();
 
         $summary = [
-            'average' => round(CourseEnrollment::avg('progress') ?? 0, 1),
-            'learners' => User::where('role_id', $learnerRoleId)->where('last_login_at', '>=', $from)->count(),
-            'courses' => Course::count(),
-            'tests' => MockTest::count(),
-            'test_series' => TestSeries::count(),
-            'bundles' => DB::table('bundles')->count(),
+            'average' => round($this->ownedEnrollmentsConstraint(CourseEnrollment::query())->avg('progress') ?? 0, 1),
+            'learners' => $this->ownedUsersQuery('learner')->where('last_login_at', '>=', $from)->count(),
+            'courses' => $this->owned(Course::query())->count(),
+            'tests' => $this->owned(MockTest::query())->count(),
+            'test_series' => $this->owned(TestSeries::query())->count(),
+            'bundles' => $this->ownedBundleIds()->count(),
             'newsfeed' => 0,
-            'communities' => DB::table('communities')->count(),
+            'communities' => DB::table('communities')->where('created_by', $this->currentUserId())->count(),
         ];
 
-        $chartData = CourseEnrollment::whereBetween('updated_at', [$from, $to . ' 23:59:59'])
+        $chartData = $this->ownedEnrollmentsConstraint(
+            CourseEnrollment::query()->whereBetween('updated_at', [$from, $to . ' 23:59:59'])
+        )
             ->selectRaw(match ($period) {
                 'weeks' => 'YEARWEEK(updated_at) as label, AVG(progress) as value',
                 'months' => 'DATE_FORMAT(updated_at, "%Y-%m") as label, AVG(progress) as value',
@@ -208,7 +211,6 @@ class InsightController extends Controller
             ->groupBy('label')
             ->orderBy('label')
             ->get();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('time-spent', ['Period', 'Avg Progress %'], $chartData->map(fn ($r) => [$r->label, round($r->value, 1)]));
         }
@@ -223,8 +225,9 @@ class InsightController extends Controller
 
     protected function trialQuery(Request $request, string $accessType)
     {
-        $query = CourseEnrollment::with(['user', 'course'])
-            ->where('access_type', $accessType);
+        $query = $this->ownedEnrollmentsConstraint(
+            CourseEnrollment::with(['user', 'course'])->where('access_type', $accessType)
+        );
 
         if ($search = $request->get('search')) {
             $query->whereHas('user', fn ($u) => $u->where('email', 'like', "%{$search}%")->orWhere('name', 'like', "%{$search}%"));
@@ -272,13 +275,13 @@ class InsightController extends Controller
 
     public function renewalTrial(Request $request)
     {
-        $records = CourseEnrollment::with(['user', 'course'])
-            ->whereNotNull('expires_at')
+        $records = $this->ownedEnrollmentsConstraint(
+            CourseEnrollment::with(['user', 'course'])->whereNotNull('expires_at')
+        )
             ->when($request->search, fn ($q, $s) => $q->whereHas('user', fn ($u) => $u->where('email', 'like', "%{$s}%")))
             ->when($request->last_access, fn ($q, $d) => $q->whereHas('user', fn ($u) => $u->whereDate('last_login_at', $d)))
             ->latest('expires_at')
             ->paginate(30)->withQueryString();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('renewal-trial', ['Learner', 'Email', 'Product', 'Expiry', 'Last Access', 'Renewal Status'],
                 $records->getCollection()->map(fn ($e) => [
@@ -314,11 +317,11 @@ class InsightController extends Controller
 
     public function liveClasses(Request $request)
     {
-        $records = ScheduledEvent::with(['course', 'instructor'])
+        $records = $this->owned(ScheduledEvent::query())
+            ->with(['course', 'instructor'])
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest('starts_at')
             ->paginate(30)->withQueryString();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('live-classes', ['Class', 'Instructor', 'Start', 'End', 'Status'],
                 $records->getCollection()->map(fn ($e) => [
@@ -333,13 +336,18 @@ class InsightController extends Controller
     {
         [$from, $to] = $this->dateBounds($request);
 
-        $stats = [
-            'total' => Order::whereBetween('created_at', [$from, $to . ' 23:59:59'])->count(),
-            'paid' => Order::where('payment_status', 'paid')->whereBetween('created_at', [$from, $to . ' 23:59:59'])->count(),
-            'pending' => Order::where('payment_status', 'pending')->whereBetween('created_at', [$from, $to . ' 23:59:59'])->count(),
-            'failed' => Payment::where('status', 'failed')->whereBetween('created_at', [$from, $to . ' 23:59:59'])->count(),
-        ];
+        $ownedOrders = $this->ownedOrdersQuery()->whereBetween('created_at', [$from, $to . ' 23:59:59']);
+        $ownedOrderIds = $this->ownedOrdersQuery()->select('orders.id');
 
+        $stats = [
+            'total' => (clone $ownedOrders)->count(),
+            'paid' => (clone $ownedOrders)->where('payment_status', 'paid')->count(),
+            'pending' => (clone $ownedOrders)->where('payment_status', 'pending')->count(),
+            'failed' => Payment::where('status', 'failed')
+                ->whereIn('order_id', $ownedOrderIds)
+                ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
+                ->count(),
+        ];
         $stats['abandoned'] = max($stats['total'] - $stats['paid'] - $stats['pending'], 0);
         $stats['conversion'] = $stats['total'] > 0 ? round(($stats['paid'] / $stats['total']) * 100, 1) : 0;
 
@@ -348,14 +356,14 @@ class InsightController extends Controller
 
     public function testTakes(Request $request)
     {
-        $records = CourseEnrollment::with(['user', 'course'])
-            ->where(function ($q) {
+        $records = $this->ownedEnrollmentsConstraint(
+            CourseEnrollment::with(['user', 'course'])->where(function ($q) {
                 $q->whereNotNull('meta->mock_test_score')->orWhereNotNull('meta->test_series_score');
             })
+        )
             ->when($request->search, fn ($q, $s) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->latest('updated_at')
             ->paginate(30)->withQueryString();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('test-takes', ['Learner', 'Test', 'Score', 'Attempt Date', 'Status'],
                 $records->getCollection()->map(fn ($e) => [
@@ -378,10 +386,12 @@ class InsightController extends Controller
     public function ctaInsights(Request $request)
     {
         $records = Lead::with('course')
+            ->where(function ($q) {
+                $q->whereIn('course_id', $this->ownedCourseIds())->orWhereNull('course_id');
+            })
             ->when($request->search, fn ($q, $s) => $q->where('source', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"))
             ->latest()
             ->paginate(30)->withQueryString();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('cta-insights', ['CTA/Source', 'Page', 'Clicks', 'Views', 'Conversion', 'Last Date'],
                 $records->getCollection()->map(fn ($l) => [

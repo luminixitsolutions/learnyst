@@ -64,8 +64,8 @@ class LoginController extends Controller
             Auth::logout();
             throw ValidationException::withMessages([
                 'email' => $panel === 'platform'
-                    ? __('This account cannot access Platform Admin. Use the company login instead.')
-                    : __('This account cannot access the Company Panel. Use the platform admin login at /admin/login.'),
+                    ? __('This account cannot access Platform Admin. Use the institute login instead.')
+                    : __('This account cannot access the Institute Panel. Use the platform admin login at /admin/login.'),
             ]);
         }
 
@@ -79,13 +79,22 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         $wasPlatform = $request->user()?->isSuperAdmin() ?? false;
+        $wasLearner = $request->user()?->isLearner() ?? false;
 
         ActivityLogger::log('logout', 'User logged out');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route($wasPlatform ? 'platform.login' : 'login');
+        if ($wasPlatform) {
+            return redirect()->route('platform.login');
+        }
+
+        if ($wasLearner) {
+            return redirect()->route('student.login');
+        }
+
+        return redirect()->route('login');
     }
 
     protected function dashboardRoute($user): string

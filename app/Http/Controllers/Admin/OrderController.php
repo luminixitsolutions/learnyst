@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CheckoutConsent;
+use App\Models\Coupon;
 use App\Models\OrderConsent;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,13 +16,21 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
+    use ScopesToCurrentUser;
+
+    protected function authorizeOrder(Order $order): void
+    {
+        abort_unless($this->ownedOrdersQuery()->whereKey($order->id)->exists(), 403);
+    }
+
     public function index(Request $request)
     {
-        $query = Order::with(['user', 'items.course'])->latest();
+        $query = $this->ownedOrdersQuery()->with(['user', 'items.course'])->latest();
 
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
@@ -45,8 +55,8 @@ class OrderController extends Controller
 
     public function create()
     {
-        $learners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))->orderBy('name')->get();
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
+        $learners = $this->visibleLearnersQuery()->orderBy('name')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
         $coupons = Coupon::where('is_active', true)->get();
         $consents = CheckoutConsent::active()->get();
 
@@ -55,10 +65,13 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        $ownedLearnerIds = $this->visibleLearnersQuery()->pluck('id');
+        $ownedCourseIds = $this->ownedCourseIds();
+
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', Rule::in($ownedLearnerIds)],
             'course_ids' => ['required', 'array', 'min:1'],
-            'course_ids.*' => ['exists:courses,id'],
+            'course_ids.*' => [Rule::in($ownedCourseIds)],
             'coupon_id' => ['nullable', 'exists:coupons,id'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['required', 'in:razorpay,manual,free'],
@@ -148,6 +161,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        $this->authorizeOrder($order);
         $order->load(['user', 'items.course', 'payments', 'coupon']);
 
         return view('admin.orders.show', compact('order'));
@@ -155,6 +169,7 @@ class OrderController extends Controller
 
     public function invoice(Order $order)
     {
+        $this->authorizeOrder($order);
         $order->load(['user', 'items.course']);
 
         return view('admin.orders.invoice', compact('order'));
@@ -162,6 +177,8 @@ class OrderController extends Controller
 
     public function refund(Request $request, Order $order)
     {
+        $this->authorizeOrder($order);
+
         $order->update([
             'payment_status' => 'refunded',
             'refund_status' => 'processed',

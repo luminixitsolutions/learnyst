@@ -85,9 +85,93 @@ class Course extends Model
         return $this->hasOne(CourseSetting::class);
     }
 
+    public function pricingPlans()
+    {
+        return $this->hasMany(CoursePricingPlan::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function enquiries()
+    {
+        return $this->hasMany(CourseEnquiry::class);
+    }
+
+    public function faqs()
+    {
+        return $this->hasMany(CourseFaq::class)->orderBy('sort_order');
+    }
+
+    public function publicationHistories()
+    {
+        return $this->hasMany(CoursePublicationHistory::class);
+    }
+
+    public function certificateCriteria()
+    {
+        return $this->hasMany(CourseCertificateCriterion::class)->orderBy('sort_order');
+    }
+
     public function lessonCount(): int
     {
         return $this->lessons()->count();
+    }
+
+    public function thumbnailUrl(): ?string
+    {
+        if (! $this->thumbnail) {
+            return null;
+        }
+
+        if (str_starts_with($this->thumbnail, 'http://') || str_starts_with($this->thumbnail, 'https://')) {
+            return $this->thumbnail;
+        }
+
+        $path = ltrim($this->thumbnail, '/');
+
+        // Public website assets (tracked in git) or storage uploads
+        if (str_starts_with($path, 'website/')) {
+            return '/'.$path;
+        }
+
+        return '/storage/'.$path;
+    }
+
+    public function displayPrice(): string
+    {
+        if (! $this->requiresPayment()) {
+            return 'Free';
+        }
+
+        return '₹'.number_format($this->payableAmount(), 0);
+    }
+
+    public function hasDiscount(): bool
+    {
+        return $this->requiresPayment()
+            && $this->sale_price !== null
+            && (float) $this->sale_price < (float) $this->price;
+    }
+
+    public function payableAmount(): float
+    {
+        if ($this->is_free || $this->access_type === 'free') {
+            return 0.0;
+        }
+
+        if ($this->sale_price !== null && (float) $this->sale_price < (float) $this->price) {
+            return (float) $this->sale_price;
+        }
+
+        return (float) ($this->price ?? 0);
+    }
+
+    public function requiresPayment(): bool
+    {
+        return $this->payableAmount() > 0;
     }
 
     public function segments()

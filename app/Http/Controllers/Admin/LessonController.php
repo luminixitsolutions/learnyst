@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\CourseLesson;
 use App\Models\LessonAttachment;
@@ -13,8 +14,18 @@ use Illuminate\Support\Facades\Storage;
 
 class LessonController extends Controller
 {
+    use ScopesToCurrentUser;
+
+    protected function authorizeLesson(CourseLesson $lesson): void
+    {
+        $lesson->loadMissing('section.course');
+        abort_unless($lesson->section?->course, 404);
+        $this->authorizeOwner($lesson->section->course);
+    }
+
     public function edit(CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $lesson->load(['section.course.settings', 'media', 'attachments', 'liveClass']);
         $course = $lesson->section->course;
         $settings = $course->settings ?? $course->settings()->create([]);
@@ -32,6 +43,7 @@ class LessonController extends Controller
 
     public function update(Request $request, CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $course = $lesson->section->course;
         $settings = $course->settings ?? $course->settings()->create([]);
 
@@ -61,6 +73,7 @@ class LessonController extends Controller
 
     public function updateSettings(Request $request, CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'status' => ['required', 'in:draft,published'],
@@ -88,6 +101,7 @@ class LessonController extends Controller
 
     public function uploadMedia(Request $request, CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $course = $lesson->section->course;
         $settings = $course->settings ?? $course->settings()->create([]);
 
@@ -132,6 +146,7 @@ class LessonController extends Controller
 
     public function storeAttachment(Request $request, CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'file' => ['required', 'file', 'max:51200'],
@@ -158,6 +173,9 @@ class LessonController extends Controller
 
     public function destroyAttachment(LessonAttachment $attachment)
     {
+        $attachment->loadMissing('lesson.section.course');
+        abort_unless($attachment->lesson, 404);
+        $this->authorizeLesson($attachment->lesson);
         $lesson = $attachment->lesson;
         Storage::disk('public')->delete($attachment->file_path);
         $attachment->delete();
@@ -169,6 +187,7 @@ class LessonController extends Controller
 
     public function updateLiveClass(Request $request, CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $validated = $request->validate([
             'live_class_type' => ['required', 'in:' . implode(',', array_keys(LiveClass::TYPES))],
             'super_live_capacity' => ['nullable', 'integer', 'min:1'],
@@ -208,6 +227,7 @@ class LessonController extends Controller
 
     public function destroy(CourseLesson $lesson)
     {
+        $this->authorizeLesson($lesson);
         $title = $lesson->title;
         $course = $lesson->section->course;
 

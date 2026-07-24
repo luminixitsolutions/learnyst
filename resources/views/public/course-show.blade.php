@@ -1,83 +1,332 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $course->title }} — Learnyst</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{400:'#34d399',500:'#10b981',600:'#059669'},surface:{950:'#020617'}}}}}</script>
-</head>
-<body class="bg-surface-950 text-slate-200 font-sans antialiased min-h-screen">
-    <nav class="border-b border-slate-800/80 bg-surface-950/90 backdrop-blur-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-            <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold">L</div>
-                <span class="text-white font-bold text-lg">Learnyst</span>
-            </a>
-            <a href="{{ route('public.courses') }}" class="text-sm text-slate-400 hover:text-white">← All Courses</a>
+@extends('website.layouts.app')
+
+@section('title', ($course->seo_title ?: $course->title).' – '.config('website.brand'))
+@section('meta_description', $course->seo_description ?: Str::limit(strip_tags($course->description ?? $course->subtitle ?? ''), 160))
+
+@section('content')
+@php
+    $authUser = auth()->user();
+    $isLearner = $authUser && $authUser->isLearner();
+    $coursePath = route('public.course', $course, false);
+    $loginUrl = route('student.login', ['redirect' => $coursePath]);
+
+    if ($isEnrolled ?? false) {
+        $ctaMode = 'access';
+        $enrollLabel = 'Go to course';
+    } elseif ($isLearner) {
+        $ctaMode = 'checkout';
+        $enrollLabel = $course->requiresPayment()
+            ? 'Buy now — '.$course->displayPrice()
+            : 'Enroll for free';
+    } else {
+        $ctaMode = 'login';
+        $enrollLabel = $course->requiresPayment() ? 'Login to buy' : 'Login to enroll';
+    }
+@endphp
+
+<section class="ly-course-hero">
+    <div class="ly-course-hero-glow" aria-hidden="true"></div>
+    <div class="ly-container ly-course-hero-inner">
+        @if($course->category)
+            <p class="ly-product-eyebrow">{{ $course->category->name }}</p>
+        @endif
+        <h1>{{ $course->title }}</h1>
+        <div class="ly-course-meta-row">
+            @if($reviewCount > 0)
+                <span class="ly-course-rating">
+                    <strong>{{ number_format($avgRating, 1) }}</strong>
+                    <span class="ly-cp-stars">{{ str_repeat('★', (int) round($avgRating)) }}{{ str_repeat('☆', 5 - (int) round($avgRating)) }}</span>
+                    <em>({{ $reviewCount }} {{ Str::plural('review', $reviewCount) }})</em>
+                </span>
+            @endif
+            <span><i class="fa fa-book"></i> {{ $lessonCount }} {{ Str::plural('lesson', $lessonCount) }}</span>
+            <span><i class="fa fa-list"></i> {{ $sectionCount }} {{ Str::plural('section', $sectionCount) }}</span>
+            @if($course->enrollment_count)
+                <span><i class="fa fa-users"></i> {{ number_format($course->enrollment_count) }} enrolled</span>
+            @endif
+            @if($institute)
+                <a class="ly-course-institute-inline" href="{{ route('website.companies.show', $institute->slug) }}">
+                    <i class="fa fa-university"></i> {{ $institute->name }}
+                </a>
+            @endif
         </div>
-    </nav>
+    </div>
+</section>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-8">
-                @if($course->thumbnail)
-                    <img src="{{ Storage::url($course->thumbnail) }}" alt="" class="w-full h-64 object-cover rounded-2xl">
+<section class="ly-section ly-course-body">
+    <div class="ly-container ly-course-layout">
+        <div class="ly-course-main">
+            <div class="ly-course-panel">
+                <h2>About this course</h2>
+                @if($course->subtitle)
+                    <p class="ly-course-panel-lead">{{ $course->subtitle }}</p>
                 @endif
-                <div>
-                    @if($course->category)<span class="text-sm text-brand-400">{{ $course->category->name }}</span>@endif
-                    <h1 class="text-3xl font-bold text-white mt-2">{{ $course->title }}</h1>
-                    <p class="text-slate-400 mt-4 whitespace-pre-line">{{ $course->description }}</p>
-                </div>
-
-                <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6">
-                    <h2 class="text-xl font-semibold text-white mb-4">Curriculum</h2>
-                    @forelse($course->sections as $section)
-                        <div class="mb-4">
-                            <h3 class="text-sm font-medium text-brand-400">{{ $section->title }}</h3>
-                            <ul class="mt-2 space-y-2">
-                                @foreach($section->lessons as $lesson)
-                                <li class="flex items-center gap-2 text-sm text-slate-400">
-                                    <span class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-xs text-brand-400">{{ $loop->iteration }}</span>
-                                    {{ $lesson->title }}
-                                    @if($lesson->is_preview)<span class="text-xs text-amber-400">Preview</span>@endif
-                                </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500">Curriculum coming soon.</p>
-                    @endforelse
-                </div>
+                @if($course->description)
+                    <div class="ly-course-prose">{!! nl2br(e($course->description)) !!}</div>
+                @else
+                    <p class="ly-muted">Course overview will be published soon.</p>
+                @endif
             </div>
 
-            <div>
-                <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-6 sticky top-24">
-                    <p class="text-3xl font-bold text-brand-400">{{ $course->is_free ? 'Free' : '₹'.number_format($course->price, 0) }}</p>
-                    <p class="text-sm text-slate-500 mt-1 capitalize">{{ $course->access_type }} access</p>
-                    <a href="{{ route('login') }}" class="block w-full text-center mt-6 px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-500 transition">
-                        Enroll Now
-                    </a>
-                    @if($course->instructors->count())
-                    <div class="mt-6 pt-6 border-t border-slate-800">
-                        <p class="text-xs text-slate-500 mb-2">Instructors</p>
+            <div class="ly-course-panel" id="curriculum">
+                <h2>Curriculum</h2>
+                <p class="ly-course-panel-lead">{{ $sectionCount }} sections · {{ $lessonCount }} lessons</p>
+                @forelse($course->sections as $section)
+                    <details class="ly-course-section" {{ $loop->first ? 'open' : '' }}>
+                        <summary>
+                            <span>{{ $section->title }}</span>
+                            <em>{{ $section->lessons->count() }} {{ Str::plural('lesson', $section->lessons->count()) }}</em>
+                        </summary>
+                        <ul>
+                            @foreach($section->lessons as $lesson)
+                                <li>
+                                    <span class="ly-course-lesson-num">{{ $loop->iteration }}</span>
+                                    <span class="ly-course-lesson-title">{{ $lesson->title }}</span>
+                                    @if($lesson->is_preview)
+                                        <span class="ly-course-preview">Preview</span>
+                                    @endif
+                                    @if(!empty($lesson->duration_minutes))
+                                        <span class="ly-course-duration">{{ $lesson->duration_minutes }} min</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @empty
+                    <p class="ly-muted">Curriculum coming soon.</p>
+                @endforelse
+            </div>
+
+            @if($course->instructors->count())
+                <div class="ly-course-panel">
+                    <h2>Instructors</h2>
+                    <div class="ly-course-instructor-grid">
                         @foreach($course->instructors as $instructor)
-                            <p class="text-sm text-white">{{ $instructor->name }}</p>
+                            <div class="ly-course-instructor">
+                                <span class="ly-course-instructor-avatar">{{ Str::upper(Str::substr($instructor->name, 0, 1)) }}</span>
+                                <div>
+                                    <strong>{{ $instructor->name }}</strong>
+                                    @if($instructor->pivot?->is_primary)
+                                        <em>Lead instructor</em>
+                                    @endif
+                                </div>
+                            </div>
                         @endforeach
                     </div>
+                </div>
+            @endif
+
+            @if($course->faqs->count())
+                <div class="ly-course-panel" id="faqs">
+                    <h2>FAQs</h2>
+                    <div class="ly-product-faq">
+                        @foreach($course->faqs as $faq)
+                            <details class="ly-product-faq-item">
+                                <summary>{{ $faq->question }}</summary>
+                                <div class="ly-product-faq-body">{{ $faq->answer }}</div>
+                            </details>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="ly-course-panel" id="reviews">
+                <div class="ly-course-panel-head">
+                    <div>
+                        <h2>Learner reviews</h2>
+                        @if($reviewCount > 0)
+                            <p class="ly-course-panel-lead">
+                                Average {{ number_format($avgRating, 1) }} / 5 from {{ $reviewCount }} {{ Str::plural('review', $reviewCount) }}
+                            </p>
+                        @else
+                            <p class="ly-course-panel-lead">Be the first to review this course.</p>
+                        @endif
+                    </div>
+                </div>
+
+                @if(session('success') && str_contains(session('success'), 'review'))
+                    <div class="ly-flash-success">{{ session('success') }}</div>
+                @endif
+
+                <div class="ly-course-review-grid">
+                    @forelse($reviews as $review)
+                        <article class="ly-cp-review-card">
+                            <div class="ly-cp-stars">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</div>
+                            <p>{{ $review->review }}</p>
+                            <div class="ly-cp-testimonial-author">
+                                <span>{{ Str::upper(Str::substr($review->displayName(), 0, 1)) }}</span>
+                                <div>
+                                    <strong>{{ $review->displayName() }}</strong>
+                                    <em style="display:block;color:#94a3b8;font-size:12px;font-style:normal;">{{ optional($review->created_at)->diffForHumans() }}</em>
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <p class="ly-muted">No public reviews yet.</p>
+                    @endforelse
+                </div>
+
+                <div class="ly-course-form-card" id="write-review">
+                    <h3>Write a review</h3>
+                    <p>Share your experience with this course. Reviews appear after moderation.</p>
+                    @if($errors->any() && old('_form') === 'review')
+                        <div class="ly-auth-error">{{ $errors->first() }}</div>
                     @endif
-                    <form method="POST" action="{{ route('leads.capture') }}" class="mt-6 pt-6 border-t border-slate-800 space-y-3">
+                    <form method="POST" action="{{ route('public.course.reviews.store', $course) }}" class="ly-cp-form">
                         @csrf
-                        <input type="hidden" name="course_id" value="{{ $course->id }}">
-                        <p class="text-xs text-slate-500">Have questions? Get in touch.</p>
-                        <input type="text" name="name" required placeholder="Name" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm">
-                        <input type="email" name="email" required placeholder="Email" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm">
-                        <button type="submit" class="w-full py-2 rounded-lg bg-slate-800 text-white text-sm hover:bg-slate-700">Contact Us</button>
+                        <input type="hidden" name="_form" value="review">
+                        <div class="ly-cp-form-row">
+                            <label>
+                                <span>Your name*</span>
+                                <input type="text" name="reviewer_name" value="{{ old('reviewer_name', $authUser?->name) }}" required>
+                            </label>
+                            <label>
+                                <span>Email</span>
+                                <input type="email" name="reviewer_email" value="{{ old('reviewer_email', $authUser?->email) }}">
+                            </label>
+                        </div>
+                        <label>
+                            <span>Rating*</span>
+                            <select name="rating" required>
+                                @for($i = 5; $i >= 1; $i--)
+                                    <option value="{{ $i }}" @selected(old('rating', 5) == $i)>{{ $i }} star{{ $i > 1 ? 's' : '' }}</option>
+                                @endfor
+                            </select>
+                        </label>
+                        <label>
+                            <span>Your review*</span>
+                            <textarea name="review" rows="4" required placeholder="What did you like about this course?">{{ old('review') }}</textarea>
+                        </label>
+                        <button type="submit" class="ly-btn ly-btn-green">Submit review</button>
                     </form>
                 </div>
             </div>
         </div>
-    </main>
-</body>
-</html>
+
+        <aside class="ly-course-side">
+            <div class="ly-course-side-card ly-course-enroll-card">
+                <div class="ly-course-thumb">
+                    @if($course->thumbnailUrl())
+                        <img src="{{ $course->thumbnailUrl() }}" alt="{{ $course->title }}">
+                    @else
+                        <div class="ly-course-thumb-fallback">{{ Str::upper(Str::substr($course->title, 0, 1)) }}</div>
+                    @endif
+                </div>
+                <div class="ly-course-price-block">
+                    <div class="ly-course-price">
+                        <strong>{{ $course->displayPrice() }}</strong>
+                        @if($course->hasDiscount())
+                            <s>₹{{ number_format((float) $course->price, 0) }}</s>
+                        @endif
+                    </div>
+                    <p>{{ $course->requiresPayment() ? ucfirst(str_replace('_', ' ', $course->access_type ?: 'paid')).' access' : 'Free access' }}</p>
+                </div>
+
+                @if(session('error'))
+                    <div class="ly-auth-error" style="margin-bottom:12px">{{ session('error') }}</div>
+                @endif
+                @if(session('success') && ! str_contains((string) session('success'), 'Enquiry') && ! str_contains((string) session('success'), 'review'))
+                    <div class="ly-flash-success" style="margin-bottom:12px">{{ session('success') }}</div>
+                @endif
+
+                @if($ctaMode === 'access')
+                    <a class="ly-btn ly-btn-green ly-course-enroll" href="{{ route('learner.courses.show', $course) }}">{{ $enrollLabel }}</a>
+                @elseif($ctaMode === 'checkout')
+                    <form method="POST" action="{{ route('courses.checkout.start', $course) }}">
+                        @csrf
+                        <button type="submit" class="ly-btn ly-btn-green ly-course-enroll" style="width:100%">{{ $enrollLabel }}</button>
+                    </form>
+                @else
+                    <a class="ly-btn ly-btn-green ly-course-enroll" href="{{ $loginUrl }}">{{ $enrollLabel }}</a>
+                    <p class="ly-course-side-lead" style="margin-top:10px">
+                        New student?
+                        <a href="{{ route('student.register', ['redirect' => $coursePath]) }}">Create account</a>
+                    </p>
+                @endif
+                <ul class="ly-course-card-points">
+                    <li><i class="fa fa-check"></i> {{ $lessonCount }} lessons · {{ $sectionCount }} sections</li>
+                    <li><i class="fa fa-check"></i> Learn at your pace</li>
+                    <li><i class="fa fa-check"></i> Expert-led content</li>
+                </ul>
+            </div>
+
+            <div class="ly-course-side-card" id="enquiry">
+                <h3>Course enquiry</h3>
+                <p class="ly-course-side-lead">Ask about syllabus, fees, or batches for <strong>{{ $course->title }}</strong>.</p>
+
+                @if(session('success') && str_contains(session('success'), 'Enquiry'))
+                    <div class="ly-flash-success">{{ session('success') }}</div>
+                @endif
+                @if($errors->any() && old('_form') === 'enquiry')
+                    <div class="ly-auth-error">{{ $errors->first() }}</div>
+                @endif
+
+                <form method="POST" action="{{ route('public.course.enquiries.store', $course) }}" class="ly-cp-form ly-course-enquiry-form">
+                    @csrf
+                    <input type="hidden" name="_form" value="enquiry">
+                    <label>
+                        <span>Name*</span>
+                        <input type="text" name="name" value="{{ old('name', $authUser?->name) }}" required>
+                    </label>
+                    <label>
+                        <span>Email*</span>
+                        <input type="email" name="email" value="{{ old('email', $authUser?->email) }}" required>
+                    </label>
+                    <label>
+                        <span>Phone</span>
+                        <input type="text" name="phone" value="{{ old('phone') }}">
+                    </label>
+                    <label>
+                        <span>Subject</span>
+                        <input type="text" name="subject" value="{{ old('subject', 'Enquiry about '.$course->title) }}">
+                    </label>
+                    <label>
+                        <span>Message*</span>
+                        <textarea name="message" rows="4" required placeholder="Your question...">{{ old('message') }}</textarea>
+                    </label>
+                    <button type="submit" class="ly-btn ly-btn-green" style="width:100%;justify-content:center;">Send enquiry</button>
+                </form>
+            </div>
+
+            @if($institute)
+                <a class="ly-course-side-card ly-course-side-institute" href="{{ route('website.companies.show', $institute->slug) }}">
+                    <p class="ly-tag">Institute</p>
+                    <strong>{{ $institute->name }}</strong>
+                    <span>View academy profile →</span>
+                </a>
+            @endif
+        </aside>
+    </div>
+</section>
+
+@if($relatedCourses->count())
+<section class="ly-section ly-section-soft" id="related">
+    <div class="ly-container">
+        <div class="ly-section-head">
+            <p class="ly-tag">Related courses</p>
+            <h2>You may also like</h2>
+            <p>More courses from the same category or academy.</p>
+        </div>
+        <div class="ly-course-related-grid">
+            @foreach($relatedCourses as $related)
+                <a href="{{ route('public.course', $related) }}" class="ly-course-related-card">
+                    <div class="ly-course-related-media">
+                        @if($related->thumbnailUrl())
+                            <img src="{{ $related->thumbnailUrl() }}" alt="{{ $related->title }}">
+                        @endif
+                    </div>
+                    <div class="ly-course-related-body">
+                        @if($related->category)
+                            <span class="ly-tag">{{ $related->category->name }}</span>
+                        @endif
+                        <h3>{{ $related->title }}</h3>
+                        <p>{{ Str::limit(strip_tags($related->subtitle ?: $related->description), 90) }}</p>
+                        <strong>{{ $related->displayPrice() }}</strong>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+@endsection

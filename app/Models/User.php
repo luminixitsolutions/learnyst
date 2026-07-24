@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'role_id', 'name', 'email', 'phone', 'address', 'notes', 'avatar', 'bio', 'expertise',
+        'role_id', 'created_by', 'name', 'email', 'phone', 'address', 'notes', 'avatar', 'bio', 'expertise',
         'social_links', 'password', 'total_spent', 'is_active', 'last_login_at', 'email_verified_at',
     ];
 
@@ -34,6 +34,21 @@ class User extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Company::class, 'owner_user_id');
+    }
+
+    public function createdUsers()
+    {
+        return $this->hasMany(self::class, 'created_by');
     }
 
     public function permissions()

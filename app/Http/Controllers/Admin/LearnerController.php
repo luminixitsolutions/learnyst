@@ -2,24 +2,34 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
-use App\Models\Order;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class LearnerController extends Controller
 {
+    use ScopesToCurrentUser;
+
+    protected function authorizeLearner(User $learner): void
+    {
+        abort_unless(
+            $this->visibleLearnersQuery()->whereKey($learner->id)->exists(),
+            403
+        );
+    }
+
     public function index(Request $request)
     {
-        $learnerRole = Role::where('slug', 'learner')->first();
-
-        $query = User::where('role_id', $learnerRole?->id)->withCount('enrollments')->latest();
+        $query = $this->visibleLearnersQuery()->withCount('enrollments')->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -68,6 +78,7 @@ class LearnerController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['email_verified_at'] = $request->boolean('email_verified', true) ? now() : null;
+        $validated['created_by'] = Auth::id();
         unset($validated['email_verified']);
 
         $learner = User::create($validated);
@@ -78,20 +89,25 @@ class LearnerController extends Controller
 
     public function show(User $learner)
     {
+        $this->authorizeLearner($learner);
         $learner->load(['enrollments.course', 'orders.items.course', 'certificates']);
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
-        $learners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))->where('id', '!=', $learner->id)->orderBy('name')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
+        $learners = $this->visibleLearnersQuery()->where('id', '!=', $learner->id)->orderBy('name')->get();
 
         return view('admin.learners.show', compact('learner', 'courses', 'learners'));
     }
 
     public function edit(User $learner)
     {
+        $this->authorizeLearner($learner);
+
         return view('admin.learners.edit', compact('learner'));
     }
 
     public function update(Request $request, User $learner)
     {
+        $this->authorizeLearner($learner);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $learner->id],
@@ -126,6 +142,7 @@ class LearnerController extends Controller
 
     public function destroy(User $learner)
     {
+        $this->authorizeLearner($learner);
         ActivityLogger::log('learner_deleted', "Learner {$learner->name} deleted", $learner);
         $learner->delete();
 
@@ -134,8 +151,10 @@ class LearnerController extends Controller
 
     public function enroll(Request $request, User $learner)
     {
+        $this->authorizeLearner($learner);
+
         $validated = $request->validate([
-            'course_id' => ['required', 'exists:courses,id'],
+            'course_id' => ['required', Rule::in($this->ownedCourseIds())],
             'access_type' => ['required', 'in:free,trial,paid'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'expires_at' => ['nullable', 'date'],
@@ -162,6 +181,11 @@ class LearnerController extends Controller
 
     public function revokeEnrollment(CourseEnrollment $enrollment)
     {
+        abort_unless(
+            $this->ownedEnrollmentsConstraint(CourseEnrollment::query()->whereKey($enrollment->id))->exists(),
+            403
+        );
+
         $enrollment->update(['status' => 'revoked']);
 
         return back()->with('success', 'Course access revoked.');
@@ -169,8 +193,7 @@ class LearnerController extends Controller
 
     public function export()
     {
-        $learnerRole = Role::where('slug', 'learner')->first();
-        $learners = User::where('role_id', $learnerRole?->id)->get();
+        $learners = $this->visibleLearnersQuery()->get();
 
         $filename = 'learners_' . now()->format('Y-m-d') . '.csv';
         $headers = [
@@ -206,13 +229,16 @@ class LearnerController extends Controller
         if (($handle = fopen($request->file('file')->getRealPath(), 'r')) !== false) {
             $header = fgetcsv($handle);
             while (($row = fgetcsv($handle)) !== false) {
-                if (count($row) < 2) continue;
+                if (count($row) < 2) {
+                    continue;
+                }
                 User::firstOrCreate(['email' => trim($row[1])], [
                     'name' => trim($row[0]),
                     'role_id' => $learnerRole->id,
                     'phone' => $row[2] ?? null,
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'created_by' => Auth::id(),
                 ]);
                 $imported++;
             }

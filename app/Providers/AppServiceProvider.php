@@ -32,5 +32,13 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Route::bind('question', fn ($value) => \App\Models\Question::findOrFail($value));
         \Illuminate\Support\Facades\Route::bind('liveClass', fn ($value) => \App\Models\ScheduledEvent::findOrFail($value));
         \Illuminate\Support\Facades\Route::bind('websiteSection', fn ($value) => \App\Models\WebsiteSection::findOrFail($value));
+
+        \Illuminate\Support\Facades\View::composer('website.*', function () {
+            try {
+                \App\Services\WebsiteContentService::applyBrandToConfig();
+            } catch (\Throwable $e) {
+                // Table may not exist before migrate — keep config defaults.
+            }
+        });
     }
 }

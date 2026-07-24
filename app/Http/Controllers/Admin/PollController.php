@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Poll;
 use App\Services\ActivityLogger;
@@ -11,9 +12,11 @@ use Illuminate\Validation\Rule;
 
 class PollController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Poll::with('creator')->latest();
+        $query = $this->owned(Poll::query())->with('creator')->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -33,10 +36,10 @@ class PollController extends Controller
 
         $polls = $query->paginate(15)->withQueryString();
         $statusCounts = [
-            'all' => Poll::count(),
-            'draft' => Poll::where('status', 'draft')->count(),
-            'published' => Poll::where('status', 'published')->count(),
-            'unpublished' => Poll::where('status', 'unpublished')->count(),
+            'all' => $this->owned(Poll::query())->count(),
+            'draft' => $this->owned(Poll::query())->where('status', 'draft')->count(),
+            'published' => $this->owned(Poll::query())->where('status', 'published')->count(),
+            'unpublished' => $this->owned(Poll::query())->where('status', 'unpublished')->count(),
         ];
 
         return view('admin.polls.index', compact('polls', 'status', 'statusCounts'));
@@ -73,6 +76,7 @@ class PollController extends Controller
 
     public function destroy(Poll $poll)
     {
+        $this->authorizeOwner($poll);
         $title = $poll->title;
         $poll->delete();
 

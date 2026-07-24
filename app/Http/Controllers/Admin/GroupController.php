@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Group;
@@ -9,12 +10,15 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class GroupController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $query = Group::withCount('learners', 'courses')->latest();
+        $query = $this->owned(Group::query())->withCount('learners', 'courses')->latest();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -52,22 +56,26 @@ class GroupController extends Controller
 
     public function show(Group $group)
     {
+        $this->authorizeOwner($group);
         $group->load(['learners', 'courses']);
-        $availableLearners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))
+        $availableLearners = $this->ownedUsersQuery('learner')
             ->whereNotIn('id', $group->learners->pluck('id'))
             ->orderBy('name')->get();
-        $courses = Course::where('status', 'published')->orderBy('title')->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
 
         return view('admin.groups.show', compact('group', 'availableLearners', 'courses'));
     }
 
     public function edit(Group $group)
     {
+        $this->authorizeOwner($group);
+
         return view('admin.groups.edit', compact('group'));
     }
 
     public function update(Request $request, Group $group)
     {
+        $this->authorizeOwner($group);
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -82,6 +90,7 @@ class GroupController extends Controller
 
     public function destroy(Group $group)
     {
+        $this->authorizeOwner($group);
         $group->delete();
 
         return redirect()->route('admin.groups.index')->with('success', 'Group deleted.');
@@ -89,7 +98,12 @@ class GroupController extends Controller
 
     public function addLearner(Request $request, Group $group)
     {
-        $validated = $request->validate(['user_id' => ['required', 'exists:users,id']]);
+        $this->authorizeOwner($group);
+        $learnerIds = $this->ownedUsersQuery('learner')->pluck('id')->all();
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', Rule::in($learnerIds)],
+        ]);
         $group->learners()->syncWithoutDetaching([$validated['user_id']]);
 
         return back()->with('success', 'Learner added to group.');
@@ -97,6 +111,7 @@ class GroupController extends Controller
 
     public function removeLearner(Group $group, User $user)
     {
+        $this->authorizeOwner($group);
         $group->learners()->detach($user->id);
 
         return back()->with('success', 'Learner removed from group.');
@@ -104,7 +119,12 @@ class GroupController extends Controller
 
     public function assignCourse(Request $request, Group $group)
     {
-        $validated = $request->validate(['course_id' => ['required', 'exists:courses,id']]);
+        $this->authorizeOwner($group);
+        $ownedCourseIds = $this->ownedCourseIds()->all();
+
+        $validated = $request->validate([
+            'course_id' => ['required', 'integer', Rule::in($ownedCourseIds)],
+        ]);
         $group->courses()->syncWithoutDetaching([$validated['course_id']]);
 
         return back()->with('success', 'Course assigned to group.');
@@ -112,6 +132,7 @@ class GroupController extends Controller
 
     public function removeCourse(Group $group, Course $course)
     {
+        $this->authorizeOwner($group);
         $group->courses()->detach($course->id);
 
         return back()->with('success', 'Course removed from group.');

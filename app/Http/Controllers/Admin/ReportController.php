@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\ExportsReportCsv;
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Bundle;
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\DB;
 class ReportController extends Controller
 {
     use ExportsReportCsv;
+    use ScopesToCurrentUser;
 
     protected function learnerRoleId(): ?int
     {
@@ -99,10 +101,10 @@ class ReportController extends Controller
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->get('to', now()->format('Y-m-d'));
 
-        $query = Order::with('user')
+        $query = $this->ownedOrdersQuery()
+            ->with('user')
             ->where('payment_status', 'paid')
             ->whereBetween('created_at', [$from, $to . ' 23:59:59']);
-
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
@@ -132,6 +134,7 @@ class ReportController extends Controller
         $to = $request->get('to', now()->format('Y-m-d'));
 
         $query = OrderItem::with(['order.user', 'order.coupon', 'course'])
+            ->whereIn('course_id', $this->ownedCourseIds())
             ->whereHas('order', function ($q) use ($from, $to, $request) {
                 $q->whereBetween('created_at', [$from, $to . ' 23:59:59']);
                 if ($search = $request->get('search')) {
@@ -144,7 +147,6 @@ class ReportController extends Controller
                     $q->where('payment_status', $status);
                 }
             });
-
         $items = $query->latest()->paginate(30)->withQueryString();
 
         if ($request->boolean('export')) {
@@ -169,10 +171,9 @@ class ReportController extends Controller
 
     public function learners(Request $request)
     {
-        $query = User::where('role_id', $this->learnerRoleId())
+        $query = $this->ownedUsersQuery('learner')
             ->withCount(['enrollments', 'orders'])
             ->with('segments');
-
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
@@ -210,24 +211,29 @@ class ReportController extends Controller
 
     public function learnerProfile(User $user)
     {
+        $this->authorizeOwner($user);
         $user->load(['enrollments.course', 'certificates.course', 'segments', 'orders']);
 
-        $courses = Course::where('status', 'published')->orderBy('title')->get(['id', 'title']);
-        $pendingPayments = Payment::where('user_id', $user->id)->whereIn('status', ['pending', 'failed'])->latest()->get();
+        $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get(['id', 'title']);
+        $pendingPayments = Payment::where('user_id', $user->id)
+            ->whereIn('order_id', $this->ownedOrdersQuery()->select('orders.id'))
+            ->whereIn('status', ['pending', 'failed'])
+            ->latest()
+            ->get();
 
         return view('admin.reports.learner-profile', compact('user', 'courses', 'pendingPayments'));
     }
 
     public function courses(Request $request)
     {
-        $courses = Course::withCount('enrollments')
+        $courses = $this->owned(Course::query())
+            ->withCount('enrollments')
             ->withAvg('enrollments as avg_progress', 'progress')
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->when($request->status, fn ($q, $st) => $q->where('status', $st))
             ->orderByDesc('enrollments_count')
             ->paginate(20)
             ->withQueryString();
-
         if ($request->boolean('export')) {
             return $this->exportCsv('courses', ['Course', 'Enrollments', 'Avg Progress', 'Status'], $courses->map(fn ($c) => [
                 $c->title,
@@ -243,6 +249,7 @@ class ReportController extends Controller
     public function enrollments(Request $request)
     {
         $query = CourseEnrollment::with(['user', 'course', 'batch', 'bundle']);
+        $this->ownedEnrollmentsConstraint($query);
         $query = $this->enrollmentSearch($query, $request->get('search'));
         $query = $this->dateRange($query, $request, 'enrolled_at');
 
@@ -257,8 +264,7 @@ class ReportController extends Controller
         }
 
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
-        $courses = Course::orderBy('title')->get(['id', 'title']);
-
+        $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
         if ($request->boolean('export')) {
             return $this->exportCsv('enrollments', [
                 'Product/Course', 'Learner', 'Email', 'Mobile', 'Enrollment Date', 'Access Start', 'Access Expiry', 'Status',
@@ -282,9 +288,9 @@ class ReportController extends Controller
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->get('to', now()->format('Y-m-d'));
 
-        $query = Payment::with(['user', 'order.items.course']);
+        $query = Payment::with(['user', 'order.items.course'])
+            ->whereIn('order_id', $this->ownedOrdersQuery()->select('orders.id'));
         $query = $this->paymentSearch($query, $request->get('search'));
-
         if ($request->filled('from')) {
             $query->where('created_at', '>=', $from);
         }
@@ -327,9 +333,9 @@ class ReportController extends Controller
     public function paymentGateways(Request $request)
     {
         $gateways = Payment::select('gateway')
+            ->whereIn('order_id', $this->ownedOrdersQuery()->select('orders.id'))
             ->selectRaw('COUNT(*) as transaction_count')
-            ->selectRaw('SUM(CASE WHEN status = "success" THEN amount ELSE 0 END) as total_amount')
-            ->selectRaw('MAX(updated_at) as last_updated')
+            ->selectRaw('SUM(CASE WHEN status = "success" THEN amount ELSE 0 END) as total_amount')            ->selectRaw('MAX(updated_at) as last_updated')
             ->when($request->search, fn ($q, $s) => $q->where('gateway', 'like', "%{$s}%"))
             ->when($request->status, fn ($q, $st) => $q->where('status', $st))
             ->groupBy('gateway')
@@ -451,8 +457,7 @@ class ReportController extends Controller
         }
 
         $records = $query->latest('updated_at')->paginate(30)->withQueryString();
-        $bundles = Bundle::orderBy('title')->get(['id', 'title']);
-
+        $bundles = $this->owned(Bundle::query())->orderBy('title')->get(['id', 'title']);
         if ($request->boolean('export')) {
             return $this->exportCsv('bundle-progress', [
                 'Bundle', 'Learner', 'Email', 'Courses Completed', 'Total Courses', 'Progress %', 'Last Activity', 'Status',
@@ -538,7 +543,8 @@ class ReportController extends Controller
 
     public function batches(Request $request)
     {
-        $query = Batch::withCount('learners')->with(['course', 'instructor']);
+        $query = Batch::withCount('learners')->with(['course', 'instructor'])
+            ->whereIn('course_id', $this->ownedCourseIds());
         $query->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"));
         $query->when($request->status, fn ($q, $st) => $q->where('status', $st));
 
@@ -563,7 +569,8 @@ class ReportController extends Controller
 
     public function bundles(Request $request)
     {
-        $bundles = Bundle::withCount(['courses', 'enrollments'])
+        $bundles = $this->owned(Bundle::query())
+            ->withCount(['courses', 'enrollments'])
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->get();
 

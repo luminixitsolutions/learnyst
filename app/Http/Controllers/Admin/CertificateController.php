@@ -2,19 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\CertificateTemplate;
-use App\Models\Course;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CertificateController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index()
     {
-        $certificates = Certificate::with(['user', 'course'])->latest()->paginate(20);
+        $certificates = Certificate::with(['user', 'course'])
+            ->where(function ($q) {
+                $q->whereIn('course_id', $this->ownedCourseIds())
+                    ->orWhereHas('user', fn ($u) => $u->where('created_by', $this->currentUserId()));
+            })
+            ->latest()
+            ->paginate(20);
         $templates = CertificateTemplate::all();
 
         return view('admin.certificates.index', compact('certificates', 'templates'));
@@ -47,8 +55,8 @@ class CertificateController extends Controller
     public function issue(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
-            'course_id' => ['nullable', 'exists:courses,id'],
+            'user_id' => ['required', Rule::in($this->visibleLearnersQuery()->pluck('id'))],
+            'course_id' => ['nullable', Rule::in($this->ownedCourseIds())],
             'certificate_template_id' => ['nullable', 'exists:certificate_templates,id'],
         ]);
 
@@ -65,6 +73,10 @@ class CertificateController extends Controller
         if ($request->filled('number')) {
             $certificate = Certificate::with(['user', 'course'])
                 ->where('certificate_number', $request->number)
+                ->where(function ($q) {
+                    $q->whereIn('course_id', $this->ownedCourseIds())
+                        ->orWhereHas('user', fn ($u) => $u->where('created_by', $this->currentUserId()));
+                })
                 ->first();
         }
 

@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
 use App\Models\Community;
 use App\Models\CommunityPost;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CommunityController extends Controller
 {
+    use ScopesToCurrentUser;
+
     public function index(Request $request)
     {
-        $communities = Community::withCount('members', 'posts')->latest()->paginate(15);
+        $communities = $this->owned(Community::query())->withCount('members', 'posts')->latest()->paginate(15);
 
         return view('admin.communities.index', compact('communities'));
     }
@@ -43,19 +46,23 @@ class CommunityController extends Controller
 
     public function show(Community $community)
     {
+        $this->authorizeOwner($community);
         $community->load(['members', 'posts.user']);
-        $learners = User::whereHas('role', fn ($q) => $q->where('slug', 'learner'))->orderBy('name')->get();
+        $learners = $this->ownedUsersQuery('learner')->orderBy('name')->get();
 
         return view('admin.communities.show', compact('community', 'learners'));
     }
 
     public function edit(Community $community)
     {
+        $this->authorizeOwner($community);
+
         return view('admin.communities.edit', compact('community'));
     }
 
     public function update(Request $request, Community $community)
     {
+        $this->authorizeOwner($community);
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -70,6 +77,7 @@ class CommunityController extends Controller
 
     public function destroy(Community $community)
     {
+        $this->authorizeOwner($community);
         $community->delete();
 
         return redirect()->route('admin.communities.index')->with('success', 'Community deleted.');
@@ -77,7 +85,12 @@ class CommunityController extends Controller
 
     public function addMember(Request $request, Community $community)
     {
-        $validated = $request->validate(['user_id' => ['required', 'exists:users,id']]);
+        $this->authorizeOwner($community);
+        $learnerIds = $this->ownedUsersQuery('learner')->pluck('id')->all();
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', Rule::in($learnerIds)],
+        ]);
         $community->members()->syncWithoutDetaching([$validated['user_id'] => ['role' => 'member']]);
 
         return back()->with('success', 'Member added.');
@@ -85,6 +98,7 @@ class CommunityController extends Controller
 
     public function storePost(Request $request, Community $community)
     {
+        $this->authorizeOwner($community);
         $validated = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'body' => ['required', 'string'],
@@ -100,6 +114,7 @@ class CommunityController extends Controller
 
     public function destroyPost(CommunityPost $post)
     {
+        $this->authorizeOwner($post->community);
         $post->delete();
 
         return back()->with('success', 'Post deleted.');
