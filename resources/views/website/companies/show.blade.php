@@ -92,7 +92,7 @@
     </div>
 </section>
 
-<nav class="ly-cp-tabs" aria-label="Institute profile sections">
+<nav class="ly-cp-tabs" id="lyCompanyTabs" aria-label="Institute profile sections">
     <div class="ly-container">
         <div class="ly-cp-tabs-inner" role="tablist">
             <a href="#overview" class="is-active" data-cp-tab role="tab" aria-selected="true">Overview</a>
@@ -108,6 +108,7 @@
         </div>
     </div>
 </nav>
+<div class="ly-cp-tabs-spacer" id="lyCompanyTabsSpacer" aria-hidden="true"></div>
 
 <section class="ly-section" id="overview">
     <div class="ly-container">
@@ -180,27 +181,35 @@
             </div>
 
             <aside class="ly-cp-aside">
-                <div class="ly-cp-card ly-cp-sticky">
-                    <h3>Quick facts</h3>
-                    <ul class="ly-company-contact">
-                        @if($founded)<li><strong>Founded</strong><span>{{ $founded }}</span></li>@endif
-                        @if(!empty($locationParts))<li><strong>Location</strong><span>{{ implode(', ', $locationParts) }}</span></li>@endif
-                        @if($hours)<li><strong>Hours</strong><span>{{ $hours }}</span></li>@endif
-                        <li><strong>Courses</strong><span>{{ $courses->total() }} published</span></li>
-                        @if($company->email)<li><strong>Email</strong><span>{{ $company->email }}</span></li>@endif
-                        @if($company->phone)<li><strong>Phone</strong><span>{{ $company->phone }}</span></li>@endif
-                    </ul>
-                    @if(!empty($social))
-                        <div class="ly-company-social ly-cp-social">
-                            @foreach($social as $network => $url)
-                                <a href="{{ $url }}" target="_blank" rel="noopener" title="{{ ucfirst($network) }}">
-                                    <i class="fa {{ $socialIcons[$network] ?? 'fa-link' }}"></i>
-                                    <span>{{ ucfirst($network) }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-                    <a class="ly-btn ly-btn-green ly-cp-full-btn" href="#courses">Explore courses</a>
+                <div class="ly-cp-sticky">
+                    <div class="ly-cp-card">
+                        <h3>Quick facts</h3>
+                        <ul class="ly-company-contact">
+                            @if($founded)<li><strong>Founded</strong><span>{{ $founded }}</span></li>@endif
+                            @if(!empty($locationParts))<li><strong>Location</strong><span>{{ implode(', ', $locationParts) }}</span></li>@endif
+                            @if($hours)<li><strong>Hours</strong><span>{{ $hours }}</span></li>@endif
+                            <li><strong>Courses</strong><span>{{ $courses->total() }} published</span></li>
+                            @if($company->email)<li><strong>Email</strong><span>{{ $company->email }}</span></li>@endif
+                            @if($company->phone)<li><strong>Phone</strong><span>{{ $company->phone }}</span></li>@endif
+                        </ul>
+                        @if(!empty($social))
+                            <div class="ly-company-social ly-cp-social">
+                                @foreach($social as $network => $url)
+                                    <a href="{{ $url }}" target="_blank" rel="noopener" title="{{ ucfirst($network) }}">
+                                        <i class="fa {{ $socialIcons[$network] ?? 'fa-link' }}"></i>
+                                        <span>{{ ucfirst($network) }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                        <a class="ly-btn ly-btn-green ly-cp-full-btn" href="#courses">Explore courses</a>
+                    </div>
+
+                    <div class="ly-cp-card ly-cp-aside-enquiry">
+                        <h3>Send an enquiry</h3>
+                        <p>Ask about courses, admissions, or partnerships.</p>
+                        @include('website.companies.partials.enquiry-form')
+                    </div>
                 </div>
             </aside>
         </div>
@@ -220,8 +229,8 @@
                 @foreach($courses as $course)
                     <a href="{{ route('public.course', $course) }}" class="ly-company-course-card">
                         <div class="ly-company-course-media">
-                            @if($course->thumbnail)
-                                <img src="{{ Storage::url($course->thumbnail) }}" alt="{{ $course->title }}">
+                            @if($course->thumbnailUrl())
+                                <img src="{{ $course->thumbnailUrl() }}" alt="{{ $course->title }}">
                             @else
                                 <span>{{ strtoupper(substr($course->title, 0, 2)) }}</span>
                             @endif
@@ -529,15 +538,7 @@
             <div class="ly-cp-card">
                 <h3>Send an enquiry</h3>
                 <p>Ask about courses, admissions, or partnerships.</p>
-                <form method="POST" action="{{ route('website.companies.enquiries.store', $company->slug) }}" class="ly-cp-form">
-                    @csrf
-                    <label>Name<input type="text" name="name" value="{{ old('name', $authUser?->name) }}" required></label>
-                    <label>Email<input type="email" name="email" value="{{ old('email', $authUser?->email) }}" required></label>
-                    <label>Phone<input type="text" name="phone" value="{{ old('phone', $authUser?->phone) }}"></label>
-                    <label>Subject<input type="text" name="subject" value="{{ old('subject') }}" placeholder="Course enquiry"></label>
-                    <label>Message<textarea name="message" rows="4" required>{{ old('message') }}</textarea></label>
-                    <button type="submit" class="ly-btn ly-btn-green">Send enquiry</button>
-                </form>
+                @include('website.companies.partials.enquiry-form')
             </div>
         </div>
     </div>
@@ -674,24 +675,95 @@ body.ly-lightbox-open .kingster-sticky-navigation {
 @push('scripts')
 <script>
 (function () {
-    var tabs = document.querySelectorAll('[data-cp-tab]');
-    if (tabs.length) {
-        var sections = Array.prototype.map.call(tabs, function (tab) {
+    var tabsNav = document.getElementById('lyCompanyTabs');
+    var spacer = document.getElementById('lyCompanyTabsSpacer');
+    var tabLinks = document.querySelectorAll('[data-cp-tab]');
+
+    function headerOffset() {
+        var stickyNav = document.querySelector('.kingster-fixed-navigation, .kingster-sticky-navigation.kingster-fixed-navigation, .kingster-header-wrap.kingster-fixed-navigation');
+        if (stickyNav) {
+            var rect = stickyNav.getBoundingClientRect();
+            if (rect.height > 0) return Math.round(rect.bottom);
+        }
+        var header = document.querySelector('.kingster-header-wrap');
+        var mobile = document.querySelector('.kingster-mobile-header');
+        var top = 0;
+        if (window.innerWidth <= 959 && mobile) {
+            top = mobile.getBoundingClientRect().height;
+        } else if (header) {
+            var hr = header.getBoundingClientRect();
+            top = hr.bottom > 0 ? hr.bottom : hr.height;
+        }
+        return Math.max(0, Math.round(top));
+    }
+
+    function updateTabsTop() {
+        if (!tabsNav) return;
+        var top = headerOffset();
+        document.documentElement.style.setProperty('--ly-cp-tabs-top', top + 'px');
+        return top;
+    }
+
+    function syncSticky() {
+        if (!tabsNav || !spacer) return;
+        var top = updateTabsTop();
+        var triggerY = (spacer.classList.contains('is-active') ? spacer : tabsNav).getBoundingClientRect().top;
+        var shouldFix = triggerY <= top + 1;
+
+        if (shouldFix) {
+            if (!tabsNav.classList.contains('is-fixed')) {
+                spacer.style.height = tabsNav.offsetHeight + 'px';
+                spacer.classList.add('is-active');
+                tabsNav.classList.add('is-fixed', 'is-stuck');
+            }
+        } else {
+            tabsNav.classList.remove('is-fixed', 'is-stuck');
+            spacer.classList.remove('is-active');
+            spacer.style.height = '0px';
+        }
+    }
+
+    if (tabsNav) {
+        updateTabsTop();
+        window.addEventListener('scroll', syncSticky, { passive: true });
+        window.addEventListener('resize', function () {
+            updateTabsTop();
+            syncSticky();
+        }, { passive: true });
+        // Kingster sticky header animates after load/scroll
+        setTimeout(function () { updateTabsTop(); syncSticky(); }, 300);
+        syncSticky();
+    }
+
+    if (tabLinks.length) {
+        var sections = Array.prototype.map.call(tabLinks, function (tab) {
             return document.querySelector(tab.getAttribute('href'));
         }).filter(Boolean);
 
         function setActive() {
-            var y = window.scrollY + 140;
+            var offset = headerOffset() + (tabsNav ? tabsNav.offsetHeight : 56) + 8;
+            var y = window.scrollY + offset;
             var current = sections[0];
             sections.forEach(function (section) {
                 if (section.offsetTop <= y) current = section;
             });
-            tabs.forEach(function (tab) {
-                var active = tab.getAttribute('href') === '#' + current.id;
+            tabLinks.forEach(function (tab) {
+                var active = current && tab.getAttribute('href') === '#' + current.id;
                 tab.classList.toggle('is-active', active);
                 tab.setAttribute('aria-selected', active ? 'true' : 'false');
             });
         }
+
+        tabLinks.forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                var target = document.querySelector(tab.getAttribute('href'));
+                if (!target) return;
+                e.preventDefault();
+                var offset = headerOffset() + (tabsNav ? tabsNav.offsetHeight : 56) + 8;
+                var top = target.getBoundingClientRect().top + window.scrollY - offset;
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            });
+        });
 
         window.addEventListener('scroll', setActive, { passive: true });
         setActive();

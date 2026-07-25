@@ -44,7 +44,7 @@ class CourseCheckoutController extends Controller
         if (! $this->razorpay->isConfigured()) {
             return redirect()
                 ->route('public.course', $course)
-                ->with('error', 'Payment gateway is not configured yet. Please ask the institute admin to add Razorpay keys in Settings → Payment.');
+                ->with('error', 'Payment gateway is not configured yet. Please add Razorpay keys in Platform Admin → Payment / Razorpay (or Institute Settings → Payment).');
         }
 
         $order = $this->createPendingOrder($user, $course);

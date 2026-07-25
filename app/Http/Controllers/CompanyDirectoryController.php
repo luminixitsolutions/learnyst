@@ -6,6 +6,8 @@ use App\Models\CompanyBlog;
 use App\Models\CompanyEnquiry;
 use App\Models\CompanyReview;
 use App\Models\Course;
+use App\Models\Lead;
+use App\Services\ActivityLogger;
 use App\Services\CompanyService;
 use App\Services\WebsiteContentService;
 use Illuminate\Http\Request;
@@ -103,7 +105,7 @@ class CompanyDirectoryController extends Controller
         $company = CompanyService::findPublicBySlug($slug);
         abort_unless($company, 404);
 
-        $data = $request->validate([
+        $validator = validator($request->all(), [
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:40'],
@@ -111,18 +113,45 @@ class CompanyDirectoryController extends Controller
             'message' => ['required', 'string', 'max:3000'],
         ]);
 
-        CompanyEnquiry::create([
+        if ($validator->fails()) {
+            return redirect()
+                ->to(route('website.companies.show', $company->slug).'#contact')
+                ->withErrors($validator)
+                ->withInput($request->all() + ['_form' => 'enquiry']);
+        }
+
+        $data = $validator->validated();
+
+        $enquiry = CompanyEnquiry::create([
             'company_id' => $company->id,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            'subject' => $data['subject'] ?? null,
+            'subject' => $data['subject'] ?: 'Course enquiry',
             'message' => $data['message'],
             'status' => 'new',
         ]);
 
+        // Keep marketing leads in sync (same pattern as course enquiries).
+        Lead::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'course_id' => null,
+            'source' => 'company_enquiry:'.$company->slug,
+            'status' => 'new',
+            'notes' => trim(($enquiry->subject ? $enquiry->subject."\n" : '').$data['message']),
+        ]);
+
+        ActivityLogger::log(
+            'company_enquiry_received',
+            "Enquiry from {$enquiry->name} for {$company->name}",
+            $enquiry
+        );
+
         return redirect()
             ->to(route('website.companies.show', $company->slug).'#contact')
-            ->with('success', 'Enquiry sent! The academy will contact you soon.');
+            ->with('success', 'Enquiry sent! The academy will contact you soon.')
+            ->with('enquiry_company', $company->slug);
     }
 }

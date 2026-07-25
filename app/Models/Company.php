@@ -125,11 +125,19 @@ class Company extends Model
             return $path;
         }
 
+        $path = ltrim($path, '/');
+
+        // Public website assets (tracked in git)
         if (str_starts_with($path, 'website/')) {
-            return asset($path);
+            return '/'.$path;
         }
 
-        return asset('storage/'.ltrim($path, '/'));
+        // Uploaded media on the public disk
+        if (str_starts_with($path, 'storage/')) {
+            return '/'.$path;
+        }
+
+        return '/storage/'.$path;
     }
 
     public static function uniqueSlug(string $name, ?int $ignoreId = null): string

@@ -89,7 +89,7 @@
                                     <li><a href="{{ route('website.product', 'sell-mock-tests') }}">Mock Tests</a></li>
                                     <li><a href="{{ route('website.product', 'branded-mobile-app') }}">Branded App</a></li>
                                     <li><a href="{{ route('website.page', 'drm-security') }}">DRM Security</a></li>
-                                    <li><a href="{{ route('website.page', 'pricing') }}">Pricing</a></li>
+                                    <li><a href="{{ route('website.pricing') }}">Pricing</a></li>
                                 </ul>
                             </div>
                             <div style="margin-top:20px;">

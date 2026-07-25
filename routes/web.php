@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\SegmentController;
 use App\Http\Controllers\Admin\UserModuleController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\StudentAuthController;
@@ -65,6 +66,7 @@ use App\Http\Controllers\Platform\PlatformSolutionPageController;
 use App\Http\Controllers\Platform\PlatformCustomerPageController;
 use App\Http\Controllers\Platform\PlatformResourcePageController;
 use App\Http\Controllers\Platform\PlatformBlogController;
+use App\Http\Controllers\Platform\PlatformSubscriptionPackageController;
 use App\Http\Controllers\Platform\PlatformUserController;
 use App\Http\Controllers\Admin\UtilitiesController;
 use App\Http\Controllers\Auth\SignupController;
@@ -93,8 +95,9 @@ Route::get('/help-center', [WebsiteController::class, 'helpCenter'])->name('webs
 Route::get('/whats-new', [WebsiteController::class, 'whatsNew'])->name('website.whats-new');
 Route::get('/blogs', [WebsiteController::class, 'blogs'])->name('website.blogs');
 Route::get('/blogs/{slug}', [WebsiteController::class, 'blogShow'])->name('website.blog.show');
+Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('website.pricing');
 Route::get('/{slug}', [WebsiteController::class, 'page'])
-    ->where('slug', 'about-us|pricing|product-demo|drm-security|corporate-lms|ai|careers|privacy-policy|terms-and-conditions|support-migration|guides')
+    ->where('slug', 'about-us|product-demo|drm-security|corporate-lms|ai|careers|privacy-policy|terms-and-conditions|support-migration|guides')
     ->name('website.page');
 
 Route::get('/home-lms', [PublicController::class, 'home'])->name('home.lms');
@@ -121,6 +124,11 @@ Route::post('/signup/audience', [SignupController::class, 'storeAudience'])->nam
 Route::post('/signup/source', [SignupController::class, 'storeSource'])->name('signup.source');
 Route::post('/signup/resend', [SignupController::class, 'resendVerification'])->name('signup.resend');
 Route::post('/signup/verified', [SignupController::class, 'markVerifiedAndLogin'])->name('signup.verified');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -399,6 +407,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::get('page/testimonials', [CompanyPageContentController::class, 'testimonialsIndex'])->name('company-page.testimonials');
     Route::post('page/testimonials', [CompanyPageContentController::class, 'testimonialsStore'])->name('company-page.testimonials.store');
     Route::put('page/testimonials/{testimonial}', [CompanyPageContentController::class, 'testimonialsUpdate'])->name('company-page.testimonials.update');
+    Route::post('page/testimonials/{testimonial}/toggle', [CompanyPageContentController::class, 'testimonialsToggle'])->name('company-page.testimonials.toggle');
     Route::delete('page/testimonials/{testimonial}', [CompanyPageContentController::class, 'testimonialsDestroy'])->name('company-page.testimonials.destroy');
 
     Route::get('page/reviews', [CompanyPageContentController::class, 'reviewsIndex'])->name('company-page.reviews');
@@ -413,6 +422,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::get('page/gallery', [CompanyPageContentController::class, 'galleryIndex'])->name('company-page.gallery');
     Route::post('page/gallery', [CompanyPageContentController::class, 'galleryStore'])->name('company-page.gallery.store');
     Route::put('page/gallery/{gallery}', [CompanyPageContentController::class, 'galleryUpdate'])->name('company-page.gallery.update');
+    Route::post('page/gallery/{gallery}/toggle', [CompanyPageContentController::class, 'galleryToggle'])->name('company-page.gallery.toggle');
     Route::delete('page/gallery/{gallery}', [CompanyPageContentController::class, 'galleryDestroy'])->name('company-page.gallery.destroy');
 
     Route::get('page/videos', [CompanyPageContentController::class, 'videosIndex'])->name('company-page.videos');
@@ -463,6 +473,13 @@ Route::prefix('admin')->name('platform.')->middleware(['auth', 'role:super-admin
     Route::get('blogs', [PlatformBlogController::class, 'edit'])->name('blogs.edit');
     Route::put('blogs', [PlatformBlogController::class, 'update'])->name('blogs.update');
     Route::delete('blogs', [PlatformBlogController::class, 'reset'])->name('blogs.reset');
+    Route::get('subscription-packages', [PlatformSubscriptionPackageController::class, 'index'])->name('subscription-packages.index');
+    Route::get('subscription-packages/create', [PlatformSubscriptionPackageController::class, 'create'])->name('subscription-packages.create');
+    Route::post('subscription-packages', [PlatformSubscriptionPackageController::class, 'store'])->name('subscription-packages.store');
+    Route::get('subscription-packages/{subscriptionPackage}/edit', [PlatformSubscriptionPackageController::class, 'edit'])->name('subscription-packages.edit');
+    Route::put('subscription-packages/{subscriptionPackage}', [PlatformSubscriptionPackageController::class, 'update'])->name('subscription-packages.update');
+    Route::post('subscription-packages/{subscriptionPackage}/toggle', [PlatformSubscriptionPackageController::class, 'toggle'])->name('subscription-packages.toggle');
+    Route::delete('subscription-packages/{subscriptionPackage}', [PlatformSubscriptionPackageController::class, 'destroy'])->name('subscription-packages.destroy');
     Route::get('settings', [PlatformSettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [PlatformSettingController::class, 'update'])->name('settings.update');
 });

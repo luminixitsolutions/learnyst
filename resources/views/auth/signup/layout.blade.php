@@ -71,13 +71,15 @@
         border: 1px solid #d1d5db;
         border-radius: 10px;
         background: #fff;
-        color: #0f172a;
+        color: #0f172a !important;
         font-weight: 500;
         font-size: 14px;
         cursor: pointer;
         font-family: inherit;
+        text-decoration: none !important;
+        box-sizing: border-box;
     }
-    .google-btn:hover { border-color: #94a3b8; }
+    .google-btn:hover { border-color: #94a3b8; color: #0f172a !important; }
     .divider {
         display: flex;
         align-items: center;

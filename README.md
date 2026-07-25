@@ -46,6 +46,26 @@ A complete Laravel 11 + MySQL Learning Management System with Admin, Instructor,
 | Instructor | instructor@learnyst.com  | password  |
 | Learner    | learner@learnyst.com     | password  |
 
+### Demo students
+
+| Student       | Email                         | Password  |
+|---------------|-------------------------------|-----------|
+| Priya Sharma  | priya.sharma@learnyst.com     | password  |
+| Arjun Mehta   | arjun.mehta@learnyst.com      | password  |
+| Sneha Reddy   | sneha.reddy@learnyst.com      | password  |
+| Vikram Patel  | vikram.patel@learnyst.com     | password  |
+| Ananya Iyer   | ananya.iyer@learnyst.com      | password  |
+
+### Demo institutes (company admin login)
+
+| Institute              | Email                     | Password  | Public page |
+|------------------------|---------------------------|-----------|-------------|
+| Luminix IT Solution    | luminix@learnyst.com      | password  | `/companies/luminix-it-solution` |
+| Nova Skills Academy    | nova@learnyst.com         | password  | `/companies/nova-skills-academy` |
+| Apex Career Institute  | apex@learnyst.com         | password  | `/companies/apex-career-institute` |
+| BrightPath Learning    | brightpath@learnyst.com   | password  | `/companies/brightpath-learning` |
+| SkillForge Academy     | skillforge@learnyst.com   | password  | `/companies/skillforge-academy` |
+
 ## Modules
 
 - Authentication (role-based login, profile, password reset)

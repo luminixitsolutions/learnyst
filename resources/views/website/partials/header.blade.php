@@ -101,7 +101,7 @@
                                     </li>
                                 </ul>
                             </li>
-                            <li class="menu-item"><a href="{{ route('website.page', 'pricing') }}">Pricing</a></li>
+                            <li class="menu-item"><a href="{{ route('website.pricing') }}">Pricing</a></li>
                             @auth
                                 @php $mobileRole = auth()->user()->role?->slug; @endphp
                                 @if($mobileRole === 'learner')

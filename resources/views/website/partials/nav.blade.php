@@ -183,7 +183,7 @@
                         </li>
 
                         <li class="menu-item {{ request()->is('pricing') ? 'current-menu-item' : '' }} kingster-normal-menu">
-                            <a href="{{ route('website.page', 'pricing') }}">Pricing</a>
+                            <a href="{{ route('website.pricing') }}">Pricing</a>
                         </li>
                     </ul>
                     <div class="kingster-navigation-slide-bar" id="kingster-navigation-slide-bar"></div>

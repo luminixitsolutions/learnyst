@@ -34,6 +34,8 @@ class DatabaseSeeder extends Seeder
         $this->seedCertificateTemplate();
         $this->seedBundlesAndGroups();
         $this->seedCheckoutConsents();
+        $this->call(DemoInstitutesAndStudentsSeeder::class);
+        $this->call(SubscriptionPackageSeeder::class);
     }
 
     protected function seedBundlesAndGroups(): void

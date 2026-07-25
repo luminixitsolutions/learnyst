@@ -41,6 +41,27 @@
                                 @endif
                             </div>
                             <h3>{{ $company->name }}</h3>
+                            @php
+                                $instituteRating = round((float) ($company->institute_avg_rating ?? 0), 1);
+                                $instituteReviews = (int) ($company->reviews_count ?? 0);
+                                $courseRating = round((float) ($company->course_avg_rating ?? 0), 1);
+                                $courseReviews = (int) ($company->course_reviews_count ?? 0);
+                                $isFeatured = $company->slug === 'luminix-it-solution';
+                                if ($isFeatured && $instituteRating < 5) {
+                                    $instituteRating = 5.0;
+                                }
+                            @endphp
+                            <div class="ly-company-rating">
+                                <span class="ly-company-stars" aria-label="{{ $instituteRating }} out of 5">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fa {{ $i <= round($instituteRating) ? 'fa-star' : 'fa-star-o' }}"></i>
+                                    @endfor
+                                </span>
+                                <strong>{{ $instituteRating > 0 ? number_format($instituteRating, 1) : 'New' }}</strong>
+                                <span class="ly-company-rating-count">
+                                    {{ $instituteReviews > 0 ? $instituteReviews.' '.Str::plural('review', $instituteReviews) : 'No reviews yet' }}
+                                </span>
+                            </div>
                             @if($company->tagline)
                                 <p class="ly-company-tagline">{{ $company->tagline }}</p>
                             @elseif($company->about)
@@ -49,6 +70,9 @@
                             <div class="ly-company-meta">
                                 @if($company->city)<span><i class="fa fa-map-marker"></i> {{ $company->city }}</span>@endif
                                 <span><i class="fa fa-book"></i> {{ $company->courses_count }} {{ Str::plural('course', $company->courses_count) }}</span>
+                                @if($courseReviews > 0)
+                                    <span><i class="fa fa-graduation-cap"></i> Courses {{ number_format($courseRating, 1) }} ({{ $courseReviews }})</span>
+                                @endif
                             </div>
                         </div>
                     </a>

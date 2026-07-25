@@ -39,6 +39,24 @@ class CompanyService
         return Company::query()
             ->publicListed()
             ->withCount(['publishedCourses as courses_count'])
+            ->withCount(['reviews as reviews_count' => fn ($q) => $q->approved()])
+            ->withAvg(['reviews as institute_avg_rating' => fn ($q) => $q->approved()], 'rating')
+            ->selectSub(function ($query) {
+                $query->from('course_reviews')
+                    ->join('courses', 'courses.id', '=', 'course_reviews.course_id')
+                    ->whereColumn('courses.created_by', 'companies.owner_user_id')
+                    ->where('course_reviews.status', 'approved')
+                    ->whereNull('course_reviews.deleted_at')
+                    ->selectRaw('AVG(course_reviews.rating)');
+            }, 'course_avg_rating')
+            ->selectSub(function ($query) {
+                $query->from('course_reviews')
+                    ->join('courses', 'courses.id', '=', 'course_reviews.course_id')
+                    ->whereColumn('courses.created_by', 'companies.owner_user_id')
+                    ->where('course_reviews.status', 'approved')
+                    ->whereNull('course_reviews.deleted_at')
+                    ->selectRaw('COUNT(*)');
+            }, 'course_reviews_count')
             ->with('owner')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -47,6 +65,11 @@ class CompanyService
                         ->orWhere('city', 'like', "%{$search}%");
                 });
             })
+            // Featured institute always first, then highest rated.
+            ->orderByRaw("CASE WHEN companies.slug = 'luminix-it-solution' THEN 0 ELSE 1 END")
+            ->orderByRaw('COALESCE(institute_avg_rating, 0) DESC')
+            ->orderByDesc('reviews_count')
+            ->orderByDesc('courses_count')
             ->orderBy('name')
             ->paginate(12)
             ->withQueryString();

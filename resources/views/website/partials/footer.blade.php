@@ -77,3 +77,31 @@
         </div>
     </div>
 </footer>
+
+<button type="button" class="ly-back-to-top" id="lyBackToTop" aria-label="Back to top" title="Back to top">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</button>
+
+<script>
+(function () {
+    var btn = document.getElementById('lyBackToTop');
+    if (!btn) return;
+
+    function sync() {
+        if (window.scrollY > 320) {
+            btn.classList.add('is-visible');
+        } else {
+            btn.classList.remove('is-visible');
+        }
+    }
+
+    btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    window.addEventListener('scroll', sync, { passive: true });
+    sync();
+})();
+</script>

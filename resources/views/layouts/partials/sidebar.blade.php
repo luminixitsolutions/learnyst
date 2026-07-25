@@ -38,14 +38,87 @@
         return $section;
     })->filter()->values()->all();
 
+    // Show unread institute enquiry count on Website → Enquiries.
+    if ($isCompanyPanel && $user && method_exists($user, 'isCompanyStaff') && $user->isCompanyStaff()) {
+        try {
+            $enquiryCompany = \App\Services\CompanyService::resolveForUser($user);
+            $newEnquiryCount = $enquiryCompany->enquiries()->where('status', 'new')->count();
+            if ($newEnquiryCount > 0) {
+                $companySections = collect($companySections)->map(function ($section) use ($newEnquiryCount) {
+                    if (! isset($section['items'])) {
+                        return $section;
+                    }
+                    $section['items'] = collect($section['items'])->map(function ($item) use ($newEnquiryCount) {
+                        if (($item['route'] ?? null) === 'admin.company-page.enquiries') {
+                            $item['badge'] = (string) $newEnquiryCount;
+                        }
+
+                        return $item;
+                    })->all();
+
+                    return $section;
+                })->all();
+            }
+        } catch (\Throwable $e) {
+            // Ignore — menu should still render if company resolve fails.
+        }
+    }
+
     $menuSections = $isPlatformPanel ? $platformSections : $companySections;
     $panelTitle = $isPlatformPanel ? 'Platform Admin' : ($isStudentPanel || $role === 'learner' ? 'Student Panel' : 'Institute Panel');
+
+    $isMenuItemActive = function (array $item) use ($menuSections): bool {
+        $route = $item['route'] ?? null;
+        if (! $route || ! request()->routeIs($route, $route . '.*')) {
+            return false;
+        }
+
+        $params = $item['params'] ?? [];
+        if (! empty($params)) {
+            foreach ($params as $key => $value) {
+                if ((string) request($key) !== (string) $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Shared route without params: inactive when another sibling's query params match.
+        foreach ($menuSections as $section) {
+            $siblings = isset($section['items']) ? $section['items'] : [$section];
+            foreach ($siblings as $sibling) {
+                if (($sibling['route'] ?? null) !== $route) {
+                    continue;
+                }
+                if (($sibling['label'] ?? null) === ($item['label'] ?? null)) {
+                    continue;
+                }
+                $siblingParams = $sibling['params'] ?? [];
+                if (empty($siblingParams)) {
+                    continue;
+                }
+                $siblingMatches = true;
+                foreach ($siblingParams as $key => $value) {
+                    if ((string) request($key) !== (string) $value) {
+                        $siblingMatches = false;
+                        break;
+                    }
+                }
+                if ($siblingMatches) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
 
     $defaultOpenGroups = [];
     foreach ($menuSections as $section) {
         if (isset($section['group'])) {
             $defaultOpenGroups[$section['group']] = collect($section['items'])->contains(
-                fn ($item) => request()->routeIs($item['route'] . '*')
+                fn ($item) => $isMenuItemActive($item)
             );
         }
     }
@@ -68,8 +141,8 @@
             @if($role === 'super-admin')
                 @foreach($menuSections as $section)
                     @if(isset($section['route']))
-                        @php $isActive = request()->routeIs($section['route'] . '*'); @endphp
-                        <a href="{{ route($section['route']) }}"
+                        @php $isActive = $isMenuItemActive($section); @endphp
+                        <a href="{{ route($section['route'], $section['params'] ?? []) }}"
                            class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ $isActive ? 'active' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70' }}">
                             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $section['icon'] }}"/></svg>
                             {{ $section['label'] }}
@@ -77,7 +150,7 @@
                     @elseif(isset($section['group']))
                         @php
                             $groupName = $section['group'];
-                            $groupActive = collect($section['items'])->contains(fn($i) => request()->routeIs($i['route'] . '*'));
+                            $groupActive = collect($section['items'])->contains(fn ($i) => $isMenuItemActive($i));
                         @endphp
                         <div class="mb-0.5">
                             <button type="button"
@@ -97,10 +170,10 @@
                                  class="ml-3 mt-1 space-y-0.5 border-l-2 border-indigo-100 pl-3">
                                 @foreach($section['items'] as $item)
                                     <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-                                       class="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-lg {{ request()->routeIs($item['route'] . '*') ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
+                                       class="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $isMenuItemActive($item) ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
                                         <span>{{ $item['label'] }}</span>
                                         @if(!empty($item['badge']))
-                                            <span class="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold leading-none rounded-full bg-emerald-100 text-emerald-700">{{ $item['badge'] }}</span>
+                                            <span class="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold leading-none rounded-full {{ is_numeric($item['badge']) ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700' }}">{{ $item['badge'] }}</span>
                                         @endif
                                     </a>
                                 @endforeach
@@ -111,8 +184,8 @@
             @elseif(in_array($role, ['admin', 'sub-admin']))
                 @foreach($menuSections as $section)
                     @if(isset($section['route']))
-                        @php $isActive = request()->routeIs($section['route'] . '*'); @endphp
-                        <a href="{{ route($section['route']) }}"
+                        @php $isActive = $isMenuItemActive($section); @endphp
+                        <a href="{{ route($section['route'], $section['params'] ?? []) }}"
                            class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ $isActive ? 'active' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70' }}">
                             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $section['icon'] }}"/></svg>
                             {{ $section['label'] }}
@@ -120,7 +193,7 @@
                     @elseif(isset($section['group']))
                         @php
                             $groupName = $section['group'];
-                            $groupActive = collect($section['items'])->contains(fn($i) => request()->routeIs($i['route'] . '*'));
+                            $groupActive = collect($section['items'])->contains(fn ($i) => $isMenuItemActive($i));
                         @endphp
                         <div class="mb-0.5">
                             <button type="button"
@@ -140,10 +213,10 @@
                                  class="ml-3 mt-1 space-y-0.5 border-l-2 border-indigo-100 pl-3">
                                 @foreach($section['items'] as $item)
                                     <a href="{{ route($item['route'], $item['params'] ?? []) }}"
-                                       class="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-lg {{ request()->routeIs($item['route'] . '*') ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
+                                       class="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $isMenuItemActive($item) ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
                                         <span>{{ $item['label'] }}</span>
                                         @if(!empty($item['badge']))
-                                            <span class="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold leading-none rounded-full bg-emerald-100 text-emerald-700">{{ $item['badge'] }}</span>
+                                            <span class="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold leading-none rounded-full {{ is_numeric($item['badge']) ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700' }}">{{ $item['badge'] }}</span>
                                         @endif
                                     </a>
                                 @endforeach
@@ -154,8 +227,8 @@
             @else
                 @php $menu = $role === 'instructor' ? $instructorMenu : $learnerMenu; @endphp
                 @foreach($menu as $item)
-                    @php $isActive = request()->routeIs($item['route'] . '*'); @endphp
-                    <a href="{{ route($item['route']) }}"
+                    @php $isActive = $isMenuItemActive($item); @endphp
+                    <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                        class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ $isActive ? 'active' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $item['icon'] }}"/></svg>
                         {{ $item['label'] }}

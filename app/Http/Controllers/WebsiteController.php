@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SubscriptionPackage;
 use App\Services\BlogService;
 use App\Services\CustomerPageService;
 use App\Services\ProductPageService;
@@ -45,6 +46,26 @@ class WebsiteController extends Controller
             'slug' => $slug,
             'related' => SolutionPageService::related($slug),
             'relatedRoute' => 'website.solution',
+        ]);
+    }
+
+    public function pricing()
+    {
+        WebsiteContentService::applyBrandToConfig();
+
+        $packages = SubscriptionPackage::query()
+            ->active()
+            ->ordered()
+            ->get();
+
+        return view('website.pricing', [
+            'page' => config('website.pages.pricing', [
+                'title' => 'Pricing',
+                'caption' => 'Plans',
+                'summary' => 'Flexible plans for startups and growing institutes.',
+                'body' => 'Start with a free trial and scale as you grow.',
+            ]),
+            'packages' => $packages,
         ]);
     }
 

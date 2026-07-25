@@ -73,6 +73,7 @@ return [
             'items' => [
                 ['label' => 'Orders', 'route' => 'admin.orders.index', 'permission' => 'sales.view'],
                 ['label' => 'Payments', 'route' => 'admin.payments.index', 'permission' => 'sales.view'],
+                ['label' => 'Payment / Razorpay', 'route' => 'admin.settings.index', 'params' => ['tab' => 'payment'], 'permission' => 'settings.view'],
                 ['label' => 'Checkout Consent', 'route' => 'admin.checkout-consents.index', 'permission' => 'sales.view'],
                 ['label' => 'Coupons', 'route' => 'admin.marketing.coupons', 'permission' => 'sales.view'],
             ],
@@ -143,6 +144,7 @@ return [
             'items' => [
                 ['label' => 'Institute Profile', 'route' => 'admin.company-profile.edit', 'permission' => 'settings.view'],
                 ['label' => 'Website Settings', 'route' => 'admin.settings.index', 'permission' => 'settings.view'],
+                ['label' => 'Payment / Razorpay', 'route' => 'admin.settings.index', 'params' => ['tab' => 'payment'], 'permission' => 'settings.view'],
                 ['label' => 'Social Links', 'route' => 'admin.settings.social', 'permission' => 'settings.view'],
             ],
         ],

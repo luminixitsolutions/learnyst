@@ -19,12 +19,25 @@ class CompanyPageContentController extends Controller
 {
     use ResolvesCompanyProfile;
 
-    public function testimonialsIndex()
+    public function testimonialsIndex(Request $request)
     {
         $company = $this->currentCompany();
-        $items = $company->testimonials()->paginate(15);
+        $status = $request->query('status');
 
-        return view('admin.company-content.testimonials.index', compact('company', 'items'));
+        $items = $company->testimonials()
+            ->when($status === 'published', fn ($q) => $q->where('is_published', true))
+            ->when($status === 'hidden', fn ($q) => $q->where('is_published', false))
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+
+        $stats = [
+            'total' => $company->testimonials()->count(),
+            'published' => $company->testimonials()->where('is_published', true)->count(),
+            'hidden' => $company->testimonials()->where('is_published', false)->count(),
+        ];
+
+        return view('admin.company-content.testimonials.index', compact('company', 'items', 'stats', 'status'));
     }
 
     public function testimonialsStore(Request $request)
@@ -90,7 +103,24 @@ class CompanyPageContentController extends Controller
             'is_published' => $request->boolean('is_published'),
         ]);
 
+        ActivityLogger::log('company_testimonial_updated', 'Testimonial updated', $testimonial);
+
         return back()->with('success', 'Testimonial updated.');
+    }
+
+    public function testimonialsToggle(CompanyTestimonial $testimonial)
+    {
+        $company = $this->currentCompany();
+        $this->authorizeCompanyOwned($company, $testimonial->company_id);
+
+        $testimonial->update([
+            'is_published' => ! $testimonial->is_published,
+        ]);
+
+        $label = $testimonial->is_published ? 'published' : 'hidden';
+        ActivityLogger::log('company_testimonial_toggled', "Testimonial marked {$label}", $testimonial);
+
+        return back()->with('success', "Testimonial {$label}.");
     }
 
     public function testimonialsDestroy(CompanyTestimonial $testimonial)
@@ -105,12 +135,25 @@ class CompanyPageContentController extends Controller
         return back()->with('success', 'Testimonial deleted.');
     }
 
-    public function reviewsIndex()
+    public function reviewsIndex(Request $request)
     {
         $company = $this->currentCompany();
-        $items = $company->reviews()->paginate(20);
+        $status = $request->query('status');
 
-        return view('admin.company-content.reviews.index', compact('company', 'items'));
+        $items = $company->reviews()
+            ->when($status === 'approved', fn ($q) => $q->where('is_approved', true))
+            ->when($status === 'pending', fn ($q) => $q->where('is_approved', false))
+            ->latest()
+            ->get();
+
+        $stats = [
+            'total' => $company->reviews()->count(),
+            'approved' => $company->reviews()->where('is_approved', true)->count(),
+            'pending' => $company->reviews()->where('is_approved', false)->count(),
+            'avg_rating' => round((float) $company->reviews()->where('is_approved', true)->avg('rating'), 1),
+        ];
+
+        return view('admin.company-content.reviews.index', compact('company', 'items', 'stats', 'status'));
     }
 
     public function reviewsApprove(CompanyReview $review)
@@ -140,10 +183,14 @@ class CompanyPageContentController extends Controller
         return back()->with('success', 'Review deleted.');
     }
 
-    public function enquiriesIndex()
+    public function enquiriesIndex(Request $request)
     {
         $company = $this->currentCompany();
-        $items = $company->enquiries()->paginate(20);
+        $status = $request->query('status');
+
+        $items = $company->enquiries()
+            ->when(in_array($status, ['new', 'read', 'replied'], true), fn ($q) => $q->where('status', $status))
+            ->paginate(20);
 
         return view('admin.company-content.enquiries.index', compact('company', 'items'));
     }
@@ -167,12 +214,26 @@ class CompanyPageContentController extends Controller
         return back()->with('success', 'Enquiry deleted.');
     }
 
-    public function galleryIndex()
+    public function galleryIndex(Request $request)
     {
         $company = $this->currentCompany();
-        $items = $company->galleryItems()->paginate(24);
+        $status = $request->query('status');
 
-        return view('admin.company-content.gallery.index', compact('company', 'items'));
+        $items = $company->galleryItems()
+            ->when($status === 'published', fn ($q) => $q->where('is_published', true))
+            ->when($status === 'hidden', fn ($q) => $q->where('is_published', false))
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->paginate(9)
+            ->withQueryString();
+
+        $stats = [
+            'total' => $company->galleryItems()->count(),
+            'published' => $company->galleryItems()->where('is_published', true)->count(),
+            'hidden' => $company->galleryItems()->where('is_published', false)->count(),
+        ];
+
+        return view('admin.company-content.gallery.index', compact('company', 'items', 'stats', 'status'));
     }
 
     public function galleryStore(Request $request)
@@ -200,16 +261,45 @@ class CompanyPageContentController extends Controller
     {
         $company = $this->currentCompany();
         $this->authorizeCompanyOwned($company, $gallery->company_id);
+
         $data = $request->validate([
             'caption' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'max:5120'],
             'is_published' => ['nullable'],
         ]);
+
+        $image = $gallery->image;
+        if ($request->hasFile('image')) {
+            if ($image && ! str_starts_with($image, 'website/')) {
+                Storage::disk('public')->delete($image);
+            }
+            $image = $request->file('image')->store('companies/gallery', 'public');
+        }
+
         $gallery->update([
             'caption' => $data['caption'] ?? null,
+            'image' => $image,
             'is_published' => $request->boolean('is_published'),
         ]);
 
+        ActivityLogger::log('company_gallery_updated', 'Gallery item updated', $gallery);
+
         return back()->with('success', 'Gallery item updated.');
+    }
+
+    public function galleryToggle(CompanyGalleryItem $gallery)
+    {
+        $company = $this->currentCompany();
+        $this->authorizeCompanyOwned($company, $gallery->company_id);
+
+        $gallery->update([
+            'is_published' => ! $gallery->is_published,
+        ]);
+
+        $label = $gallery->is_published ? 'published' : 'hidden';
+        ActivityLogger::log('company_gallery_toggled', "Gallery item marked {$label}", $gallery);
+
+        return back()->with('success', "Gallery image {$label}.");
     }
 
     public function galleryDestroy(CompanyGalleryItem $gallery)

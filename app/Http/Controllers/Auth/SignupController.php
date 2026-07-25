@@ -120,6 +120,7 @@ class SignupController extends Controller
         $signup = session('signup', []);
         $signup['email'] = $validated['email'];
         $signup['password'] = $validated['password'];
+        unset($signup['google_id'], $signup['google_name'], $signup['auth_provider']);
         session(['signup' => $signup]);
 
         return redirect()->route('signup.show', 'company');
@@ -219,30 +220,55 @@ class SignupController extends Controller
         ]);
 
         $signup = session('signup', []);
-        abort_unless(! empty($signup['email']) && ! empty($signup['password']) && ! empty($signup['company_name']), 403);
+        $isGoogle = ($signup['auth_provider'] ?? null) === 'google' && ! empty($signup['google_id']);
+        abort_unless(
+            ! empty($signup['email'])
+            && ! empty($signup['company_name'])
+            && ($isGoogle || ! empty($signup['password'])),
+            403
+        );
 
         $signup['source'] = $validated['source'];
 
         $adminRole = Role::where('slug', 'admin')->firstOrFail();
 
-        $user = User::create([
+        $userData = [
             'role_id' => $adminRole->id,
             'name' => $signup['company_name'],
             'email' => $signup['email'],
             'phone' => $signup['phone'] ?? null,
-            'password' => Hash::make($signup['password']),
             'notes' => json_encode([
                 'onboarding' => collect($signup)->only([
                     'business_type', 'teach', 'goal', 'content_ready', 'audience', 'source',
                 ])->all(),
             ]),
             'is_active' => true,
-            'email_verified_at' => null,
-        ]);
+        ];
+
+        if ($isGoogle) {
+            $userData['google_id'] = $signup['google_id'];
+            $userData['password'] = Hash::make(str()->random(40));
+            $userData['email_verified_at'] = now();
+        } else {
+            $userData['password'] = Hash::make($signup['password']);
+            $userData['email_verified_at'] = null;
+        }
+
+        $user = User::create($userData);
 
         Company::firstOrCreateForOwner($user);
 
         session()->forget('signup');
+
+        if ($isGoogle) {
+            Auth::login($user);
+            $request->session()->regenerate();
+
+            return redirect()
+                ->route('admin.dashboard')
+                ->with('success', 'Welcome! Your institute account is ready.');
+        }
+
         session(['signup_verify_email' => $user->email]);
 
         return redirect()->route('signup.show', 'verify');
