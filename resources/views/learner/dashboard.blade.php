@@ -36,8 +36,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @forelse($enrollments as $enrollment)
                 <a href="{{ route('learner.courses.show', $enrollment->course) }}" class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-emerald-400/40 transition">
-                    @if($enrollment->course?->thumbnail)
-                        <img src="{{ Storage::url($enrollment->course->thumbnail) }}" alt="" class="w-full h-32 object-cover rounded-lg mb-3">
+                    @if($enrollment->course?->thumbnailUrl())
+                        <img src="{{ $enrollment->course->thumbnailUrl() }}" alt="{{ $enrollment->course->title }}" class="w-full h-32 object-cover rounded-lg mb-3">
                     @else
                         <div class="w-full h-32 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 font-bold mb-3">{{ strtoupper(substr($enrollment->course?->title ?? 'C', 0, 2)) }}</div>
                     @endif

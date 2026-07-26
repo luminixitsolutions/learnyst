@@ -84,8 +84,8 @@
         @foreach($courses as $course)
         <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
             <div class="relative h-40 bg-slate-100">
-                @if($course->thumbnail)
-                    <img src="{{ Storage::url($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                @if($course->thumbnailUrl())
+                    <img src="{{ $course->thumbnailUrl() }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
                         <span class="text-3xl font-bold text-indigo-400">{{ strtoupper(substr($course->title, 0, 2)) }}</span>

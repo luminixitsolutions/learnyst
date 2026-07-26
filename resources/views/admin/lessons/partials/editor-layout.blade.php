@@ -5,9 +5,18 @@
     $totalLessons = $course->lessons()->count();
     $lessonIndex = $course->lessons()->where('course_lessons.id', '<=', $lesson->id)->count();
     $typeLabel = $lesson->typeLabel();
+    $hasMedia = $lesson->hasPlayableMedia();
+    $embedSrc = $lesson->embedSrc();
+    $fileUrl = $lesson->fileUrl();
+    $isEmbed = $lesson->isExternalEmbed();
 @endphp
 
-<div x-data="{ dragOver: false, showSettings: false, showPreview: false, showEmbed: false }">
+<div x-data="{
+    dragOver: false,
+    showSettings: false,
+    showPreview: false,
+    showEmbed: {{ ($showEmbed || $showVideoUrl) && ($isEmbed || filled($lesson->video_url)) ? 'true' : 'false' }}
+}">
     {{-- Top toolbar --}}
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3 text-sm text-slate-500">
@@ -47,25 +56,48 @@
                 </div>
 
                 @if(in_array($mediaType, ['video', 'audio', 'pdf']))
-                {{-- Dropzone --}}
+                {{-- Media preview / dropzone --}}
                 <div @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false"
                      @drop.prevent="dragOver = false; const dt = $event.dataTransfer.files; if(dt.length) { $refs.uploadInput.files = dt; $refs.uploadForm.submit(); }"
                      :class="dragOver ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-200 bg-white'"
-                     class="border-2 border-dashed rounded-xl min-h-[320px] flex items-center justify-center transition mb-4">
-                    <div class="text-center p-8">
-                        @if($lesson->file_path || $lesson->video_url)
+                     class="border-2 border-dashed rounded-xl min-h-[320px] flex items-center justify-center transition mb-4 overflow-hidden">
+                    <div class="text-center p-4 w-full">
+                        @if($hasMedia)
                             @if($mediaType === 'video')
-                                <video controls class="max-w-full max-h-64 mx-auto rounded-lg mb-4" src="{{ $lesson->video_url ?: Storage::url($lesson->file_path) }}"></video>
-                            @elseif($mediaType === 'audio')
-                                <audio controls class="w-full max-w-md mx-auto mb-4" src="{{ Storage::url($lesson->file_path) }}"></audio>
-                            @elseif($mediaType === 'pdf')
-                                <iframe src="{{ Storage::url($lesson->file_path) }}" class="w-full h-64 rounded-lg mb-4"></iframe>
+                                @if($isEmbed && $embedSrc)
+                                    <div class="aspect-video w-full max-w-3xl mx-auto rounded-lg overflow-hidden bg-black mb-3">
+                                        <iframe src="{{ $embedSrc }}" class="w-full h-full" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                    </div>
+                                    <p class="text-sm text-green-600 font-medium">Embedded video ready</p>
+                                @elseif($fileUrl)
+                                    <video controls class="max-w-full max-h-72 mx-auto rounded-lg mb-3" src="{{ $fileUrl }}"></video>
+                                    <p class="text-sm text-green-600 font-medium">{{ basename($lesson->file_path) }}</p>
+                                @elseif($embedSrc)
+                                    <video controls class="max-w-full max-h-72 mx-auto rounded-lg mb-3" src="{{ $embedSrc }}"></video>
+                                    <p class="text-sm text-green-600 font-medium">Video URL linked</p>
+                                @endif
+                            @elseif($mediaType === 'audio' && $fileUrl)
+                                <audio controls class="w-full max-w-md mx-auto mb-3" src="{{ $fileUrl }}"></audio>
+                                <p class="text-sm text-green-600 font-medium">{{ basename($lesson->file_path) }}</p>
+                            @elseif($mediaType === 'pdf' && $fileUrl)
+                                <iframe src="{{ $fileUrl }}" class="w-full h-72 rounded-lg mb-3"></iframe>
+                                <p class="text-sm text-green-600 font-medium">{{ basename($lesson->file_path) }}</p>
                             @endif
-                            <p class="text-sm text-green-600 font-medium">{{ basename($lesson->file_path ?? $lesson->video_url) }}</p>
+
                             @if(in_array($lesson->media_processing_status, ['processing', 'encryption']))
-                            <p class="text-xs text-amber-600 mt-1">{{ $lesson->media_processing_status === 'encryption' ? 'Encryption in progress...' : 'Processing...' }}</p>
+                                <p class="text-xs text-amber-600 mt-1">{{ $lesson->media_processing_status === 'encryption' ? 'Encryption in progress...' : 'Processing...' }}</p>
                             @endif
+
+                            <p class="text-xs text-slate-400 mt-3">
+                                Drop a new file to replace, or use
+                                <label class="text-indigo-600 font-medium cursor-pointer hover:underline">
+                                    browse files
+                                    <input type="file" name="file_path" accept="{{ $accept }}" class="hidden" @change="$el.closest('form').submit()">
+                                </label>
+                            </p>
                         @else
+                            <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <p class="text-slate-500 text-sm mb-1">No {{ $mediaType }} uploaded yet</p>
                             <p class="text-slate-500 text-sm">
                                 Drop files here or
                                 <label class="text-indigo-600 font-medium cursor-pointer hover:underline">
@@ -73,6 +105,9 @@
                                     <input type="file" name="file_path" accept="{{ $accept }}" class="hidden" @change="$el.closest('form').submit()">
                                 </label>
                             </p>
+                            @if($showVideoUrl || $showEmbed)
+                            <p class="text-xs text-slate-400 mt-2">or click <button type="button" @click="showEmbed = true" class="text-indigo-600 hover:underline">Embed video</button> to paste a YouTube / Vimeo URL</p>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -92,8 +127,9 @@
                     @endif
                 </div>
 
-                <div x-show="showEmbed" x-cloak class="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
-                    <x-form-input label="Video / Embed URL" name="video_url" :value="$lesson->video_url" placeholder="https://" />
+                <div x-show="showEmbed" x-cloak class="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+                    <x-form-input label="Video / Embed URL" name="video_url" :value="$lesson->video_url" placeholder="https://youtube.com/watch?v=... or https://youtu.be/..." />
+                    <p class="text-xs text-slate-400">Supports YouTube, Vimeo, or a direct video file URL. Click Save after pasting.</p>
                 </div>
                 @endif
 

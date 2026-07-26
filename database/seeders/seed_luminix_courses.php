@@ -314,6 +314,8 @@ function upsertCourse(int $ownerId, array $data): Course
                 'lesson_type' => $i === 0 ? 'video' : 'text',
                 'status' => 'published',
                 'content' => 'Lesson overview and practice notes for: '.$lessonTitle,
+                'video_url' => $i === 0 ? 'https://www.youtube.com/watch?v=eIho2S0ZahI' : null,
+                'media_processing_status' => $i === 0 ? 'ready' : 'none',
                 'duration_minutes' => 12 + ($i * 3),
                 'is_preview' => $i === 0,
                 'is_locked' => false,

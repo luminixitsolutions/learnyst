@@ -82,4 +82,61 @@ class CourseLesson extends Model
     {
         return route('admin.lessons.edit', $this);
     }
+
+    public function hasPlayableMedia(): bool
+    {
+        return filled($this->video_url) || filled($this->file_path) || filled($this->external_url);
+    }
+
+    public function fileUrl(): ?string
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        $path = ltrim($this->file_path, '/');
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, 'website/')) {
+            return '/'.$path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return '/'.$path;
+        }
+
+        return '/storage/'.$path;
+    }
+
+    /**
+     * Normalize YouTube/Vimeo/watch URLs into an embeddable iframe src.
+     */
+    public function embedSrc(): ?string
+    {
+        $url = trim((string) ($this->video_url ?: $this->external_url ?: ''));
+        if ($url === '') {
+            return null;
+        }
+
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]+)/', $url, $m)) {
+            return 'https://www.youtube.com/embed/'.$m[1];
+        }
+
+        if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $m)) {
+            return 'https://player.vimeo.com/video/'.$m[1];
+        }
+
+        // Already an embed URL or direct media URL
+        return $url;
+    }
+
+    public function isExternalEmbed(): bool
+    {
+        $url = (string) ($this->video_url ?: $this->external_url ?: '');
+
+        return (bool) preg_match('/youtube\.com|youtu\.be|vimeo\.com/i', $url);
+    }
 }

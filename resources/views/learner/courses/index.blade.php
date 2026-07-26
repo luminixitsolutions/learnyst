@@ -10,8 +10,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($enrollments as $enrollment)
         <a href="{{ route('learner.courses.show', $enrollment->course) }}" class="glass-card rounded-2xl overflow-hidden hover:border-indigo-400/30 transition group">
-            @if($enrollment->course?->thumbnail)
-                <img src="{{ Storage::url($enrollment->course->thumbnail) }}" alt="" class="w-full h-40 object-cover">
+            @if($enrollment->course?->thumbnailUrl())
+                <img src="{{ $enrollment->course->thumbnailUrl() }}" alt="{{ $enrollment->course->title }}" class="w-full h-40 object-cover">
             @else
                 <div class="w-full h-40 bg-slate-800 flex items-center justify-center text-3xl font-bold text-indigo-600">{{ strtoupper(substr($enrollment->course?->title ?? 'C', 0, 2)) }}</div>
             @endif

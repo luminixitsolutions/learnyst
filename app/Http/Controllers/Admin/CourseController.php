@@ -132,7 +132,37 @@ class CourseController extends Controller
         $instructors = $this->ownedUsersQuery('instructor')->orderBy('name')->get();
         $tab = $request->get('tab', 'curriculum');
 
-        return view('admin.courses.builder', compact('course', 'categories', 'tags', 'instructors', 'tab'));
+        $enrollments = null;
+        $learnerStats = null;
+        if ($tab === 'learners') {
+            $enrollmentQuery = $course->enrollments()
+                ->with(['user', 'order', 'batch', 'bundle'])
+                ->when($request->filled('search'), function ($q) use ($request) {
+                    $search = $request->search;
+                    $q->whereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+                })
+                ->latest('enrolled_at');
+
+            $enrollments = $enrollmentQuery->paginate(20)->withQueryString();
+
+            $learnerStats = [
+                'total' => $course->enrollments()->count(),
+                'active' => $course->enrollments()->where('status', 'active')->count(),
+                'paid' => $course->enrollments()->where(function ($q) {
+                    $q->where('access_type', 'paid')
+                        ->orWhere('amount', '>', 0)
+                        ->orWhereNotNull('order_id');
+                })->count(),
+                'completed' => $course->enrollments()->whereNotNull('completed_at')->count(),
+            ];
+        }
+
+        return view('admin.courses.builder', compact(
+            'course', 'categories', 'tags', 'instructors', 'tab', 'enrollments', 'learnerStats'
+        ));
     }
 
     public function edit(Course $course)

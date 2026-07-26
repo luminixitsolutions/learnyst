@@ -42,16 +42,24 @@
                class="pb-3 text-sm font-semibold border-b-2 transition {{ $tab === 'settings' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
                 Settings
             </a>
+            <a href="{{ route('admin.courses.builder', ['course' => $course, 'tab' => 'learners']) }}"
+               class="pb-3 text-sm font-semibold border-b-2 transition {{ $tab === 'learners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
+                Learners
+            </a>
         </nav>
     </div>
 
     @if($tab === 'settings')
         @include('admin.courses.partials.builder-settings')
+    @elseif($tab === 'learners')
+        @include('admin.courses.partials.builder-learners')
     @else
         @include('admin.courses.partials.builder-curriculum')
     @endif
 
-    @include('admin.courses.partials.add-lesson-drawer')
+    @if($tab === 'curriculum')
+        @include('admin.courses.partials.add-lesson-drawer')
+    @endif
 
     {{-- Add Section Modal --}}
     <div x-show="sectionModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

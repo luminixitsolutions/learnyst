@@ -29,6 +29,10 @@
             return $section;
         }
         $items = collect($section['items'] ?? [])->filter(function ($item) use ($user) {
+            if (! empty($item['hidden'])) {
+                return false;
+            }
+
             return PermissionService::canAccessRoute($user, $item['permission'] ?? null);
         })->values()->all();
         if (empty($items)) {

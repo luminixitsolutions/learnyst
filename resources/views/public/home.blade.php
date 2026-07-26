@@ -61,7 +61,7 @@
             @foreach($courses as $course)
             <a href="{{ route('public.course', $course) }}" class="rounded-2xl overflow-hidden bg-slate-900/60 border border-slate-800 hover:border-brand-500/30 transition group">
                 @if($course->thumbnail)
-                    <img src="{{ Storage::url($course->thumbnail) }}" alt="" class="w-full h-44 object-cover">
+                    <img src="{{ $course->thumbnailUrl() }}" alt="" class="w-full h-44 object-cover">
                 @else
                     <div class="w-full h-44 bg-slate-800 flex items-center justify-center text-3xl font-bold text-brand-400">{{ strtoupper(substr($course->title, 0, 2)) }}</div>
                 @endif

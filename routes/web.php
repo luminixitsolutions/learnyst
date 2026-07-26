@@ -497,6 +497,10 @@ Route::prefix('learner')->name('learner.')->middleware(['auth', 'role:learner'])
     Route::get('/courses', [LearnerCourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/{course:slug}', [LearnerCourseController::class, 'show'])->name('courses.show');
     Route::get('/lessons/{lesson}', [LearnerCourseController::class, 'lesson'])->name('lessons.show');
+    Route::post('/lessons/{lesson}/complete', [LearnerCourseController::class, 'complete'])->name('lessons.complete');
+    Route::post('/lessons/{lesson}/incomplete', [LearnerCourseController::class, 'incomplete'])->name('lessons.incomplete');
+    Route::post('/courses/{course:slug}/certificate', [LearnerCourseController::class, 'issueCertificate'])->name('courses.certificate.issue');
+    Route::get('/certificates/{certificate}/download', [LearnerCourseController::class, 'downloadCertificate'])->name('certificates.download');
     Route::get('/certificates', [LearnerDashboardController::class, 'certificates'])->name('certificates');
     Route::get('/communities', [LearnerCommunityController::class, 'index'])->name('communities.index');
     Route::get('/communities/{community:slug}', [LearnerCommunityController::class, 'show'])->name('communities.show');

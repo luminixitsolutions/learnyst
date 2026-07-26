@@ -9,7 +9,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             @if($course->thumbnail)
-                <img src="{{ Storage::url($course->thumbnail) }}" alt="" class="w-16 h-16 rounded-xl object-cover">
+                <img src="{{ $course->thumbnailUrl() }}" alt="" class="w-16 h-16 rounded-xl object-cover">
             @endif
             <div>
                 <x-badge :type="match($course->status) { 'published' => 'success', 'draft' => 'warning', default => 'default' }">{{ ucfirst($course->status) }}</x-badge>

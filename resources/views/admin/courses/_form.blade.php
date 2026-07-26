@@ -49,8 +49,8 @@
 <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
     <div class="space-y-1.5">
         <label class="block text-sm font-medium text-slate-700">Course Thumbnail</label>
-        @if($course?->thumbnail)
-            <img src="{{ Storage::url($course->thumbnail) }}" alt="" class="w-32 h-20 object-cover rounded-lg mb-2">
+        @if($course?->thumbnailUrl())
+            <img src="{{ $course->thumbnailUrl() }}" alt="" class="w-32 h-20 object-cover rounded-lg mb-2">
         @endif
         <input type="file" name="thumbnail" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-900 file:text-white">
         @error('thumbnail')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror

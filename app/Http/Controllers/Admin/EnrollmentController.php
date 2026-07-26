@@ -155,7 +155,11 @@ class EnrollmentController extends Controller
 
     public function history(User $learner)
     {
-        $this->authorizeOwner($learner);
+        abort_unless(
+            $this->visibleLearnersQuery()->whereKey($learner->id)->exists(),
+            403,
+            'You do not have access to this resource.'
+        );
 
         $enrollments = CourseEnrollment::with(['course', 'batch', 'bundle', 'order'])
             ->where('user_id', $learner->id);

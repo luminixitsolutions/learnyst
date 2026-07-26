@@ -12,6 +12,38 @@
     --ly-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
 }
 
+/* Flush page edges — kill theme frame / body gaps */
+html,
+body.kingster-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+}
+.kingster-body-outer-wrapper,
+.kingster-body-wrapper,
+.kingster-body-wrapper.kingster-with-frame {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    max-width: none !important;
+}
+body.kingster-full .kingster-body-wrapper,
+body.kingster-boxed .kingster-body-wrapper {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+.kingster-footer-wrapper {
+    padding-top: 56px !important;
+    padding-bottom: 36px !important;
+}
+.kingster-copyright-wrapper {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+.kingster-footer-wrapper .widget {
+    margin-bottom: 28px !important;
+}
+
 .learnyst-brand-text {
     display: inline-block;
     font-family: Poppins, sans-serif;
@@ -378,9 +410,9 @@
 
 /* Hero */
 .learnyst-hero-slider {
-    position: relative; overflow: hidden; color: #fff; min-height: 620px;
+    position: relative; overflow: hidden; color: #fff; min-height: 560px;
 }
-.learnyst-hero-slider .slides { position: relative; min-height: 620px; }
+.learnyst-hero-slider .slides { position: relative; min-height: 560px; }
 .learnyst-hero-slider .slide {
     position: absolute; inset: 0; opacity: 0; visibility: hidden; pointer-events: none;
     transition: opacity .8s ease, visibility .8s ease;
@@ -391,7 +423,7 @@
     position: absolute; inset: 0;
     background: linear-gradient(120deg, rgba(11,18,32,.9) 8%, rgba(20,83,45,.55) 62%, rgba(11,18,32,.4));
 }
-.learnyst-hero-slider .slide-content { position: relative; z-index: 2; padding: 120px 0 110px; }
+.learnyst-hero-slider .slide-content { position: relative; z-index: 2; padding: 72px 0 64px; }
 .learnyst-hero-slider .ly-brand-mark {
     margin: 0 0 18px; font-family: Poppins, sans-serif; font-size: clamp(40px, 5.2vw, 60px);
     font-weight: 700; letter-spacing: -1.2px; line-height: 1; color: #fff;
@@ -433,7 +465,7 @@
 
 /* Video */
 .learnyst-video-section {
-    padding: 56px 0 40px; background: linear-gradient(180deg, #fff 0%, #f8fafc 100%); text-align: center;
+    padding: 40px 0 28px; background: linear-gradient(180deg, #fff 0%, #f8fafc 100%); text-align: center;
 }
 .learnyst-video-ctas { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-bottom: 32px; }
 .learnyst-video-player {
@@ -484,7 +516,7 @@
 .learnyst-stat-item span { color: rgba(255,255,255,.78); font-family: Poppins, sans-serif; font-size: 15px; }
 
 /* Shared sections */
-.ly-section { padding: 88px 0; }
+.ly-section { padding: 64px 0; }
 .ly-section-soft { background: var(--ly-soft); }
 .ly-section-dark {
     background: radial-gradient(circle at top right, #14532d, #0b1220 55%);
@@ -590,7 +622,7 @@
 .ly-center { text-align: center; margin-top: 28px; }
 
 .ly-cta-banner {
-    text-align: center; padding: 72px 20px;
+    text-align: center; padding: 56px 20px;
     background: linear-gradient(135deg, #0b1220 0%, #163663 48%, #15803d 120%);
     border-radius: 0;
 }
@@ -1451,14 +1483,16 @@
     .ly-auth-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 767px) {
-    .learnyst-hero-slider, .learnyst-hero-slider .slides { min-height: 540px; }
+    .learnyst-hero-slider, .learnyst-hero-slider .slides { min-height: 480px; }
+    .learnyst-hero-slider .slide-content { padding: 48px 0 52px; }
     .learnyst-hero-nav, .learnyst-platform-nav { display: none; }
-    .learnyst-video-section { padding: 36px 0 28px; }
+    .learnyst-video-section { padding: 28px 0 20px; }
     .learnyst-video-player { border-radius: 14px; }
     .learnyst-partners { justify-content: center; }
     .learnyst-partner-item { flex: 0 0 calc(50% - 16px); max-width: none; }
     .learnyst-stats-grid { grid-template-columns: 1fr; gap: 24px; }
-    .ly-section { padding: 64px 0; }
+    .ly-section { padding: 48px 0; }
+    .ly-cta-banner { padding: 44px 16px; }
     .ly-grid-4, .ly-grid-2 { grid-template-columns: 1fr; }
     .ly-product-hero-inner { grid-template-columns: 1fr; padding: 40px 20px 32px; gap: 20px; }
     .ly-product-hero-visual { order: -1; }
