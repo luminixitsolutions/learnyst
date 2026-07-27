@@ -122,7 +122,7 @@
                 <div class="space-y-1.5">
                     <label class="block text-sm font-medium text-slate-700">{{ $label }}</label>
                     <input type="{{ str_contains($key, 'color') ? 'color' : 'text' }}" name="settings[{{ $loop->index }}][value]"
-                           value="{{ $groups['general'][$key] ?? ($key === 'secondary_color' ? '#6366f1' : '') }}"
+                           value="{{ $groups['general'][$key] ?? ($key === 'secondary_color' ? '#0d9488' : '') }}"
                            class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm">
                     <input type="hidden" name="settings[{{ $loop->index }}][group]" value="general">
                     <input type="hidden" name="settings[{{ $loop->index }}][key]" value="{{ $key }}">

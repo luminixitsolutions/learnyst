@@ -87,7 +87,7 @@
                 @if($course->thumbnailUrl())
                     <img src="{{ $course->thumbnailUrl() }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                 @else
-                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
+                    <div class="w-full h-full flex items-center justify-center" style="background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12));">
                         <span class="text-3xl font-bold text-indigo-400">{{ strtoupper(substr($course->title, 0, 2)) }}</span>
                     </div>
                 @endif

@@ -70,6 +70,7 @@
                 'html' => $html,
                 'replacements' => $replacements,
                 'preview' => false,
+                'showQr' => (bool) ($certificate->course?->settings?->certificate_config['qr_verification'] ?? true),
             ])
         </div>
     </div>

@@ -40,8 +40,8 @@
         text-decoration: none;
     }
     .tm-filter-chip.is-active {
-        background: #4f46e5;
-        border-color: #4f46e5;
+        background: #0d9488;
+        border-color: #0d9488;
         color: #fff;
     }
 
@@ -58,8 +58,8 @@
         cursor: pointer;
     }
     .action-icon-btn svg { width: 1rem; height: 1rem; }
-    .action-icon-btn--edit { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
-    .action-icon-btn--edit:hover { background: #e0e7ff; }
+    .action-icon-btn--edit { color: #0d9488; border-color: #b6dfdb; background: #ecfdf5; }
+    .action-icon-btn--edit:hover { background: #ccfbf1; }
     .action-icon-btn--publish { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
     .action-icon-btn--publish:hover { background: #d1fae5; }
     .action-icon-btn--hide { color: #d97706; border-color: #fde68a; background: #fffbeb; }
@@ -339,13 +339,13 @@
     $table.addClass('cell-border row-border');
 
     $table.DataTable({
+        autoWidth: true,
         order: [[4, 'desc']],
         pageLength: 10,
         lengthChange: false,
         dom: '<"dt-toolbar"f>rt<"dt-footer"ip>',
         columnDefs: [
-            { orderable: false, targets: [5] },
-            { searchable: false, targets: [5] }
+            { orderable: false, searchable: false, targets: [5], className: 'dt-col-actions text-right' },
         ],
         language: {
             search: 'Search:',

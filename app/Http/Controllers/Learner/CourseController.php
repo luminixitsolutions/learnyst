@@ -10,6 +10,7 @@ use App\Models\CourseLesson;
 use App\Models\LessonProgress;
 use App\Services\ActivityLogger;
 use App\Services\CertificateDesignService;
+use App\Services\CertificateLifecycleService;
 use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
@@ -38,6 +39,9 @@ class CourseController extends Controller
 
         $course->load(['sections.lessons']);
 
+        $this->reconcileEnrollmentProgress($enrollment, $course);
+        $enrollment->refresh();
+
         $completedLessonIds = LessonProgress::where('user_id', Auth::id())
             ->where('is_completed', true)
             ->whereIn('course_lesson_id', $course->lessons()->pluck('course_lessons.id'))
@@ -61,6 +65,9 @@ class CourseController extends Controller
                 ->with('error', 'Please enroll to access this course.');
         }
 
+        $course->load(['sections.lessons']);
+        $this->reconcileEnrollmentProgress($enrollment, $course);
+
         if (! $this->hasCompletedAllLessons($course, Auth::id())) {
             return back()->with('error', 'Complete all lessons before issuing your certificate.');
         }
@@ -79,6 +86,11 @@ class CourseController extends Controller
         if (! $certificate->issued_at) {
             $certificate->update(['issued_at' => now()]);
         }
+
+        app(CertificateLifecycleService::class)->applyLifecycle(
+            $certificate->fresh(),
+            app(CertificateDesignService::class)->forCourse($course)
+        );
 
         if ($enrollment->progress < 100) {
             $this->recalculateEnrollmentProgress($enrollment, $course);
@@ -233,5 +245,43 @@ class CourseController extends Controller
             'progress' => $progress,
             'completed_at' => $progress >= 100 ? ($enrollment->completed_at ?? now()) : null,
         ]);
+    }
+
+    protected function reconcileEnrollmentProgress(CourseEnrollment $enrollment, Course $course): void
+    {
+        $lessonIds = $course->lessons()->pluck('course_lessons.id');
+        $totalLessons = $lessonIds->count();
+
+        if ($totalLessons === 0) {
+            $this->recalculateEnrollmentProgress($enrollment, $course);
+
+            return;
+        }
+
+        $completedCount = LessonProgress::where('user_id', $enrollment->user_id)
+            ->where('is_completed', true)
+            ->whereIn('course_lesson_id', $lessonIds)
+            ->count();
+
+        $enrollmentMarkedComplete = (float) $enrollment->progress >= 100 || $enrollment->completed_at !== null;
+
+        if ($enrollmentMarkedComplete && $completedCount < $totalLessons) {
+            $completedAt = $enrollment->completed_at ?? now();
+
+            foreach ($lessonIds as $lessonId) {
+                LessonProgress::updateOrCreate(
+                    [
+                        'user_id' => $enrollment->user_id,
+                        'course_lesson_id' => $lessonId,
+                    ],
+                    [
+                        'is_completed' => true,
+                        'completed_at' => $completedAt,
+                    ]
+                );
+            }
+        }
+
+        $this->recalculateEnrollmentProgress($enrollment->fresh(), $course);
     }
 }

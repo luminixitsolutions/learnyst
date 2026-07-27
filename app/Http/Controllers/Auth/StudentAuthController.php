@@ -50,10 +50,10 @@ class StudentAuthController extends Controller
             ]);
         }
 
-        if (! $user->isLearner()) {
+        if (! $user->isStudentPanelUser()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => __('This account is not a student account. Use institute login or platform admin login instead.'),
+                'email' => __('This account is not a student portal account. Use institute login or platform admin login instead.'),
             ]);
         }
 
@@ -158,8 +158,10 @@ class StudentAuthController extends Controller
     {
         return match ($user->role?->slug) {
             'super-admin' => route('platform.dashboard'),
-            'admin', 'sub-admin' => route('admin.dashboard'),
+            'admin', 'sub-admin', 'counselor' => route('admin.dashboard'),
             'instructor' => route('instructor.dashboard'),
+            'alumni' => route('alumni.dashboard'),
+            'parent' => route('parent.dashboard'),
             'learner' => route('learner.dashboard'),
             default => route('home'),
         };

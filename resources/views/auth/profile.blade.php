@@ -37,8 +37,8 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl p-6">
-        <h3 class="text-lg font-semibold text-white mb-6">Change Password</h3>
+    <div class="glass-card rounded-2xl p-6" id="change-password">
+        <h3 class="text-lg font-semibold text-slate-800 mb-6">Change Password</h3>
         <form method="POST" action="{{ route('profile.password') }}" class="space-y-5 max-w-md">
             @csrf
             @method('PUT')

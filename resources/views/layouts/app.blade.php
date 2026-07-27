@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — {{ config('app.name', 'Learnyst') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
@@ -16,18 +16,59 @@
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
                         brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            400: '#818cf8',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
+                            50: '#ecfdf5',
+                            100: '#ccfbf1',
+                            200: '#b6dfdb',
+                            400: '#7ac4be',
+                            500: '#0d9488',
+                            600: '#0d9488',
+                            700: '#0b7970',
+                            800: '#09655c',
                         },
                         panel: {
-                            bg: '#f0f4fa',
+                            bg: '#f3f4f6',
                             card: '#ffffff',
                             border: '#e2e8f0',
-                        }
+                        },
+                        indigo: {
+                            50: '#ecfdf5',
+                            100: '#ccfbf1',
+                            200: '#b6dfdb',
+                            300: '#7ac4be',
+                            400: '#5eead4',
+                            500: '#2dd4bf',
+                            600: '#0d9488',
+                            700: '#0b7970',
+                            800: '#09655c',
+                            900: '#065f46',
+                            950: '#042f2e',
+                        },
+                        violet: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#b6dfdb',
+                            300: '#7ac4be',
+                            400: '#7ac4be',
+                            500: '#5eead4',
+                            600: '#0d9488',
+                            700: '#0b7970',
+                            800: '#09655c',
+                            900: '#065f46',
+                            950: '#042f2e',
+                        },
+                        purple: {
+                            50: '#ecfdf5',
+                            100: '#ccfbf1',
+                            200: '#b6dfdb',
+                            300: '#7ac4be',
+                            400: '#7ac4be',
+                            500: '#2dd4bf',
+                            600: '#0d9488',
+                            700: '#0b7970',
+                            800: '#09655c',
+                            900: '#065f46',
+                            950: '#042f2e',
+                        },
                     },
                     boxShadow: {
                         soft: '0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)',
@@ -40,9 +81,44 @@
     <style>
         [x-cloak] { display: none !important; }
 
+        :root, .panel-app, .admin-app {
+            --theme-accent: #0d9488;
+            --theme-accent-bright: #7ac4be;
+            --theme-accent-light: #b6dfdb;
+            --theme-accent-dark: #0b7970;
+            --theme-accent-deeper: #09655c;
+            --theme-accent-soft: rgba(13, 148, 136, 0.12);
+            --theme-accent-soft-border: rgba(13, 148, 136, 0.28);
+            --theme-accent-glow: rgba(13, 148, 136, 0.28);
+            --theme-gradient: linear-gradient(125deg, #7ac4be 0%, #0d9488 48%, #0b7970 100%);
+            --theme-gradient-btn: linear-gradient(115deg, #0b7970 0%, #0d9488 52%, #7ac4be 110%);
+            --sb-accent-start: #0b7970;
+            --sb-accent-mid: #0d9488;
+            --sb-accent-end: #7ac4be;
+            --sb-active-start: #0d9488;
+            --sb-active-end: #7ac4be;
+            --sb-icon: #0d9488;
+            --sb-accent-line: #0d9488;
+            --sb-rail-bottom: rgba(13, 148, 136, 0.35);
+            --sb-hover-bg: rgba(13, 148, 136, 0.08);
+            --sb-text: #334155;
+            --sb-shell-bg: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+            --menu-bg: #ffffff;
+            --menu-text: #334155;
+            --menu-accent: #0d9488;
+            --menu-accent-rgb: 13, 148, 136;
+            --brand-gold: #0d9488;
+            --brand-gold-bright: #7ac4be;
+            --brand-gold-light: #b6dfdb;
+            --brand-gold-dark: #0b7970;
+            --brand-gold-dim: #09655c;
+            --hero-gold: #0d9488;
+            --topbar-border: rgba(13, 148, 136, 0.28);
+        }
+
         body.panel-app {
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f0f9ff 100%);
-            color: #334155;
+            background: var(--panel-page-bg, #f3f4f6);
+            color: var(--sb-text, #334155);
         }
 
         .glass-card {
@@ -65,7 +141,7 @@
             left: 0;
             bottom: 0;
             width: 4px;
-            background: var(--panel-sidebar-stripe, linear-gradient(180deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%));
+            background: var(--panel-sidebar-stripe, linear-gradient(180deg, #0d9488 0%, #8b5cf6 50%, #3b82f6 100%));
             z-index: 2;
             pointer-events: none;
         }
@@ -114,12 +190,12 @@
         }
         .panel-sidebar-nav {
             scrollbar-width: thin;
-            scrollbar-color: var(--panel-sidebar-accent, #6366f1) transparent;
+            scrollbar-color: var(--panel-sidebar-accent, #0d9488) transparent;
         }
         .panel-sidebar-nav::-webkit-scrollbar { width: 5px; }
         .panel-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
         .panel-sidebar-nav::-webkit-scrollbar-thumb {
-            background: var(--panel-sidebar-accent-gradient, linear-gradient(180deg, #6366f1, #8b5cf6));
+            background: var(--panel-sidebar-accent-gradient, linear-gradient(180deg, #0d9488, #8b5cf6));
             border-radius: 9999px;
         }
 
@@ -139,33 +215,33 @@
         }
         .sidebar-link:hover:not(.active) {
             background: var(--panel-sidebar-hover-bg, linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(238,242,255,0.45) 100%));
-            color: var(--panel-sidebar-accent-dark, #4338ca) !important;
+            color: var(--panel-sidebar-accent-dark, #0b7970) !important;
             box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
         }
         .sidebar-link:hover:not(.active) .sidebar-icon-wrap {
             background: rgba(255, 255, 255, 0.55);
-            color: var(--panel-sidebar-accent, #6366f1);
+            color: var(--panel-sidebar-accent, #0d9488);
         }
         .sidebar-link.active {
             background: var(--panel-sidebar-active-bg, linear-gradient(90deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.14) 100%));
-            border-left-color: var(--panel-sidebar-accent, #6366f1);
-            color: var(--panel-sidebar-accent-dark, #4338ca) !important;
+            border-left-color: var(--panel-sidebar-accent, #0d9488);
+            color: var(--panel-sidebar-accent-dark, #0b7970) !important;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 14px rgba(99, 102, 241, 0.12);
         }
         .sidebar-link.active .sidebar-icon-wrap {
-            background: var(--panel-sidebar-accent-gradient, linear-gradient(135deg, #6366f1, #8b5cf6));
+            background: var(--panel-sidebar-accent-gradient, linear-gradient(135deg, #0d9488, #8b5cf6));
             color: #fff;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
         }
 
         .panel-sidebar-group-btn:hover:not(.panel-sidebar-group-active) {
             background: var(--panel-sidebar-hover-bg);
-            color: var(--panel-sidebar-accent-dark, #4338ca) !important;
+            color: var(--panel-sidebar-accent-dark, #0b7970) !important;
             box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
         }
         .panel-sidebar-group-active {
             background: var(--panel-sidebar-active-bg);
-            color: var(--panel-sidebar-accent-dark, #4338ca) !important;
+            color: var(--panel-sidebar-accent-dark, #0b7970) !important;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 10px rgba(99, 102, 241, 0.1);
         }
         .panel-sidebar-group-active .sidebar-icon-wrap {
@@ -175,12 +251,12 @@
         }
         .panel-sidebar-sub-active {
             background: var(--panel-sidebar-active-bg);
-            color: var(--panel-sidebar-accent-dark, #4338ca) !important;
+            color: var(--panel-sidebar-accent-dark, #0b7970) !important;
             font-weight: 600;
-            box-shadow: inset 3px 0 0 var(--panel-sidebar-accent, #6366f1);
+            box-shadow: inset 3px 0 0 var(--panel-sidebar-accent, #0d9488);
         }
         .panel-sidebar-sub-border {
-            border-left-color: var(--panel-sidebar-accent, #818cf8) !important;
+            border-left-color: var(--panel-sidebar-accent, #7ac4be) !important;
             opacity: 0.72;
         }
         .panel-sidebar-sub-link {
@@ -193,7 +269,7 @@
             color: var(--panel-sidebar-accent-dark, #312e81) !important;
         }
         .panel-sidebar-brand-sub {
-            color: var(--panel-sidebar-accent, #6366f1);
+            color: var(--panel-sidebar-accent, #0d9488);
         }
 
         .panel-input {
@@ -208,8 +284,8 @@
         }
         .panel-input:focus {
             outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            border-color: var(--theme-accent, #0d9488);
+            box-shadow: 0 0 0 3px var(--theme-accent-soft, rgba(13, 148, 136, 0.12));
         }
         .panel-input::placeholder { color: #94a3b8; }
 
@@ -224,8 +300,8 @@
         }
         .panel-select:focus {
             outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            border-color: var(--theme-accent, #0d9488);
+            box-shadow: 0 0 0 3px var(--theme-accent-soft, rgba(13, 148, 136, 0.12));
         }
 
         .panel-btn-secondary {
@@ -256,12 +332,12 @@
             font-size: 0.875rem;
             font-weight: 600;
             color: #fff;
-            background: linear-gradient(to right, #4f46e5, #7c3aed);
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+            background: var(--theme-gradient-btn, linear-gradient(to right, #0b7970, #0d9488));
+            box-shadow: 0 4px 14px var(--theme-accent-glow, rgba(13, 148, 136, 0.28));
             transition: all 0.15s;
         }
         .panel-btn-primary:hover {
-            background: linear-gradient(to right, #6366f1, #8b5cf6);
+            filter: brightness(1.05);
         }
 
         .panel-table thead {
@@ -282,20 +358,49 @@
         }
 
         .panel-table tbody tr:hover {
-            background: #f8fafc;
+            background: var(--theme-accent-soft, rgba(13, 148, 136, 0.06));
         }
 
         .panel-table tbody td {
             color: #475569;
         }
 
+        .panel-app table.panel-table td:has(.action-icon-btn),
+        .panel-app table.panel-table th.col-actions,
+        .panel-app table.panel-table td.col-actions {
+            width: 1%;
+            white-space: nowrap;
+            text-align: right;
+            padding-left: .75rem;
+            padding-right: .75rem;
+        }
+
+        .panel-app table.panel-table th.col-narrow,
+        .panel-app table.panel-table td.col-narrow {
+            white-space: nowrap;
+        }
+
         /* Pagination light theme */
         .panel-app nav[role="navigation"] span, .panel-app nav[role="navigation"] a {
             color: #64748b !important;
         }
+        .panel-app input[type="checkbox"],
+        .panel-app input[type="radio"] {
+            accent-color: var(--theme-accent, #0d9488);
+        }
+
+        .panel-app .action-icon-btn--edit {
+            color: var(--theme-accent, #0d9488) !important;
+            border-color: var(--theme-accent-light, #b6dfdb) !important;
+            background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12)) !important;
+        }
+        .panel-app .action-icon-btn--edit:hover {
+            background: rgba(13, 148, 136, 0.18) !important;
+        }
+
         .panel-app nav[role="navigation"] a.bg-gray-800,
         .panel-app nav[role="navigation"] span.bg-gray-800 {
-            background: #6366f1 !important;
+            background: var(--theme-accent, #0d9488) !important;
             color: white !important;
         }
 
@@ -332,7 +437,7 @@
         }
         .panel-layout-horizontal .panel-main-horizontal {
             margin-left: 0 !important;
-            padding-top: 7.5rem;
+            padding-top: 8rem;
         }
         .panel-sidebar-horizontal-nav {
             scrollbar-width: thin;
@@ -340,19 +445,23 @@
         }
         .panel-sidebar-horizontal-nav-scroll {
             overflow-x: auto;
-            overflow-y: visible;
-            scrollbar-width: thin;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .panel-sidebar-horizontal-nav-scroll::-webkit-scrollbar { height: 4px; }
-        .panel-sidebar-horizontal-nav-scroll::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.45);
-            border-radius: 9999px;
+        .panel-sidebar-horizontal-nav-scroll::-webkit-scrollbar {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+        .panel-sidebar-horizontal-link {
+            color: var(--panel-sidebar-text, #334155);
         }
         .panel-sidebar-horizontal-dropdown {
             position: fixed;
             z-index: 100;
             scrollbar-width: thin;
-            scrollbar-color: var(--panel-sidebar-accent, #6366f1) transparent;
+            scrollbar-color: var(--panel-sidebar-accent, #0d9488) transparent;
         }
         .panel-sidebar-horizontal-dropdown[x-cloak] {
             display: none !important;
@@ -365,13 +474,13 @@
             margin: 6px 0;
         }
         .panel-sidebar-horizontal-dropdown::-webkit-scrollbar-thumb {
-            background: var(--panel-sidebar-accent-gradient, linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%));
+            background: var(--panel-sidebar-accent-gradient, linear-gradient(180deg, #0d9488 0%, #8b5cf6 100%));
             border-radius: 9999px;
             border: 1px solid rgba(255, 255, 255, 0.65);
             box-shadow: 0 1px 4px rgba(99, 102, 241, 0.25);
         }
         .panel-sidebar-horizontal-dropdown::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(180deg, #0b7970 0%, #0d9488 100%);
         }
         .panel-sidebar-horizontal-dropdown::-webkit-scrollbar-corner {
             background: transparent;
@@ -385,7 +494,261 @@
             visibility: hidden;
             pointer-events: none;
         }
-        .panel-sidebar-skeleton-horizontal { height: 7.5rem; }
+        .panel-sidebar-skeleton-horizontal { height: 8rem; }
+
+        /* ── NRI Suvidha flat sidebar (solid colors, Inter 14px) ── */
+        body.panel-sidebar-flat .panel-sidebar {
+            background-color: var(--panel-sidebar-bg, #ffffff) !important;
+            background-image: none !important;
+            border-right-color: var(--panel-sidebar-border, #e5e7eb);
+            box-shadow: 1px 0 0 #e5e7eb;
+        }
+        body.panel-sidebar-flat .panel-sidebar::after,
+        body.panel-sidebar-flat .panel-sidebar-glow-bottom { display: none !important; }
+        body.panel-sidebar-flat .panel-sidebar::before {
+            width: 3px;
+            background: var(--panel-sidebar-stripe, #0d9488) !important;
+        }
+        body.panel-sidebar-flat .panel-sidebar-header,
+        body.panel-sidebar-flat .panel-sidebar-footer {
+            background: #ffffff !important;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-color: var(--panel-sidebar-border, #e5e7eb);
+        }
+        body.panel-sidebar-flat .panel-sidebar-user {
+            background: #f9fafb !important;
+            border: 1px solid var(--panel-sidebar-border, #e5e7eb);
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        body.panel-sidebar-flat .panel-sidebar-nav,
+        body.panel-sidebar-flat .panel-sidebar-horizontal-nav {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: var(--panel-sidebar-nav-font-size, 0.875rem);
+        }
+        body.panel-sidebar-flat .sidebar-link,
+        body.panel-sidebar-flat .panel-sidebar-group-btn,
+        body.panel-sidebar-flat .panel-sidebar-sub-link {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: var(--panel-sidebar-nav-font-size, 0.875rem);
+            font-weight: 500;
+            color: var(--panel-sidebar-text, #334155) !important;
+        }
+        body.panel-sidebar-flat .sidebar-link:hover:not(.active),
+        body.panel-sidebar-flat .panel-sidebar-group-btn:hover:not(.panel-sidebar-group-active),
+        body.panel-sidebar-flat .panel-sidebar-sub-link:hover:not(.panel-sidebar-sub-active) {
+            background: var(--sb-hover-bg, var(--panel-sidebar-hover-bg)) !important;
+            color: var(--theme-accent-dark, var(--panel-sidebar-accent-dark)) !important;
+            box-shadow: none;
+        }
+        body.panel-sidebar-flat .sidebar-link.active,
+        body.panel-sidebar-flat .panel-sidebar-group-active,
+        body.panel-sidebar-flat .panel-sidebar-sub-active {
+            background: var(--theme-accent-soft, var(--panel-sidebar-active-bg)) !important;
+            color: var(--theme-accent-dark, var(--panel-sidebar-accent-dark)) !important;
+            box-shadow: none;
+        }
+        body.panel-sidebar-flat .sidebar-link.active .sidebar-icon-wrap,
+        body.panel-sidebar-flat .panel-sidebar-group-active .sidebar-icon-wrap {
+            background: var(--theme-gradient, var(--panel-sidebar-accent-gradient)) !important;
+            color: #fff !important;
+            box-shadow: none;
+        }
+        body.panel-sidebar-flat .sidebar-link:hover:not(.active) .sidebar-icon-wrap {
+            background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12));
+            color: var(--sb-icon, var(--menu-accent, #0d9488));
+        }
+        body.panel-sidebar-flat .sidebar-icon-wrap {
+            color: var(--sb-icon, var(--menu-accent, #0d9488));
+        }
+        body.panel-sidebar-flat .panel-sidebar-brand-sub {
+            color: var(--panel-sidebar-text-muted, #64748b);
+            font-weight: 500;
+        }
+        body.panel-sidebar-flat .panel-sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--panel-sidebar-accent, #0d9488);
+        }
+
+        /* Horizontal top bar — NRI Suvidha style (white header + light nav + teal active pill) */
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal {
+            background-color: #ffffff !important;
+            background-image: none !important;
+            border-bottom: none;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-brand {
+            background: var(--menu-bg, #ffffff);
+            border-bottom: 1px solid var(--topbar-border, var(--panel-sidebar-border));
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav {
+            background: var(--menu-bg, var(--panel-sidebar-horizontal-bg, #ffffff));
+            padding-top: 0.375rem;
+            padding-bottom: 0.5rem;
+            border-bottom: none;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll a,
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll button {
+            font-family: 'Inter', system-ui, sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            color: var(--menu-text, var(--panel-sidebar-horizontal-text, #334155)) !important;
+            border-radius: 0.5rem;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll a:hover,
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll button:hover {
+            background: var(--sb-hover-bg, var(--panel-sidebar-hover-bg)) !important;
+            color: var(--theme-accent-dark, var(--panel-sidebar-accent-dark)) !important;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-nav-item:not(.panel-sidebar-group-active) .panel-nav-icon {
+            color: var(--sb-icon, var(--menu-accent, #0d9488));
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-sidebar-group-active .panel-nav-icon,
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-sidebar-group-active .panel-nav-chevron {
+            color: #ffffff;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-dropdown a {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.875rem;
+            color: var(--panel-sidebar-text, #334155) !important;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-dropdown a.text-indigo-700 {
+            color: var(--panel-sidebar-accent-dark, #0f766e) !important;
+            background: var(--panel-sidebar-active-bg, #f0fdfa) !important;
+        }
+        body.panel-sidebar-flat .panel-sidebar-logo-mark {
+            background: var(--theme-gradient, var(--panel-sidebar-accent-gradient)) !important;
+            box-shadow: none;
+        }
+
+        body.panel-sidebar-flat.panel-app {
+            background: var(--panel-page-bg, #f3f4f6) !important;
+        }
+
+        /* Horizontal nav — icon + label items */
+        .panel-nav-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+        .panel-nav-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.125rem;
+            height: 1.125rem;
+            flex-shrink: 0;
+            opacity: 0.95;
+        }
+        .panel-nav-chevron {
+            width: 0.875rem;
+            height: 0.875rem;
+            flex-shrink: 0;
+            opacity: 0.85;
+            margin-left: -0.125rem;
+        }
+
+        .panel-nav-scroll-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 0.5rem;
+            color: var(--theme-accent, #0d9488);
+            background: transparent;
+            border: none;
+            transition: background 0.15s, opacity 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+        .panel-nav-scroll-btn:not(:disabled):hover {
+            background: var(--sb-hover-bg, rgba(13, 148, 136, 0.08));
+            color: var(--theme-accent-dark, #0b7970);
+        }
+        .panel-nav-scroll-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-nav-item:hover:not(.panel-sidebar-group-active) {
+            background: var(--sb-hover-bg, var(--panel-sidebar-hover-bg)) !important;
+            color: var(--theme-accent-dark, var(--panel-sidebar-accent-dark)) !important;
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-sidebar-group-active.panel-nav-item {
+            background: var(--theme-gradient, linear-gradient(125deg, var(--sb-active-start, #0d9488), var(--sb-active-end, #7ac4be))) !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 3px var(--theme-accent-glow, rgba(13, 148, 136, 0.28));
+        }
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-sidebar-group-active .panel-nav-icon,
+        body.panel-sidebar-flat.panel-layout-horizontal .panel-sidebar-horizontal-nav-scroll .panel-sidebar-group-active .panel-nav-chevron {
+            opacity: 1;
+        }
+
+        body.panel-sidebar-flat .sidebar-link.active {
+            border-left: 3px solid var(--sb-accent-line, var(--theme-accent, #0d9488));
+            padding-left: calc(0.75rem - 3px);
+        }
+
+        .panel-topbar {
+            border-bottom-color: var(--topbar-border, rgba(13, 148, 136, 0.28)) !important;
+        }
+
+        .panel-user-menu-trigger { cursor: pointer; }
+        .panel-user-menu-trigger:hover { background: #f8fafc; }
+        .panel-user-menu-dropdown { font-size: 0.875rem; }
+
+        /* Thin teal scrollbars — page & panels */
+        .panel-app {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(13, 148, 136, 0.38) transparent;
+        }
+        .panel-app ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .panel-app ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .panel-app ::-webkit-scrollbar-thumb {
+            background: rgba(13, 148, 136, 0.32);
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            background-clip: padding-box;
+        }
+        .panel-app ::-webkit-scrollbar-thumb:hover {
+            background: rgba(13, 148, 136, 0.52);
+            border-radius: 9999px;
+        }
+        .panel-app ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+        .panel-sidebar-horizontal-dropdown {
+            scrollbar-color: rgba(13, 148, 136, 0.38) transparent;
+        }
+        .panel-sidebar-horizontal-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(13, 148, 136, 0.35);
+            border-radius: 9999px;
+            border: none;
+            box-shadow: none;
+        }
+        .panel-sidebar-horizontal-dropdown::-webkit-scrollbar-thumb:hover {
+            background: rgba(13, 148, 136, 0.55);
+        }
+        .panel-sidebar-nav {
+            scrollbar-color: rgba(13, 148, 136, 0.38) transparent;
+        }
+        .panel-sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(13, 148, 136, 0.35);
+            border-radius: 9999px;
+        }
+        .panel-sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(13, 148, 136, 0.55);
+        }
     </style>
     @stack('styles')
 </head>
@@ -400,9 +763,14 @@
         }
     }
     $panelSidebarCss = \App\Services\SidebarSettingsService::cssVariables($panelSidebarSettings);
-    $panelSidebarHorizontal = ($panelSidebarSettings['layout'] ?? 'vertical') === 'horizontal';
+    $panelRole = auth()->user()?->role?->slug ?? '';
+    $isCompanyPanelRoute = auth()->check() && request()->is('company', 'company/*');
+    // Horizontal nav is company-only; platform (/admin) and learner panels always use vertical sidebar.
+    $canUseHorizontalNav = $isCompanyPanelRoute && in_array($panelRole, ['admin', 'sub-admin', 'counselor'], true);
+    $panelSidebarHorizontal = $canUseHorizontalNav && ($panelSidebarSettings['layout'] ?? 'vertical') === 'horizontal';
+    $panelSidebarFlat = \App\Services\SidebarSettingsService::isFlatTheme($panelSidebarSettings);
 @endphp
-<body class="h-full panel-app font-sans antialiased {{ $panelSidebarHorizontal ? 'panel-layout-horizontal' : 'panel-layout-vertical' }}"
+<body class="h-full panel-app admin-app font-sans antialiased {{ $panelSidebarHorizontal ? 'panel-layout-horizontal' : 'panel-layout-vertical' }} {{ $panelSidebarFlat ? 'panel-sidebar-flat' : '' }}"
       style="{{ $panelSidebarCss }}"
       x-data="{ sidebarOpen: false, deleteModal: false, deleteForm: null }">
     @if($panelSidebarHorizontal)

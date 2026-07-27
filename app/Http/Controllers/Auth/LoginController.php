@@ -31,7 +31,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        return $this->attemptLogin($request, ['admin', 'sub-admin'], 'company');
+        return $this->attemptLogin($request, ['admin', 'sub-admin', 'counselor'], 'company');
     }
 
     public function loginPlatform(Request $request)
@@ -84,7 +84,7 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         $wasPlatform = $request->user()?->isSuperAdmin() ?? false;
-        $wasLearner = $request->user()?->isLearner() ?? false;
+        $wasLearner = $request->user()?->isStudentPanelUser() ?? false;
 
         ActivityLogger::log('logout', 'User logged out');
         Auth::logout();
@@ -106,8 +106,10 @@ class LoginController extends Controller
     {
         return match ($user->role?->slug) {
             'super-admin' => route('platform.dashboard'),
-            'admin', 'sub-admin' => route('admin.dashboard'),
+            'admin', 'sub-admin', 'counselor' => route('admin.dashboard'),
             'instructor' => route('instructor.dashboard'),
+            'alumni' => route('alumni.dashboard'),
+            'parent' => route('parent.dashboard'),
             default => route('learner.dashboard'),
         };
     }

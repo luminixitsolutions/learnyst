@@ -5,7 +5,7 @@
     'deleteTitle' => 'Delete',
 ])
 
-<div class="flex items-center justify-end gap-2">
+<div class="inline-flex items-center justify-end gap-1.5">
     @if($editUrl)
         <a href="{{ $editUrl }}"
            class="action-icon-btn action-icon-btn--edit"

@@ -74,6 +74,7 @@
     $completedLessonIds = $completedLessonIds ?? [];
     $totalLessons = $course->sections->sum(fn ($s) => $s->lessons->count());
     $completedCount = count($completedLessonIds);
+    $displayProgress = $totalLessons > 0 ? (int) round(($completedCount / $totalLessons) * 100) : 0;
     $allComplete = $totalLessons > 0 && $completedCount >= $totalLessons;
 @endphp
 
@@ -81,7 +82,7 @@
     <div class="glass-card rounded-2xl p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <x-badge type="success">{{ number_format((float) ($enrollment->progress ?? 0), 0) }}% Complete</x-badge>
+                <x-badge type="success">{{ $displayProgress }}% Complete</x-badge>
                 <p class="text-sm text-slate-500 mt-3 max-w-2xl">{{ $course->description }}</p>
             </div>
             @if($course->thumbnailUrl())
@@ -89,9 +90,9 @@
             @endif
         </div>
         <div class="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div class="h-full bg-brand-500 rounded-full transition-all" style="width: {{ $enrollment->progress ?? 0 }}%"></div>
+            <div class="h-full bg-brand-500 rounded-full transition-all" style="width: {{ $displayProgress }}%"></div>
         </div>
-        <p class="text-xs text-slate-400 mt-2">{{ count($completedLessonIds) }} of {{ $course->sections->sum(fn ($s) => $s->lessons->count()) }} lessons completed</p>
+        <p class="text-xs text-slate-400 mt-2">{{ $completedCount }} of {{ $totalLessons }} lessons completed</p>
     </div>
 
     <div class="space-y-4">

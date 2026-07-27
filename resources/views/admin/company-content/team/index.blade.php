@@ -40,8 +40,8 @@
         height: 4rem;
         border-radius: 9999px;
         border: 1px solid #e2e8f0;
-        background: #eef2ff;
-        color: #4f46e5;
+        background: #ecfdf5;
+        color: #0d9488;
         font-size: 1rem;
         font-weight: 700;
         display: inline-flex;
@@ -109,8 +109,8 @@
         cursor: pointer;
     }
     .action-icon-btn svg { width: 1rem; height: 1rem; }
-    .action-icon-btn--edit { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
-    .action-icon-btn--edit:hover { background: #e0e7ff; }
+    .action-icon-btn--edit { color: #0d9488; border-color: #b6dfdb; background: #ecfdf5; }
+    .action-icon-btn--edit:hover { background: #ccfbf1; }
     .action-icon-btn--delete { color: #e11d48; border-color: #fecdd3; background: #fff1f2; }
     .action-icon-btn--delete:hover { background: #ffe4e6; }
 </style>

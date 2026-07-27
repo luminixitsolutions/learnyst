@@ -7,6 +7,32 @@ use App\Models\Company;
 class SidebarSettingsService
 {
     public const THEMES = [
+        'learnyst' => [
+            'label' => 'Learnyst Teal',
+            'flat' => true,
+            'preview' => '#0d9488',
+            'accent' => '#0d9488',
+            'accent_bright' => '#7ac4be',
+            'accent_light' => '#b6dfdb',
+            'accent_dark' => '#0b7970',
+            'accent_deeper' => '#09655c',
+            'text' => '#334155',
+            'text_muted' => '#64748b',
+            'bg' => '#ffffff',
+            'horizontal_bg' => '#ffffff',
+            'horizontal_text' => '#334155',
+            'mesh' => 'none',
+            'accent_gradient' => 'linear-gradient(125deg, #7ac4be 0%, #0d9488 48%, #0b7970 100%)',
+            'accent_gradient_btn' => 'linear-gradient(115deg, #0b7970 0%, #0d9488 52%, #7ac4be 110%)',
+            'active_bg' => 'rgba(13, 148, 136, 0.12)',
+            'hover_bg' => 'rgba(13, 148, 136, 0.08)',
+            'glow1' => 'transparent',
+            'glow2' => 'transparent',
+            'border' => 'rgba(13, 148, 136, 0.28)',
+            'stripe' => '#0d9488',
+            'page_bg' => '#f3f4f6',
+            'nav_accent_line' => '#0d9488',
+        ],
         'indigo' => [
             'label' => 'Indigo Violet',
             'preview' => 'linear-gradient(135deg, #c7d2fe, #ddd6fe, #bfdbfe)',
@@ -102,8 +128,8 @@ class SidebarSettingsService
     public static function defaults(): array
     {
         return [
-            'layout' => 'vertical',
-            'theme' => 'indigo',
+            'layout' => 'horizontal',
+            'theme' => 'learnyst',
             'menu_order' => [],
             'custom_colors' => self::defaultCustomColors(),
         ];
@@ -112,10 +138,10 @@ class SidebarSettingsService
     public static function defaultCustomColors(): array
     {
         return [
-            'primary' => '#6366f1',
-            'secondary' => '#8b5cf6',
-            'bg_start' => '#dbeafe',
-            'bg_end' => '#ede9fe',
+            'primary' => '#0d9488',
+            'secondary' => '#0b7970',
+            'bg_start' => '#f3f4f6',
+            'bg_end' => '#ffffff',
         ];
     }
 
@@ -132,13 +158,25 @@ class SidebarSettingsService
         }
 
         $stored = data_get($company->profile, 'sidebar', []);
+        $rawTheme = $stored['theme'] ?? '';
+        $storedTheme = $rawTheme;
+
+        // Auto-apply Learnyst Teal for institutes still on legacy default themes.
+        if (in_array($rawTheme, ['nrisuvidha', 'indigo', ''], true)) {
+            $storedTheme = 'learnyst';
+        }
+
+        $layout = $stored['layout'] ?? '';
+        if (in_array($rawTheme, ['nrisuvidha', 'indigo', ''], true)) {
+            $layout = 'horizontal';
+        } elseif (! in_array($layout, ['vertical', 'horizontal'], true)) {
+            $layout = $defaults['layout'];
+        }
 
         return [
-            'layout' => in_array($stored['layout'] ?? '', ['vertical', 'horizontal'], true)
-                ? $stored['layout']
-                : $defaults['layout'],
-            'theme' => in_array($stored['theme'] ?? '', self::allowedThemeKeys(), true)
-                ? $stored['theme']
+            'layout' => $layout,
+            'theme' => in_array($storedTheme, self::allowedThemeKeys(), true)
+                ? $storedTheme
                 : $defaults['theme'],
             'menu_order' => is_array($stored['menu_order'] ?? null) ? $stored['menu_order'] : [],
             'custom_colors' => self::normalizeCustomColors($stored['custom_colors'] ?? null),
@@ -182,7 +220,7 @@ class SidebarSettingsService
 
         $profile['sidebar'] = [
             'layout' => $input['layout'] ?? 'vertical',
-            'theme' => in_array($input['theme'] ?? '', self::allowedThemeKeys(), true) ? $input['theme'] : 'indigo',
+            'theme' => in_array($input['theme'] ?? '', self::allowedThemeKeys(), true) ? $input['theme'] : 'learnyst',
             'menu_order' => $menuOrder,
             'custom_colors' => self::normalizeCustomColors([
                 'primary' => $input['custom_primary'] ?? data_get($existingSidebar, 'custom_colors.primary'),
@@ -244,7 +282,7 @@ class SidebarSettingsService
             return self::buildCustomTheme($customColors ?? self::defaultCustomColors());
         }
 
-        return self::THEMES[$key] ?? self::THEMES['indigo'];
+        return self::THEMES[$key] ?? self::THEMES['learnyst'];
     }
 
     public static function resolveTheme(array $settings): array
@@ -314,22 +352,89 @@ class SidebarSettingsService
         );
     }
 
+    public static function learnystThemeTokens(): array
+    {
+        return [
+            '--theme-accent' => '#0d9488',
+            '--theme-accent-bright' => '#7ac4be',
+            '--theme-accent-light' => '#b6dfdb',
+            '--theme-accent-dark' => '#0b7970',
+            '--theme-accent-deeper' => '#09655c',
+            '--theme-accent-soft' => 'rgba(13, 148, 136, 0.12)',
+            '--theme-accent-soft-border' => 'rgba(13, 148, 136, 0.28)',
+            '--theme-accent-glow' => 'rgba(13, 148, 136, 0.28)',
+            '--theme-gradient' => 'linear-gradient(125deg, #7ac4be 0%, #0d9488 48%, #0b7970 100%)',
+            '--theme-gradient-btn' => 'linear-gradient(115deg, #0b7970 0%, #0d9488 52%, #7ac4be 110%)',
+            '--sb-accent-start' => '#0b7970',
+            '--sb-accent-mid' => '#0d9488',
+            '--sb-accent-end' => '#7ac4be',
+            '--sb-active-start' => '#0d9488',
+            '--sb-active-end' => '#7ac4be',
+            '--sb-icon' => '#0d9488',
+            '--sb-accent-line' => '#0d9488',
+            '--sb-rail-bottom' => 'rgba(13, 148, 136, 0.35)',
+            '--sb-hover-bg' => 'rgba(13, 148, 136, 0.08)',
+            '--sb-text' => '#334155',
+            '--sb-shell-bg' => 'linear-gradient(180deg, #ffffff 0%, #ffffff 100%)',
+            '--menu-bg' => '#ffffff',
+            '--menu-text' => '#334155',
+            '--menu-accent' => '#0d9488',
+            '--menu-accent-rgb' => '13, 148, 136',
+            '--brand-gold' => '#0d9488',
+            '--brand-gold-bright' => '#7ac4be',
+            '--brand-gold-light' => '#b6dfdb',
+            '--brand-gold-dark' => '#0b7970',
+            '--brand-gold-dim' => '#09655c',
+            '--hero-gold' => '#0d9488',
+            '--topbar-border' => 'rgba(13, 148, 136, 0.28)',
+        ];
+    }
+
+    public static function usesLearnystTokens(array $settings): bool
+    {
+        return ($settings['theme'] ?? 'learnyst') === 'learnyst';
+    }
+
     public static function cssVariables(array $settings): string
     {
         $theme = self::resolveTheme($settings);
+        $isFlat = ! empty($theme['flat']);
 
-        return implode("\n", [
-            '--panel-sidebar-bg: '.$theme['bg'].';',
-            '--panel-sidebar-mesh: '.$theme['mesh'].';',
+        $vars = [];
+
+        if (self::usesLearnystTokens($settings)) {
+            foreach (self::learnystThemeTokens() as $key => $value) {
+                $vars[] = $key.': '.$value.';';
+            }
+        }
+
+        $vars = array_merge($vars, [
+            '--panel-sidebar-bg: '.($isFlat ? ($theme['bg'] ?? '#ffffff') : $theme['bg']).';',
+            '--panel-sidebar-mesh: '.($isFlat ? 'none' : $theme['mesh']).';',
             '--panel-sidebar-accent: '.$theme['accent'].';',
-            '--panel-sidebar-accent-dark: '.$theme['accent_dark'].';',
-            '--panel-sidebar-accent-gradient: '.$theme['accent_gradient'].';',
+            '--panel-sidebar-accent-dark: '.($theme['accent_dark'] ?? '#0b7970').';',
+            '--panel-sidebar-accent-gradient: '.($theme['accent_gradient'] ?? $theme['accent']).';',
             '--panel-sidebar-active-bg: '.$theme['active_bg'].';',
             '--panel-sidebar-hover-bg: '.$theme['hover_bg'].';',
             '--panel-sidebar-border: '.$theme['border'].';',
             '--panel-sidebar-glow1: '.$theme['glow1'].';',
             '--panel-sidebar-glow2: '.$theme['glow2'].';',
             '--panel-sidebar-stripe: '.$theme['stripe'].';',
+            '--panel-sidebar-text: '.($theme['text'] ?? '#334155').';',
+            '--panel-sidebar-text-muted: '.($theme['text_muted'] ?? '#64748b').';',
+            '--panel-sidebar-horizontal-bg: '.($theme['horizontal_bg'] ?? '#ffffff').';',
+            '--panel-sidebar-horizontal-text: '.($theme['horizontal_text'] ?? '#334155').';',
+            '--panel-sidebar-nav-font-size: 0.875rem;',
+            '--panel-sidebar-flat: '.($isFlat ? '1' : '0').';',
+            '--panel-page-bg: '.($theme['page_bg'] ?? '#f3f4f6').';',
+            '--panel-nav-accent-line: '.($theme['nav_accent_line'] ?? $theme['accent'] ?? '#0d9488').';',
         ]);
+
+        return implode("\n            ", $vars);
+    }
+
+    public static function isFlatTheme(array $settings): bool
+    {
+        return ! empty(self::resolveTheme($settings)['flat']);
     }
 }

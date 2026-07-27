@@ -8,12 +8,12 @@
 <style>
     .sidebar-theme-option input:checked + .sidebar-theme-card,
     .sidebar-theme-option:has(input:checked) .sidebar-theme-card {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+        border-color: #0d9488;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
     }
     .sidebar-layout-option input:checked + .sidebar-layout-card {
-        border-color: #6366f1;
-        background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+        border-color: #0d9488;
+        background: rgba(13, 148, 136, 0.12);
     }
     .menu-sort-item {
         cursor: grab;
@@ -22,7 +22,7 @@
     .menu-sort-item:active { cursor: grabbing; }
     .menu-sort-ghost {
         opacity: 0.45;
-        background: #eef2ff !important;
+        background: #ecfdf5 !important;
     }
 </style>
 @endpush
@@ -68,9 +68,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="sidebar-layout-option cursor-pointer">
                     <input type="radio" name="layout" value="vertical" class="sr-only" x-model="layout" @checked(old('layout', $settings['layout']) === 'vertical')>
-                    <div class="sidebar-layout-card rounded-xl border-2 border-slate-200 p-5 transition hover:border-indigo-200">
+                    <div class="sidebar-layout-card rounded-xl border-2 border-slate-200 p-5 transition hover:border-teal-200">
                         <div class="flex gap-3">
-                            <div class="w-14 h-20 rounded-lg bg-gradient-to-b from-indigo-100 to-violet-50 border border-indigo-100 shrink-0"></div>
+                            <div class="w-14 h-20 rounded-lg bg-white border-2 border-teal-600 shrink-0 relative"><span class="absolute left-0 top-0 bottom-0 w-1 bg-teal-600 rounded-l-lg"></span></div>
                             <div class="flex-1 space-y-2 pt-1">
                                 <div class="h-2.5 w-full rounded bg-slate-100"></div>
                                 <div class="h-2.5 w-4/5 rounded bg-slate-100"></div>
@@ -83,9 +83,11 @@
                 </label>
                 <label class="sidebar-layout-option cursor-pointer">
                     <input type="radio" name="layout" value="horizontal" class="sr-only" x-model="layout" @checked(old('layout', $settings['layout']) === 'horizontal')>
-                    <div class="sidebar-layout-card rounded-xl border-2 border-slate-200 p-5 transition hover:border-indigo-200">
+                    <div class="sidebar-layout-card rounded-xl border-2 border-slate-200 p-5 transition hover:border-teal-200">
                         <div class="space-y-2">
-                            <div class="h-8 w-full rounded-lg bg-gradient-to-r from-indigo-100 to-violet-50 border border-indigo-100"></div>
+                            <div class="h-8 w-full rounded-lg border border-slate-200 bg-white relative overflow-hidden">
+                                <span class="absolute bottom-0 left-0 right-0 h-1" style="background:#0d9488"></span>
+                            </div>
                             <div class="h-2.5 w-full rounded bg-slate-100"></div>
                             <div class="h-2.5 w-4/5 rounded bg-slate-100"></div>
                         </div>
@@ -168,7 +170,7 @@
                                    @input="syncColor('primary', $event.target.value)"
                                    pattern="^#[0-9A-Fa-f]{6}$"
                                    class="flex-1 panel-input !py-2 font-mono text-sm"
-                                   placeholder="#6366f1">
+                                   placeholder="#0d9488">
                         </div>
                     </div>
                     <div>

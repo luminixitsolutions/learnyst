@@ -10,6 +10,12 @@ use App\Http\Controllers\Admin\SubAdminWizardController;
 use App\Http\Controllers\Admin\BatchController as AdminBatchController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CertificateController;
+use App\Http\Controllers\Admin\CertificateRenewalController;
+use App\Http\Controllers\Admin\AlumniController;
+use App\Http\Controllers\Admin\ProctoringController;
+use App\Http\Controllers\Admin\ComplianceController;
+use App\Http\Controllers\Admin\NotificationCenterController;
+use App\Http\Controllers\Admin\ParentLinkController;
 use App\Http\Controllers\Admin\CompanyPageContentController;
 use App\Http\Controllers\Admin\CompanyProfileController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
@@ -56,7 +62,11 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardController;
 use App\Http\Controllers\Learner\CommunityController as LearnerCommunityController;
 use App\Http\Controllers\Learner\CourseController as LearnerCourseController;
+use App\Http\Controllers\Learner\CertificateRenewalController as LearnerCertificateRenewalController;
 use App\Http\Controllers\Learner\DashboardController as LearnerDashboardController;
+use App\Http\Controllers\Alumni\DashboardController as AlumniDashboardController;
+use App\Http\Controllers\Parent\DashboardController as ParentDashboardController;
+use App\Http\Controllers\PublicCertificateController;
 use App\Http\Controllers\Platform\PlatformActivityController;
 use App\Http\Controllers\Platform\PlatformCompanyController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
@@ -107,12 +117,12 @@ Route::get('/courses', [PublicController::class, 'courses'])->name('public.cours
 Route::get('/courses/{course:slug}', [PublicController::class, 'courseShow'])->name('public.course');
 Route::post('/courses/{course:slug}/reviews', [PublicController::class, 'storeCourseReview'])->name('public.course.reviews.store');
 Route::post('/courses/{course:slug}/enquiries', [PublicController::class, 'storeCourseEnquiry'])->name('public.course.enquiries.store');
-Route::middleware(['auth', 'role:learner'])->group(function () {
+Route::middleware(['auth', 'role:learner,alumni'])->group(function () {
     Route::post('/courses/{course:slug}/checkout', [\App\Http\Controllers\CourseCheckoutController::class, 'start'])->name('courses.checkout.start');
     Route::post('/courses/checkout/complete', [\App\Http\Controllers\CourseCheckoutController::class, 'complete'])->name('courses.checkout.complete');
 });
 Route::post('/leads', [PublicController::class, 'captureLead'])->name('leads.capture');
-Route::get('/verify-certificate', [CertificateController::class, 'verify'])->name('certificates.verify');
+Route::get('/verify-certificate', [PublicCertificateController::class, 'verify'])->name('certificates.verify');
 
 // Signup is public so "Get Started" always opens (not blocked by guest redirect when already logged in).
 Route::get('/signup/{step?}', [SignupController::class, 'show'])->name('signup.show');
@@ -155,7 +165,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
-Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-admin'])->group(function () {
+Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-admin,counselor'])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('courses', AdminCourseController::class);
@@ -317,6 +327,18 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::get('certificates/templates', [CertificateController::class, 'templates'])->name('certificates.templates');
     Route::post('certificates/templates', [CertificateController::class, 'storeTemplate'])->name('certificates.templates.store');
     Route::post('certificates/issue', [CertificateController::class, 'issue'])->name('certificates.issue');
+    Route::get('certificates/renewals', [CertificateRenewalController::class, 'index'])->middleware('permission:certificates_renewal,view')->name('certificates.renewals.index');
+    Route::put('certificates/templates/{template}/renewal', [CertificateRenewalController::class, 'updateTemplate'])->middleware('permission:certificates_renewal,edit')->name('certificates.templates.renewal');
+    Route::post('certificates/renewals/bulk', [CertificateRenewalController::class, 'bulkRenew'])->middleware('permission:certificates_renewal,manage')->name('certificates.renewals.bulk');
+
+    Route::get('alumni', [AlumniController::class, 'index'])->middleware('permission:alumni,view')->name('alumni.index');
+    Route::get('proctoring', [ProctoringController::class, 'index'])->middleware('permission:proctoring,view')->name('proctoring.index');
+    Route::put('proctoring', [ProctoringController::class, 'update'])->middleware('permission:proctoring,edit')->name('proctoring.update');
+    Route::get('compliance', [ComplianceController::class, 'index'])->middleware('permission:compliance,view')->name('compliance.index');
+    Route::put('compliance', [ComplianceController::class, 'update'])->middleware('permission:compliance,edit')->name('compliance.update');
+    Route::get('notification-center', [NotificationCenterController::class, 'index'])->middleware('permission:notifications,view')->name('notifications.index');
+    Route::put('notification-center', [NotificationCenterController::class, 'update'])->middleware('permission:notifications,edit')->name('notifications.update');
+    Route::get('parent-links', [ParentLinkController::class, 'index'])->middleware('permission:parent,view')->name('parent-links.index');
 
     Route::get('marketing/coupons', [MarketingController::class, 'coupons'])->name('marketing.coupons');
     Route::post('marketing/coupons', [MarketingController::class, 'storeCoupon'])->name('marketing.coupons.store');
@@ -499,7 +521,7 @@ Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:inst
     Route::get('/', [InstructorDashboardController::class, 'index'])->name('dashboard');
 });
 
-Route::prefix('learner')->name('learner.')->middleware(['auth', 'role:learner'])->group(function () {
+Route::prefix('learner')->name('learner.')->middleware(['auth', 'role:learner,alumni'])->group(function () {
     Route::get('/', [LearnerDashboardController::class, 'index'])->name('dashboard');
     Route::get('/courses', [LearnerCourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/{course:slug}', [LearnerCourseController::class, 'show'])->name('courses.show');
@@ -509,6 +531,22 @@ Route::prefix('learner')->name('learner.')->middleware(['auth', 'role:learner'])
     Route::post('/courses/{course:slug}/certificate', [LearnerCourseController::class, 'issueCertificate'])->name('courses.certificate.issue');
     Route::get('/certificates/{certificate}/download', [LearnerCourseController::class, 'downloadCertificate'])->name('certificates.download');
     Route::get('/certificates', [LearnerDashboardController::class, 'certificates'])->name('certificates');
+    Route::get('/certificates/{certificate}/renew', [LearnerCertificateRenewalController::class, 'show'])->name('certificates.renew');
+    Route::post('/certificates/{certificate}/renew', [LearnerCertificateRenewalController::class, 'start'])->name('certificates.renew.start');
+    Route::post('/certificates/renew/complete', [LearnerCertificateRenewalController::class, 'complete'])->name('certificates.renew.complete');
     Route::get('/communities', [LearnerCommunityController::class, 'index'])->name('communities.index');
     Route::get('/communities/{community:slug}', [LearnerCommunityController::class, 'show'])->name('communities.show');
+});
+
+Route::prefix('alumni')->name('alumni.')->middleware(['auth', 'role:alumni'])->group(function () {
+    Route::get('/', [AlumniDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/certificates', [AlumniDashboardController::class, 'certificates'])->name('certificates');
+    Route::get('/certificates/{certificate}/renew', [LearnerCertificateRenewalController::class, 'show'])->name('certificates.renew');
+    Route::post('/certificates/{certificate}/renew', [LearnerCertificateRenewalController::class, 'start'])->name('certificates.renew.start');
+    Route::post('/certificates/renew/complete', [LearnerCertificateRenewalController::class, 'complete'])->name('certificates.renew.complete');
+});
+
+Route::prefix('parent')->name('parent.')->middleware(['auth', 'role:parent'])->group(function () {
+    Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/learners', [ParentDashboardController::class, 'learners'])->name('learners');
 });

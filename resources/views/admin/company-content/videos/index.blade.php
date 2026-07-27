@@ -111,7 +111,7 @@
     .video-open-link {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #4f46e5;
+        color: #0d9488;
         text-decoration: none;
     }
     .video-open-link:hover { text-decoration: underline; }
@@ -136,8 +136,8 @@
         cursor: pointer;
     }
     .action-icon-btn svg { width: 1rem; height: 1rem; }
-    .action-icon-btn--edit { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
-    .action-icon-btn--edit:hover { background: #e0e7ff; }
+    .action-icon-btn--edit { color: #0d9488; border-color: #b6dfdb; background: #ecfdf5; }
+    .action-icon-btn--edit:hover { background: #ccfbf1; }
     .action-icon-btn--delete { color: #e11d48; border-color: #fecdd3; background: #fff1f2; }
     .action-icon-btn--delete:hover { background: #ffe4e6; }
 </style>

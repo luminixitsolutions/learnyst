@@ -15,10 +15,35 @@
         text-decoration: none;
     }
     .action-icon-btn svg { width: 1rem; height: 1rem; }
-    .action-icon-btn--edit { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
-    .action-icon-btn--edit:hover { background: #e0e7ff; }
+    .action-icon-btn--edit { color: var(--theme-accent, #0d9488); border-color: var(--theme-accent-light, #b6dfdb); background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12)); }
+    .action-icon-btn--edit:hover { background: rgba(13, 148, 136, 0.18); }
     .action-icon-btn--delete { color: #e11d48; border-color: #fecdd3; background: #fff1f2; }
     .action-icon-btn--delete:hover { background: #ffe4e6; }
+
+    .panel-datatable-wrapper table.dataTable,
+    .panel-datatable-wrapper table.panel-table {
+        table-layout: auto !important;
+    }
+
+    /* Actions column — compact, no extra gap */
+    .panel-datatable-wrapper .dt-col-actions,
+    .panel-datatable-wrapper th.col-actions,
+    .panel-datatable-wrapper td.col-actions {
+        width: 1%;
+        white-space: nowrap !important;
+        padding: .5rem .75rem !important;
+        text-align: right !important;
+        vertical-align: middle !important;
+    }
+
+    /* Compact columns — fit content, don't collapse table */
+    .panel-datatable-wrapper .dt-col-narrow,
+    .panel-datatable-wrapper th.col-narrow,
+    .panel-datatable-wrapper td.col-narrow {
+        white-space: nowrap !important;
+        padding-left: .75rem !important;
+        padding-right: .75rem !important;
+    }
 
     /* Hide show-entries dropdown globally */
     .panel-datatable-wrapper .dataTables_length {
@@ -60,8 +85,8 @@
         font-size: .85rem;
     }
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_filter input:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, .15);
+        border-color: var(--theme-accent, #0d9488);
+        box-shadow: 0 0 0 3px var(--theme-accent-soft, rgba(13, 148, 136, 0.12));
     }
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_filter label {
         font-weight: 500;
@@ -95,9 +120,9 @@
 
     /* Export button */
     .panel-datatable-wrapper .dataTables_wrapper .dt-button {
-        border: 1px solid #c7d2fe !important;
-        background: #eef2ff !important;
-        color: #4338ca !important;
+        border: 1px solid var(--theme-accent-soft-border, rgba(13, 148, 136, 0.28)) !important;
+        background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12)) !important;
+        color: var(--theme-accent-dark, #0b7970) !important;
         border-radius: 9999px !important;
         padding: .5rem 1rem !important;
         font-size: .82rem !important;
@@ -106,9 +131,9 @@
         box-shadow: none !important;
     }
     .panel-datatable-wrapper .dataTables_wrapper .dt-button:hover {
-        background: #e0e7ff !important;
-        border-color: #a5b4fc !important;
-        color: #3730a3 !important;
+        background: rgba(13, 148, 136, 0.18) !important;
+        border-color: var(--theme-accent, #0d9488) !important;
+        color: var(--theme-accent-deeper, #09655c) !important;
     }
 
     /* Table borders & styling — override DataTables default minimal borders */
@@ -133,24 +158,24 @@
     .panel-datatable-wrapper table.dataTable thead td,
     .panel-datatable-wrapper table.panel-table thead th,
     .panel-datatable-wrapper table.panel-table thead td {
-        white-space: nowrap;
         background: #f1f5f9 !important;
         color: #334155 !important;
         font-weight: 600 !important;
         font-size: .78rem !important;
         text-transform: uppercase;
         letter-spacing: .04em;
-        padding: .85rem 1.25rem !important;
+        padding: .625rem .875rem !important;
         border-bottom: 1px solid #cbd5e1 !important;
         border-right: 1px solid #cbd5e1 !important;
         border-top: none !important;
         box-sizing: border-box;
+        vertical-align: middle;
     }
     .panel-datatable-wrapper table.dataTable tbody th,
     .panel-datatable-wrapper table.dataTable tbody td,
     .panel-datatable-wrapper table.panel-table tbody th,
     .panel-datatable-wrapper table.panel-table tbody td {
-        padding: .85rem 1.25rem !important;
+        padding: .625rem .875rem !important;
         vertical-align: middle !important;
         color: #475569 !important;
         border-bottom: 1px solid #e2e8f0 !important;
@@ -175,7 +200,7 @@
     .panel-datatable-wrapper table.dataTable tbody tr:hover th,
     .panel-datatable-wrapper table.dataTable tbody tr:hover td,
     .panel-datatable-wrapper table.panel-table tbody tr:hover td {
-        background: #f8faff !important;
+        background: var(--theme-accent-soft, rgba(13, 148, 136, 0.06)) !important;
     }
     .panel-datatable-wrapper table.dataTable.stripe tbody tr.odd th,
     .panel-datatable-wrapper table.dataTable.stripe tbody tr.odd td,
@@ -193,7 +218,7 @@
     .panel-datatable-wrapper table.dataTable.stripe tbody tr:hover td,
     .panel-datatable-wrapper table.dataTable.display tbody tr:hover th,
     .panel-datatable-wrapper table.dataTable.display tbody tr:hover td {
-        background: #f8faff !important;
+        background: var(--theme-accent-soft, rgba(13, 148, 136, 0.06)) !important;
     }
     .panel-datatable-wrapper table.dataTable.row-border tbody th,
     .panel-datatable-wrapper table.dataTable.row-border tbody td,
@@ -228,15 +253,15 @@
     }
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_paginate .paginate_button.current,
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-        background: #4f46e5 !important;
+        background: var(--theme-accent, #0d9488) !important;
         color: #fff !important;
-        border-color: #4f46e5 !important;
-        box-shadow: 0 4px 14px rgba(79, 70, 229, .35) !important;
+        border-color: var(--theme-accent, #0d9488) !important;
+        box-shadow: 0 4px 14px var(--theme-accent-glow, rgba(13, 148, 136, 0.28)) !important;
     }
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        background: #eef2ff !important;
-        color: #4338ca !important;
-        border-color: #c7d2fe !important;
+        background: var(--theme-accent-soft, rgba(13, 148, 136, 0.12)) !important;
+        color: var(--theme-accent-dark, #0b7970) !important;
+        border-color: var(--theme-accent-soft-border, rgba(13, 148, 136, 0.28)) !important;
     }
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
     .panel-datatable-wrapper .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {

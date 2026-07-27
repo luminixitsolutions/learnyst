@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
-    protected $fillable = ['order_id', 'course_id', 'price', 'discount', 'total'];
+    protected $fillable = [
+        'order_id', 'item_type', 'course_id', 'certificate_id', 'price', 'discount', 'total',
+    ];
 
     protected function casts(): array
     {
@@ -25,5 +27,10 @@ class OrderItem extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function certificate()
+    {
+        return $this->belongsTo(Certificate::class);
     }
 }

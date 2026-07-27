@@ -21,6 +21,36 @@ class PermissionService
             'community' => 'Community',
             'instructors' => 'Instructors',
             'sub_admins' => 'Sub Admins',
+            'alumni' => 'Alumni Network',
+            'certificates_renewal' => 'Certificate Renewal',
+            'proctoring' => 'Exam Proctoring',
+            'parent' => 'Parent Portal',
+            'compliance' => 'Compliance Center',
+            'notifications' => 'Notification Center',
+        ];
+    }
+
+    /**
+     * Default permission slugs synced when seeding non-admin roles.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function defaultRolePermissions(): array
+    {
+        return [
+            'counselor' => [
+                'dashboard.view',
+                'learners.view',
+                'learners.export',
+                'reports.view',
+                'sales.view',
+            ],
+            'sub-admin' => [
+                'dashboard.view',
+                'learners.view',
+                'products.view',
+                'sales.view',
+            ],
         ];
     }
 

@@ -447,11 +447,20 @@ class CourseSettingsController extends Controller
             ],
             'discussions-bookmarks', 'leaderboard', 'content-dripping', 'learner-configurations', 'learning-path' => [],
             'certificates' => [
-                'templates' => CertificateTemplate::where(function ($q) use ($course) {
-                    $q->whereNull('course_id')->orWhere('course_id', $course->id);
-                })->orderBy('name')->get(),
+                'presets' => app(CertificateDesignService::class)->presets(),
                 'courseTemplate' => app(CertificateDesignService::class)->forCourse($course),
                 'designService' => app(CertificateDesignService::class),
+                'selectedPresetKey' => app(CertificateDesignService::class)->resolvePresetKey(
+                    app(CertificateDesignService::class)->layoutFrom(
+                        app(CertificateDesignService::class)->forCourse($course)
+                    )
+                ),
+                'elementPositions' => app(CertificateDesignService::class)->sanitizeElementPositions(
+                    app(CertificateDesignService::class)->layoutFrom(
+                        app(CertificateDesignService::class)->forCourse($course)
+                    )['element_positions'] ?? []
+                ),
+                'elementLabels' => CertificateDesignService::ELEMENT_LABELS,
                 'criteria' => $course->certificateCriteria()->orderBy('sort_order')->get(),
                 'issuedCount' => Certificate::where('course_id', $course->id)->count(),
             ],
@@ -778,48 +787,35 @@ class CourseSettingsController extends Controller
 
     protected function updateCertificates(Request $request, Course $course, CourseSetting $settings): void
     {
+        $design = app(CertificateDesignService::class);
+
         $validated = $request->validate([
+            'preset_key' => ['nullable', 'string', Rule::in($design->presetKeys())],
+            'element_positions' => ['nullable', 'string'],
             'certificate_template_id' => ['nullable', 'exists:certificate_templates,id'],
             'auto_generate' => ['boolean'],
             'expiry_days' => ['nullable', 'integer', 'min:1'],
             'unique_number' => ['boolean'],
             'qr_verification' => ['boolean'],
-            'design_name' => ['nullable', 'string', 'max:255'],
-            'title' => ['nullable', 'string', 'max:255'],
-            'subtitle' => ['nullable', 'string', 'max:255'],
-            'body' => ['nullable', 'string', 'max:2000'],
-            'left_signatory' => ['nullable', 'string', 'max:120'],
-            'right_signatory' => ['nullable', 'string', 'max:120'],
-            'primary_color' => ['nullable', 'string', 'max:20'],
-            'accent_color' => ['nullable', 'string', 'max:20'],
-            'paper_color' => ['nullable', 'string', 'max:20'],
-            'orientation' => ['nullable', Rule::in(['A4-landscape', 'A4-portrait'])],
-            'theme' => ['nullable', Rule::in(['classic-blue-gold', 'emerald', 'minimal'])],
-            'save_design' => ['nullable', 'boolean'],
         ]);
 
-        $design = app(CertificateDesignService::class);
         $template = $design->forCourse($course);
 
-        if ($request->boolean('save_design') || $request->filled('title') || $request->filled('body')) {
-            $layout = array_merge($design->layoutFrom($template), [
-                'theme' => $validated['theme'] ?? 'classic-blue-gold',
-                'orientation' => $validated['orientation'] ?? 'A4-landscape',
-                'title' => $validated['title'] ?? 'Certificate of Completion',
-                'subtitle' => $validated['subtitle'] ?? 'This Certificate is Proudly Present to:',
-                'body' => $validated['body'] ?? '',
-                'left_signatory' => $validated['left_signatory'] ?? 'Head of the Department',
-                'right_signatory' => $validated['right_signatory'] ?? 'School Principal',
-                'primary_color' => $validated['primary_color'] ?? '#1e4a8c',
-                'accent_color' => $validated['accent_color'] ?? '#c9a227',
-                'paper_color' => $validated['paper_color'] ?? '#fffef8',
-                'show_verify_url' => $request->boolean('show_verify_url', true),
-                'show_cert_number' => $request->boolean('show_cert_number', true),
-            ]);
-
-            $design->saveDesign($template, $layout, $validated['design_name'] ?? null);
+        if ($request->filled('preset_key')) {
+            $design->applyPreset($template, $validated['preset_key']);
+            $template = $template->fresh();
             $design->attachToCourse($course, $template);
             $validated['certificate_template_id'] = $template->id;
+        }
+
+        if ($request->filled('element_positions')) {
+            $decoded = json_decode($request->input('element_positions'), true);
+            if (is_array($decoded)) {
+                $layout = $design->layoutFrom($template);
+                $layout['element_positions'] = $design->sanitizeElementPositions($decoded);
+                $design->saveDesign($template, $layout);
+                $template = $template->fresh();
+            }
         }
 
         $settings->refresh();
@@ -827,6 +823,7 @@ class CourseSettingsController extends Controller
             'certificate_enabled' => $request->boolean('certificate_enabled'),
             'certificate_config' => [
                 'certificate_template_id' => $validated['certificate_template_id'] ?? $template->id,
+                'preset_key' => $validated['preset_key'] ?? $design->resolvePresetKey($design->layoutFrom($template)),
                 'auto_generate' => $request->boolean('auto_generate', true),
                 'expiry_days' => $validated['expiry_days'] ?? null,
                 'unique_number' => $request->boolean('unique_number', true),

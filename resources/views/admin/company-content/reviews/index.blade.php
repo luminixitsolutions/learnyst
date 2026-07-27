@@ -40,8 +40,8 @@
         text-decoration: none;
     }
     .reviews-filter-chip.is-active {
-        background: #4f46e5;
-        border-color: #4f46e5;
+        background: #0d9488;
+        border-color: #0d9488;
         color: #fff;
     }
 
@@ -222,13 +222,13 @@
     $table.addClass('cell-border row-border');
 
     $table.DataTable({
+        autoWidth: true,
         order: [[4, 'desc']],
         pageLength: 10,
         lengthChange: false,
         dom: '<"dt-toolbar"f>rt<"dt-footer"ip>',
         columnDefs: [
-            { orderable: false, targets: [5] },
-            { searchable: false, targets: [5] }
+            { orderable: false, searchable: false, targets: [5], className: 'dt-col-actions text-right' },
         ],
         language: {
             search: 'Search:',

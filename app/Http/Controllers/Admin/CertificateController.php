@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\CertificateTemplate;
 use App\Services\ActivityLogger;
+use App\Services\CertificateDesignService;
+use App\Services\CertificateLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -41,18 +43,30 @@ class CertificateController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'html_content' => ['required', 'string'],
             'is_default' => ['boolean'],
+            'validity_years' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'validity_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
+            'renewal_price' => ['nullable', 'numeric', 'min:0'],
+            'requires_renewal_assessment' => ['boolean'],
         ]);
 
         if ($request->boolean('is_default')) {
             CertificateTemplate::where('is_default', true)->update(['is_default' => false]);
         }
 
-        CertificateTemplate::create($validated);
+        CertificateTemplate::create([
+            'name' => $validated['name'],
+            'html_content' => $validated['html_content'],
+            'is_default' => $request->boolean('is_default'),
+            'validity_years' => $validated['validity_years'] ?? null,
+            'validity_days' => $validated['validity_days'] ?? null,
+            'renewal_price' => $validated['renewal_price'] ?? null,
+            'requires_renewal_assessment' => $request->boolean('requires_renewal_assessment'),
+        ]);
 
         return back()->with('success', 'Template created.');
     }
 
-    public function issue(Request $request)
+    public function issue(Request $request, CertificateLifecycleService $lifecycle)
     {
         $validated = $request->validate([
             'user_id' => ['required', Rule::in($this->visibleLearnersQuery()->pluck('id'))],
@@ -60,26 +74,23 @@ class CertificateController extends Controller
             'certificate_template_id' => ['nullable', 'exists:certificate_templates,id'],
         ]);
 
-        $cert = Certificate::create(array_merge($validated, ['issued_at' => now()]));
+        $template = null;
+        if (! empty($validated['certificate_template_id'])) {
+            $template = CertificateTemplate::find($validated['certificate_template_id']);
+        } elseif (! empty($validated['course_id'])) {
+            $course = \App\Models\Course::find($validated['course_id']);
+            $template = $course ? app(CertificateDesignService::class)->forCourse($course) : null;
+        }
+
+        $cert = Certificate::create(array_merge($validated, [
+            'issued_at' => now(),
+            'certificate_template_id' => $template?->id ?? $validated['certificate_template_id'] ?? null,
+        ]));
+
+        $lifecycle->applyLifecycle($cert, $template);
+
         ActivityLogger::log('certificate_issued', "Certificate {$cert->certificate_number} issued", $cert);
 
         return back()->with('success', 'Certificate issued.');
-    }
-
-    public function verify(Request $request)
-    {
-        $certificate = null;
-
-        if ($request->filled('number')) {
-            $certificate = Certificate::with(['user', 'course'])
-                ->where('certificate_number', $request->number)
-                ->where(function ($q) {
-                    $q->whereIn('course_id', $this->ownedCourseIds())
-                        ->orWhereHas('user', fn ($u) => $u->where('created_by', $this->currentUserId()));
-                })
-                ->first();
-        }
-
-        return view('certificates.verify', compact('certificate'));
     }
 }

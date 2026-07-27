@@ -18,19 +18,69 @@
 
     const actionColumn = {{ $actionColumn !== null ? (int) $actionColumn : 'null' }};
     const columnDefs = [];
-
-    if (actionColumn !== null) {
-        columnDefs.push({ orderable: false, searchable: false, targets: [actionColumn] });
-    }
-
-    const exportColumns = actionColumn !== null
-        ? ':not(:eq(' + actionColumn + '))'
-        : ':visible';
+    const narrowHeaders = [
+        'status', 'price', 'marks', 'quiz type', 'template', 'duration',
+        'active', 'featured', 'visibility', 'role', 'amount', 'date',
+        'phone', 'code', 'rating', 'priority', 'section', 'course',
+    ];
+    let actionsTarget = null;
 
     const $table = jQuery('#{{ $tableId }}');
     $table.addClass('cell-border row-border');
 
+    $table.find('thead th').each(function (index) {
+        const label = jQuery(this).text().trim().toLowerCase().replace(/\s+/g, ' ');
+
+        if (label === 'actions') {
+            actionsTarget = index;
+            jQuery(this).addClass('col-actions');
+            columnDefs.push({
+                targets: [index],
+                orderable: false,
+                searchable: false,
+                className: 'dt-col-actions text-right',
+            });
+            return;
+        }
+
+        if (narrowHeaders.includes(label)) {
+            jQuery(this).addClass('col-narrow');
+            columnDefs.push({
+                targets: [index],
+                className: 'dt-col-narrow',
+            });
+        }
+    });
+
+    if (actionColumn !== null && actionsTarget !== actionColumn) {
+        $table.find('thead th').eq(actionColumn).addClass('col-actions');
+        columnDefs.push({
+            targets: [actionColumn],
+            orderable: false,
+            searchable: false,
+            className: 'dt-col-actions text-right',
+        });
+    }
+
+    $table.find('tbody tr').each(function () {
+        jQuery(this).find('td').each(function (i) {
+            const $th = $table.find('thead th').eq(i);
+            if ($th.hasClass('col-actions')) {
+                jQuery(this).addClass('col-actions');
+            }
+            if ($th.hasClass('col-narrow')) {
+                jQuery(this).addClass('col-narrow');
+            }
+        });
+    });
+
+    const resolvedActionColumn = actionsTarget !== null ? actionsTarget : actionColumn;
+    const exportColumns = resolvedActionColumn !== null
+        ? ':not(:eq(' + resolvedActionColumn + '))'
+        : ':visible';
+
     $table.DataTable({
+        autoWidth: true,
         order: [[{{ (int) $orderColumn }}, '{{ $orderDirection }}']],
         pageLength: 10,
         lengthChange: false,
@@ -52,6 +102,9 @@
             }
         }],
         columnDefs: columnDefs,
+        initComplete: function () {
+            this.api().columns.adjust();
+        },
         language: {
             search: 'Search:',
             info: 'Showing _START_ to _END_ of _TOTAL_ {{ $entity }}',

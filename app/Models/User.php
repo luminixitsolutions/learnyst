@@ -73,7 +73,7 @@ class User extends Authenticatable
 
     public function isCompanyStaff(): bool
     {
-        return in_array($this->role?->slug, ['admin', 'sub-admin', 'super-admin'], true);
+        return in_array($this->role?->slug, ['admin', 'sub-admin', 'super-admin', 'counselor'], true);
     }
 
     public function isSubAdmin(): bool
@@ -94,6 +94,26 @@ class User extends Authenticatable
     public function isLearner(): bool
     {
         return $this->role?->slug === 'learner';
+    }
+
+    public function isAlumni(): bool
+    {
+        return $this->role?->slug === 'alumni';
+    }
+
+    public function isParent(): bool
+    {
+        return $this->role?->slug === 'parent';
+    }
+
+    public function isCounselor(): bool
+    {
+        return $this->role?->slug === 'counselor';
+    }
+
+    public function isStudentPanelUser(): bool
+    {
+        return in_array($this->role?->slug, ['learner', 'alumni', 'parent'], true);
     }
 
     public function hasRole(string $slug): bool
@@ -139,5 +159,15 @@ class User extends Authenticatable
     public function certificates()
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(UserNotification::class);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->unread();
     }
 }

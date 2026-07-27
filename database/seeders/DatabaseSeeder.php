@@ -79,6 +79,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Sub Administrator', 'slug' => 'sub-admin', 'description' => 'Limited admin with assigned permissions', 'is_system' => true],
             ['name' => 'Instructor', 'slug' => 'instructor', 'description' => 'Manage assigned courses and batches', 'is_system' => true],
             ['name' => 'Learner', 'slug' => 'learner', 'description' => 'Access enrolled courses', 'is_system' => true],
+            ['name' => 'Alumni', 'slug' => 'alumni', 'description' => 'Graduated learners with alumni network access', 'is_system' => true],
+            ['name' => 'Parent', 'slug' => 'parent', 'description' => 'Guardian with linked learner access', 'is_system' => true],
+            ['name' => 'Counselor', 'slug' => 'counselor', 'description' => 'Staff CRM with learner and sales visibility', 'is_system' => true],
         ];
 
         foreach ($roles as $role) {
@@ -109,10 +112,15 @@ class DatabaseSeeder extends Seeder
         $superAdminRole = Role::where('slug', 'super-admin')->first();
         $superAdminRole?->permissions()->sync($permissionIds);
 
-        $subAdminPermissions = Permission::whereIn('module', ['dashboard', 'learners', 'products', 'sales'])
-            ->where('action', 'view')
-            ->pluck('id');
-        $subAdminRole->permissions()->sync($subAdminPermissions);
+        foreach (PermissionService::defaultRolePermissions() as $roleSlug => $permissionSlugs) {
+            $role = Role::where('slug', $roleSlug)->first();
+            if (! $role) {
+                continue;
+            }
+
+            $ids = Permission::whereIn('slug', $permissionSlugs)->pluck('id');
+            $role->permissions()->sync($ids);
+        }
     }
 
     protected function seedUsers(): void
@@ -175,6 +183,33 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now(),
             'is_active' => true,
             'phone' => '+919876543210',
+        ]);
+
+        $alumniRole = Role::where('slug', 'alumni')->first();
+        User::firstOrCreate(['email' => 'alumni@learnyst.com'], [
+            'role_id' => $alumniRole?->id,
+            'name' => 'Jamie Alumni',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'is_active' => true,
+        ]);
+
+        $parentRole = Role::where('slug', 'parent')->first();
+        User::firstOrCreate(['email' => 'parent@learnyst.com'], [
+            'role_id' => $parentRole?->id,
+            'name' => 'Taylor Parent',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'is_active' => true,
+        ]);
+
+        $counselorRole = Role::where('slug', 'counselor')->first();
+        User::firstOrCreate(['email' => 'counselor@learnyst.com'], [
+            'role_id' => $counselorRole?->id,
+            'name' => 'Chris Counselor',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'is_active' => true,
         ]);
     }
 

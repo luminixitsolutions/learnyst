@@ -37,11 +37,9 @@
                             @if($amount > 0)
                                 <span class="text-[10px] font-semibold text-indigo-600 mb-1 truncate max-w-full opacity-0 group-hover:opacity-100 transition-opacity" title="₹{{ number_format($amount, 0) }}">₹{{ number_format($amount, 0) }}</span>
                             @endif
-                            <div @class([
-                                'w-full max-w-[2.75rem] mx-auto rounded-t-lg transition-all',
-                                'bg-gradient-to-t from-indigo-600 to-violet-400 hover:from-indigo-500 hover:to-violet-300 shadow-sm' => $amount > 0,
-                                'bg-slate-100 border border-slate-200/80' => $amount <= 0,
-                            ]) style="height: {{ $barPx }}px" title="{{ date('F', mktime(0, 0, 0, $m, 1)) }}: ₹{{ number_format($amount, 0) }}"></div>
+                            <div class="w-full max-w-[2.75rem] mx-auto rounded-t-lg transition-all shadow-sm"
+                                 style="height: {{ $barPx }}px; {{ $amount > 0 ? 'background: var(--theme-gradient, linear-gradient(to top, #0b7970, #7ac4be));' : 'background:#f1f5f9;border:1px solid #e2e8f0;' }}"
+                                 title="{{ date('F', mktime(0, 0, 0, $m, 1)) }}: ₹{{ number_format($amount, 0) }}"></div>
                         </div>
                     @endfor
                 </div>
@@ -80,7 +78,7 @@
             <div class="space-y-3">
                 @forelse($recentLearners as $learner)
                     <a href="{{ route('admin.learners.show', $learner) }}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-sm font-bold text-white">{{ strtoupper(substr($learner->name,0,1)) }}</div>
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style="background: var(--theme-gradient, linear-gradient(135deg, #0b7970, #0d9488, #7ac4be));">{{ strtoupper(substr($learner->name,0,1)) }}</div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-slate-800 truncate">{{ $learner->name }}</p>
                             <p class="text-xs text-slate-500">{{ $learner->created_at->diffForHumans() }}</p>
