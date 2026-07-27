@@ -23,40 +23,39 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($payments->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Order ID</th>
-                    <th class="px-6 py-4">Learner</th>
-                    <th class="px-6 py-4">Product</th>
-                    <th class="px-6 py-4">Amount</th>
-                    <th class="px-6 py-4">Payment Mode</th>
-                    <th class="px-6 py-4">Payment Status</th>
-                    <th class="px-6 py-4">Transaction ID</th>
-                    <th class="px-6 py-4">Created Date</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($payments as $payment)
-                    <tr class="hover:bg-indigo-50/40">
-                        <td class="px-6 py-4"><a href="{{ route('admin.orders.show', $payment->order) }}" class="text-indigo-600">{{ $payment->order?->order_number }}</a></td>
-                        <td class="px-6 py-4 text-slate-800">{{ $payment->user?->name }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $payment->order?->items->first()?->course?->title ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-800">₹{{ number_format($payment->amount, 2) }}</td>
-                        <td class="px-6 py-4 capitalize text-slate-500">{{ $payment->gateway }}</td>
-                        <td class="px-6 py-4"><x-badge :type="$payment->status === 'success' ? 'success' : ($payment->status === 'pending' ? 'warning' : 'danger')">{{ ucfirst($payment->status) }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-500 font-mono text-xs">{{ $payment->transaction_id ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $payment->created_at->format('M d, Y H:i') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $payments->links() }}</div>
-        @else
-        <x-empty-state title="No transactions found" />
-        @endif
-    </div>
+    <x-admin.report-datatable
+        table-id="transactionsReportTable"
+        :has-records="$payments->count() > 0"
+        entity="transactions"
+        :order-column="7"
+        order-direction="desc"
+        export-file-name="transactions-report"
+        empty-title="No transactions found"
+    >
+        <thead><tr class="text-left">
+            <th>Order ID</th>
+            <th>Learner</th>
+            <th>Product</th>
+            <th>Amount</th>
+            <th>Payment Mode</th>
+            <th>Payment Status</th>
+            <th>Transaction ID</th>
+            <th>Created Date</th>
+        </tr></thead>
+        <tbody>
+            @foreach($payments as $payment)
+            <tr>
+                <td><a href="{{ route('admin.orders.show', $payment->order) }}" class="text-indigo-600">{{ $payment->order?->order_number }}</a></td>
+                <td class="text-slate-800">{{ $payment->user?->name }}</td>
+                <td class="text-slate-500">{{ $payment->order?->items->first()?->course?->title ?? '—' }}</td>
+                <td class="text-slate-800" data-order="{{ $payment->amount }}">₹{{ number_format($payment->amount, 2) }}</td>
+                <td class="capitalize text-slate-500">{{ $payment->gateway }}</td>
+                <td><x-badge :type="$payment->status === 'success' ? 'success' : ($payment->status === 'pending' ? 'warning' : 'danger')">{{ ucfirst($payment->status) }}</x-badge></td>
+                <td class="text-slate-500 font-mono text-xs">{{ $payment->transaction_id ?? '—' }}</td>
+                <td class="text-slate-500" data-order="{{ $payment->created_at->timestamp }}">{{ $payment->created_at->format('M d, Y H:i') }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

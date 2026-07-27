@@ -33,7 +33,7 @@ class PodcastController extends Controller
             default => $query->latest(),
         };
 
-        $podcasts = $query->paginate(15)->withQueryString();
+        $podcasts = $query->get();
 
         return view('admin.podcasts.index', compact('podcasts', 'sort'));
     }

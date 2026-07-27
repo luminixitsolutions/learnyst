@@ -27,7 +27,7 @@ class InstructorController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $instructors = $query->paginate(15)->withQueryString();
+        $instructors = $query->get();
 
         return view('admin.instructors.index', compact('instructors'));
     }

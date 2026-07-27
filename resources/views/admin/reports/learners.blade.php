@@ -16,38 +16,23 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($learners->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Learner</th>
-                    <th class="px-6 py-4">Email</th>
-                    <th class="px-6 py-4">Total Sales</th>
-                    <th class="px-6 py-4">Lead Visits</th>
-                    <th class="px-6 py-4">Signed Up On</th>
-                    <th class="px-6 py-4">Billing Address</th>
-                    <th class="px-6 py-4">Enrollments</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($learners as $learner)
-                    <tr class="hover:bg-indigo-50/40">
-                        <td class="px-6 py-4"><a href="{{ route('admin.reports.learner-profile', $learner) }}" class="text-indigo-600 font-medium">{{ $learner->name }}</a></td>
-                        <td class="px-6 py-4 text-slate-500">{{ $learner->email }}</td>
-                        <td class="px-6 py-4 text-indigo-600 font-medium">₹{{ number_format($learner->total_spent ?? 0, 0) }}</td>
-                        <td class="px-6 py-4 text-slate-800">{{ $leadCounts[$learner->email] ?? 0 }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $learner->created_at->format('M d, Y') }}</td>
-                        <td class="px-6 py-4 text-slate-500 max-w-xs truncate">{{ $learner->address ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-800">{{ $learner->enrollments_count }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $learners->links() }}</div>
-        @else
-        <x-empty-state title="No learners found" />
-        @endif
-    </div>
+    <x-admin.report-datatable table-id="learnersReportTable" :has-records="$learners->count() > 0" entity="learners" :order-column="2" order-direction="desc" export-file-name="learners-report" empty-title="No learners found">
+        <thead><tr class="text-left">
+            <th>Learner</th><th>Email</th><th>Total Sales</th><th>Lead Visits</th><th>Signed Up On</th><th>Billing Address</th><th>Enrollments</th>
+        </tr></thead>
+        <tbody>
+            @foreach($learners as $learner)
+            <tr>
+                <td><a href="{{ route('admin.reports.learner-profile', $learner) }}" class="text-indigo-600 font-medium">{{ $learner->name }}</a></td>
+                <td class="text-slate-500">{{ $learner->email }}</td>
+                <td class="text-indigo-600 font-medium" data-order="{{ $learner->total_spent ?? 0 }}">₹{{ number_format($learner->total_spent ?? 0, 0) }}</td>
+                <td data-order="{{ $leadCounts[$learner->email] ?? 0 }}">{{ $leadCounts[$learner->email] ?? 0 }}</td>
+                <td class="text-slate-500" data-order="{{ $learner->created_at->timestamp }}">{{ $learner->created_at->format('M d, Y') }}</td>
+                <td class="text-slate-500 max-w-xs truncate">{{ $learner->address ?? '—' }}</td>
+                <td data-order="{{ $learner->enrollments_count }}">{{ $learner->enrollments_count }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

@@ -32,7 +32,7 @@ class BatchController extends Controller
             $query->where('status', $request->status);
         }
 
-        $batches = $query->paginate(15)->withQueryString();
+        $batches = $query->get();
 
         return view('admin.batches.index', compact('batches'));
     }

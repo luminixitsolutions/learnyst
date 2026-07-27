@@ -29,7 +29,7 @@ class SegmentController extends Controller
             default => $query->latest(),
         };
 
-        $segments = $query->paginate(15)->withQueryString();
+        $segments = $query->get();
 
         return view('admin.segments.index', compact('segments', 'sort'));
     }

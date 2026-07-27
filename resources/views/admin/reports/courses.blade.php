@@ -17,32 +17,20 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($courses->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Course</th>
-                    <th class="px-6 py-4">Enrollments</th>
-                    <th class="px-6 py-4">Avg Progress</th>
-                    <th class="px-6 py-4">Status</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($courses as $course)
-                    <tr>
-                        <td class="px-6 py-4"><a href="{{ route('admin.courses.show', $course) }}" class="text-indigo-600">{{ $course->title }}</a></td>
-                        <td class="px-6 py-4">{{ $course->enrollments_count }}</td>
-                        <td class="px-6 py-4">{{ round($course->avg_progress ?? 0) }}%</td>
-                        <td class="px-6 py-4"><x-badge :type="$course->status === 'published' ? 'success' : 'warning'">{{ ucfirst($course->status) }}</x-badge></td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $courses->links() }}</div>
-        @else
-        <x-empty-state title="No courses found" />
-        @endif
-    </div>
+    <x-admin.report-datatable table-id="coursesReportTable" :has-records="$courses->count() > 0" entity="courses" :order-column="1" order-direction="desc" export-file-name="courses-report" empty-title="No courses found">
+        <thead><tr class="text-left">
+            <th>Course</th><th>Enrollments</th><th>Avg Progress</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+            @foreach($courses as $course)
+            <tr>
+                <td><a href="{{ route('admin.courses.show', $course) }}" class="text-indigo-600">{{ $course->title }}</a></td>
+                <td data-order="{{ $course->enrollments_count }}">{{ $course->enrollments_count }}</td>
+                <td data-order="{{ round($course->avg_progress ?? 0) }}">{{ round($course->avg_progress ?? 0) }}%</td>
+                <td><x-badge :type="$course->status === 'published' ? 'success' : 'warning'">{{ ucfirst($course->status) }}</x-badge></td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

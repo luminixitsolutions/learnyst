@@ -25,6 +25,7 @@ use App\Models\ScheduledEvent;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Webinar;
+use App\Services\CompanyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -79,6 +80,18 @@ class ReportController extends Controller
         }
 
         return $query;
+    }
+
+    protected function demoReportRecords(string $key): \Illuminate\Support\Collection
+    {
+        try {
+            $company = CompanyService::resolveForUser(auth()->user());
+            $rows = data_get($company->profile, "reports_demo.{$key}", []);
+
+            return collect(is_array($rows) ? $rows : [])->map(fn ($row) => (object) $row);
+        } catch (\Throwable $e) {
+            return collect();
+        }
     }
 
     public function index()
@@ -147,10 +160,10 @@ class ReportController extends Controller
                     $q->where('payment_status', $status);
                 }
             });
-        $items = $query->latest()->paginate(30)->withQueryString();
+        $items = $query->latest()->get();
 
         if ($request->boolean('export')) {
-            $rows = $items->getCollection()->map(fn ($item) => [
+            $rows = $items->map(fn ($item) => [
                 $item->course?->title,
                 $item->order?->order_number,
                 $item->order?->user?->name,
@@ -184,14 +197,14 @@ class ReportController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $learners = $query->orderByDesc('total_spent')->paginate(30)->withQueryString();
+        $learners = $query->orderByDesc('total_spent')->get();
 
         $leadCounts = Lead::select('email', DB::raw('count(*) as visits'))
             ->groupBy('email')
             ->pluck('visits', 'email');
 
         if ($request->boolean('export')) {
-            $rows = $learners->getCollection()->map(fn ($l) => [
+            $rows = $learners->map(fn ($l) => [
                 $l->name,
                 $l->email,
                 $l->phone,
@@ -232,8 +245,7 @@ class ReportController extends Controller
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->when($request->status, fn ($q, $st) => $q->where('status', $st))
             ->orderByDesc('enrollments_count')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
         if ($request->boolean('export')) {
             return $this->exportCsv('courses', ['Course', 'Enrollments', 'Avg Progress', 'Status'], $courses->map(fn ($c) => [
                 $c->title,
@@ -263,12 +275,12 @@ class ReportController extends Controller
             $query->where('course_id', $courseId);
         }
 
-        $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
+        $enrollments = $query->latest('enrolled_at')->get();
         $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
         if ($request->boolean('export')) {
             return $this->exportCsv('enrollments', [
                 'Product/Course', 'Learner', 'Email', 'Mobile', 'Enrollment Date', 'Access Start', 'Access Expiry', 'Status',
-            ], $enrollments->getCollection()->map(fn ($e) => [
+            ], $enrollments->map(fn ($e) => [
                 $e->course?->title ?? $e->bundle?->title ?? $e->batch?->title,
                 $e->user?->name,
                 $e->user?->email,
@@ -305,12 +317,12 @@ class ReportController extends Controller
             $query->where('gateway', $gateway);
         }
 
-        $payments = $query->latest()->paginate(30)->withQueryString();
+        $payments = $query->latest()->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('transactions', [
                 'Order ID', 'Learner', 'Product', 'Amount', 'Payment Mode', 'Payment Status', 'Transaction ID', 'Created Date',
-            ], $payments->getCollection()->map(fn ($p) => [
+            ], $payments->map(fn ($p) => [
                 $p->order?->order_number,
                 $p->user?->name,
                 $p->order?->items->first()?->course?->title,
@@ -368,12 +380,19 @@ class ReportController extends Controller
 
     public function schoolPayouts(Request $request)
     {
-        $payouts = collect();
+        $payouts = $this->demoReportRecords('school_payouts');
 
         if ($request->boolean('export')) {
             return $this->exportCsv('school-payouts', [
                 'Payout ID', 'Transaction ID', 'Amount', 'Payment Gateway', 'Status', 'Date',
-            ], $payouts);
+            ], $payouts->map(fn ($p) => [
+                $p->payout_id ?? $p->id ?? '—',
+                $p->transaction_id ?? '—',
+                $p->amount ?? 0,
+                $p->gateway ?? '—',
+                $p->status ?? '—',
+                $p->date ?? '—',
+            ]));
         }
 
         return view('admin.reports.school-payouts', compact('payouts'));
@@ -387,6 +406,7 @@ class ReportController extends Controller
         $metaKey = $types[$type]['meta_key'] ?? null;
         $query = CourseEnrollment::with(['user', 'course'])
             ->where('enrollment_type', 'course');
+        $this->ownedEnrollmentsConstraint($query);
 
         $query = $this->enrollmentSearch($query, $request->get('search'));
         $query = $this->dateRange($query, $request, 'enrolled_at');
@@ -401,15 +421,15 @@ class ReportController extends Controller
             $query->whereNotNull('meta->' . $metaKey);
         }
 
-        $records = $query->latest('updated_at')->paginate(30)->withQueryString();
-        $courses = Course::orderBy('title')->get(['id', 'title']);
-        $learners = User::where('role_id', $this->learnerRoleId())->orderBy('name')->get(['id', 'name']);
+        $records = $query->latest('updated_at')->get();
+        $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
+        $learners = $this->ownedUsersQuery('learner')->orderBy('name')->get(['id', 'name']);
         $reportType = $types[$type];
 
         if ($request->boolean('export')) {
             return $this->exportCsv($type . '-progress', [
                 'Product', 'Learner', 'Progress %', 'Completed Lessons', 'Total Lessons', 'Last Activity', 'Status',
-            ], $records->getCollection()->map(function ($e) use ($metaKey) {
+            ], $records->map(function ($e) use ($metaKey) {
                 $meta = $e->meta ?? [];
 
                 return [
@@ -449,6 +469,7 @@ class ReportController extends Controller
         $query = CourseEnrollment::with(['user', 'bundle'])
             ->where('enrollment_type', 'bundle')
             ->whereNotNull('bundle_id');
+        $this->ownedEnrollmentsConstraint($query);
 
         $query = $this->enrollmentSearch($query, $request->get('search'));
 
@@ -456,12 +477,12 @@ class ReportController extends Controller
             $query->where('bundle_id', $bundleId);
         }
 
-        $records = $query->latest('updated_at')->paginate(30)->withQueryString();
+        $records = $query->latest('updated_at')->get();
         $bundles = $this->owned(Bundle::query())->orderBy('title')->get(['id', 'title']);
         if ($request->boolean('export')) {
             return $this->exportCsv('bundle-progress', [
                 'Bundle', 'Learner', 'Email', 'Courses Completed', 'Total Courses', 'Progress %', 'Last Activity', 'Status',
-            ], $records->getCollection()->map(function ($e) {
+            ], $records->map(function ($e) {
                 $meta = $e->meta ?? [];
 
                 return [
@@ -482,18 +503,19 @@ class ReportController extends Controller
 
     public function customProductProgress(Request $request)
     {
-        $products = CustomProduct::orderBy('title')->get(['id', 'title']);
-        $records = CourseEnrollment::with(['user', 'course'])
-            ->where('enrollment_type', 'course')
-            ->when($request->search, fn ($q, $s) => $this->enrollmentSearch($q, $s))
-            ->latest('updated_at')
-            ->paginate(30)
-            ->withQueryString();
+        $products = $this->owned(CustomProduct::query())->orderBy('title')->get(['id', 'title']);
+        $query = CourseEnrollment::with(['user', 'course'])
+            ->where('enrollment_type', 'course');
+        $this->ownedEnrollmentsConstraint($query);
+        if ($request->search) {
+            $query = $this->enrollmentSearch($query, $request->search);
+        }
+        $records = $query->latest('updated_at')->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('custom-product-progress', [
                 'Product', 'Learner', 'Email', 'Progress', 'Completed Content', 'Last Activity', 'Status',
-            ], $records->getCollection()->map(fn ($e) => [
+            ], $records->map(fn ($e) => [
                 $e->course?->title,
                 $e->user?->name,
                 $e->user?->email,
@@ -511,16 +533,17 @@ class ReportController extends Controller
     {
         $query = CourseEnrollment::with(['user', 'course', 'bundle'])
             ->whereNotNull('meta->test_series_score');
+        $this->ownedEnrollmentsConstraint($query);
 
         $query = $this->enrollmentSearch($query, $request->get('search'));
         $query = $this->dateRange($query, $request, 'updated_at');
 
-        $records = $query->latest('updated_at')->paginate(30)->withQueryString();
+        $records = $query->latest('updated_at')->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('test-series-scores', [
                 'Learner', 'Email', 'Test Series', 'Score', 'Total Marks', 'Percentage', 'Attempt Date', 'Pass/Fail',
-            ], $records->getCollection()->map(function ($e) {
+            ], $records->map(function ($e) {
                 $score = $e->meta['test_series_score'] ?? 0;
                 $total = $e->meta['test_series_total'] ?? 100;
                 $pct = $total > 0 ? round(($score / $total) * 100, 1) : 0;
@@ -548,12 +571,12 @@ class ReportController extends Controller
         $query->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"));
         $query->when($request->status, fn ($q, $st) => $q->where('status', $st));
 
-        $batches = $query->latest()->paginate(30)->withQueryString();
+        $batches = $query->latest()->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('batches', [
                 'Batch', 'Product/Course', 'Instructor', 'Start Date', 'End Date', 'Total Learners', 'Status',
-            ], $batches->getCollection()->map(fn ($b) => [
+            ], $batches->map(fn ($b) => [
                 $b->title,
                 $b->course?->title,
                 $b->instructor?->name,
@@ -585,12 +608,21 @@ class ReportController extends Controller
 
     public function referralWallet(Request $request)
     {
-        $records = collect();
+        $records = $this->demoReportRecords('referral_wallet');
 
         if ($request->boolean('export')) {
             return $this->exportCsv('referral-wallet', [
                 'Learner', 'Referral Code', 'Referred User', 'Wallet Amount', 'Credit/Debit', 'Transaction Type', 'Date', 'Status',
-            ], $records);
+            ], $records->map(fn ($r) => [
+                $r->learner ?? '—',
+                $r->referral_code ?? '—',
+                $r->referred_user ?? '—',
+                $r->wallet_amount ?? 0,
+                $r->credit_debit ?? '—',
+                $r->transaction_type ?? '—',
+                $r->date ?? '—',
+                $r->status ?? '—',
+            ]));
         }
 
         return view('admin.reports.referral-wallet', compact('records'));
@@ -598,12 +630,20 @@ class ReportController extends Controller
 
     public function affiliateProducts(Request $request)
     {
-        $records = collect();
+        $records = $this->demoReportRecords('affiliate_products');
 
         if ($request->boolean('export')) {
             return $this->exportCsv('affiliate-products', [
                 'Affiliate', 'Product', 'Sales Count', 'Commission', 'Conversion', 'Payout Status', 'Date',
-            ], $records);
+            ], $records->map(fn ($r) => [
+                $r->affiliate ?? '—',
+                $r->product ?? '—',
+                $r->sales_count ?? 0,
+                $r->commission ?? 0,
+                $r->conversion ?? '—',
+                $r->payout_status ?? '—',
+                $r->date ?? '—',
+            ]));
         }
 
         return view('admin.reports.affiliate-products', compact('records'));
@@ -611,12 +651,21 @@ class ReportController extends Controller
 
     public function affiliates(Request $request)
     {
-        $records = collect();
+        $records = $this->demoReportRecords('affiliates');
 
         if ($request->boolean('export')) {
             return $this->exportCsv('affiliates', [
                 'Affiliate', 'Email', 'Total Referrals', 'Total Sales', 'Commission Earned', 'Commission Paid', 'Pending', 'Status',
-            ], $records);
+            ], $records->map(fn ($r) => [
+                $r->name ?? '—',
+                $r->email ?? '—',
+                $r->total_referrals ?? 0,
+                $r->total_sales ?? 0,
+                $r->commission_earned ?? 0,
+                $r->commission_paid ?? 0,
+                $r->pending ?? 0,
+                $r->status ?? '—',
+            ]));
         }
 
         return view('admin.reports.affiliates', compact('records'));
@@ -629,13 +678,12 @@ class ReportController extends Controller
             ->when($request->status === 'active', fn ($q) => $q->where('is_active', true))
             ->when($request->status === 'inactive', fn ($q) => $q->where('is_active', false))
             ->orderByDesc('used_count')
-            ->paginate(30)
-            ->withQueryString();
+            ->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('coupons', [
                 'Code', 'Discount Type', 'Discount Value', 'Usage Count', 'Total Discount', 'Start Date', 'End Date', 'Status',
-            ], $coupons->getCollection()->map(fn ($c) => [
+            ], $coupons->map(fn ($c) => [
                 $c->code,
                 $c->discount_type,
                 $c->discount_value,
@@ -652,17 +700,16 @@ class ReportController extends Controller
 
     public function broadcastMessages(Request $request)
     {
-        $campaigns = Campaign::query()
+        $campaigns = $this->owned(Campaign::query())
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->when($request->channel, fn ($q, $ch) => $q->where('channel', $ch))
             ->latest()
-            ->paginate(30)
-            ->withQueryString();
+            ->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('broadcast-messages', [
                 'Campaign', 'Status', 'Scheduled', 'Sent At', 'Channel',
-            ], $campaigns->getCollection()->map(fn ($c) => [
+            ], $campaigns->map(fn ($c) => [
                 $c->title,
                 $c->status,
                 $c->scheduled_at?->format('Y-m-d H:i'),
@@ -678,10 +725,10 @@ class ReportController extends Controller
     {
         $events = ScheduledEvent::with(['course', 'instructor'])
             ->where('platform', 'zoom')
+            ->whereIn('course_id', $this->ownedCourseIds())
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest('starts_at')
-            ->paginate(30)
-            ->withQueryString();
+            ->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('zoom-insights', [
@@ -695,11 +742,11 @@ class ReportController extends Controller
     public function liveClassAttendance(Request $request)
     {
         $events = ScheduledEvent::with(['course', 'batch'])
-            ->where('type', 'live_class')
+            ->where('type', 'class')
+            ->whereIn('course_id', $this->ownedCourseIds())
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest('starts_at')
-            ->paginate(30)
-            ->withQueryString();
+            ->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('live-class-attendance', [
@@ -713,17 +760,18 @@ class ReportController extends Controller
     public function resourceUsage(Request $request)
     {
         $query = ResourceDownload::with(['resource.category', 'user'])
+            ->whereHas('user', fn ($u) => $u->where('created_by', $this->currentUserId()))
             ->when($request->search, fn ($q, $s) => $q->whereHas('resource', fn ($r) => $r->where('title', 'like', "%{$s}%"))
                 ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")));
 
         $query = $this->dateRange($query, $request);
 
-        $downloads = $query->latest()->paginate(30)->withQueryString();
+        $downloads = $query->latest()->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('resource-usage', [
                 'Resource', 'Learner', 'Views', 'Downloads', 'Last Accessed', 'Product/Course',
-            ], $downloads->getCollection()->map(fn ($d) => [
+            ], $downloads->map(fn ($d) => [
                 $d->resource?->title,
                 $d->user?->name ?? 'Guest',
                 '—',
@@ -738,17 +786,18 @@ class ReportController extends Controller
 
     public function superLiveLessons(Request $request)
     {
-        $records = CourseEnrollment::with(['user', 'course'])
-            ->whereHas('course.lessons', fn ($q) => $q->where('lesson_type', 'live_class'))
-            ->when($request->search, fn ($q, $s) => $this->enrollmentSearch($q, $s))
-            ->latest('updated_at')
-            ->paginate(30)
-            ->withQueryString();
+        $query = CourseEnrollment::with(['user', 'course'])
+            ->whereIn('course_id', $this->ownedCourseIds())
+            ->whereHas('course.lessons', fn ($q) => $q->where('lesson_type', 'live_class'));
+        if ($request->search) {
+            $query = $this->enrollmentSearch($query, $request->search);
+        }
+        $records = $query->latest('updated_at')->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('super-live-lessons', [
                 'Lesson', 'Learner', 'Attendance', 'Watch Duration', 'Join Time', 'Leave Time', 'Status',
-            ], $records->getCollection()->map(fn ($e) => [
+            ], $records->map(fn ($e) => [
                 $e->course?->title,
                 $e->user?->name,
                 '—',
@@ -765,11 +814,11 @@ class ReportController extends Controller
     public function certificates(Request $request)
     {
         $certificates = Certificate::with(['user', 'course'])
+            ->whereIn('course_id', $this->ownedCourseIds())
             ->when($request->search, fn ($q, $s) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%"))
                 ->orWhere('certificate_number', 'like', "%{$s}%"))
             ->latest()
-            ->paginate(30)
-            ->withQueryString();
+            ->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('certificates', ['Certificate #', 'Learner', 'Course', 'Issued'], $certificates->map(fn ($c) => [

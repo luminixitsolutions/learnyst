@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\GoogleOAuthService;
+use App\Services\LoginGreetingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -175,6 +176,10 @@ class GoogleAuthController extends Controller
         $user->update(['last_login_at' => now()]);
         ActivityLogger::log('login', $logMessage, $user);
         $request->session()->regenerate();
+
+        if (in_array($user->role?->slug, ['admin', 'sub-admin'], true)) {
+            LoginGreetingService::flashForUser($user);
+        }
 
         return redirect()->intended(route('admin.dashboard'));
     }

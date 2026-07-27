@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogger;
+use App\Services\LoginGreetingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -72,6 +73,10 @@ class LoginController extends Controller
         $user->update(['last_login_at' => now()]);
         ActivityLogger::log('login', "User {$user->name} logged in ({$panel} panel)", $user);
         $request->session()->regenerate();
+
+        if ($panel === 'company') {
+            LoginGreetingService::flashForUser($user);
+        }
 
         return redirect()->intended($this->dashboardRoute($user));
     }

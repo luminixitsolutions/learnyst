@@ -33,7 +33,7 @@ class WebinarController extends Controller
             default => $query->latest(),
         };
 
-        $webinars = $query->paginate(15)->withQueryString();
+        $webinars = $query->get();
 
         return view('admin.webinars.index', compact('webinars', 'sort'));
     }

@@ -26,7 +26,7 @@ class SubAdminController extends Controller
             });
         }
 
-        $subAdmins = $query->paginate(15)->withQueryString();
+        $subAdmins = $query->get();
 
         return view('admin.sub-admins.index', compact('subAdmins'));
     }

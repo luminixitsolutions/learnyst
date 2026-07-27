@@ -32,7 +32,7 @@ class TagController extends Controller
             default => $query->latest(),
         };
 
-        $tags = $query->paginate(15)->withQueryString();
+        $tags = $query->get();
 
         return view('admin.tags.index', compact('tags', 'sort'));
     }

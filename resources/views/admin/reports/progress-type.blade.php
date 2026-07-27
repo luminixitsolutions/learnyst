@@ -23,39 +23,39 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($records->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Product / Course</th>
-                    <th class="px-6 py-4">Learner</th>
-                    <th class="px-6 py-4">Progress %</th>
-                    <th class="px-6 py-4">Completed Lessons</th>
-                    <th class="px-6 py-4">Total Lessons</th>
-                    <th class="px-6 py-4">Last Activity</th>
-                    <th class="px-6 py-4">Status</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($records as $record)
-                    @php $meta = $record->meta ?? []; @endphp
-                    <tr>
-                        <td class="px-6 py-4 text-slate-800">{{ $record->course?->title ?? '—' }}</td>
-                        <td class="px-6 py-4">{{ $record->user?->name }}</td>
-                        <td class="px-6 py-4">{{ number_format($record->progress ?? 0, 0) }}%</td>
-                        <td class="px-6 py-4">{{ $meta['completed_lessons'] ?? '—' }}</td>
-                        <td class="px-6 py-4">{{ $meta['total_lessons'] ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $record->updated_at?->format('M d, Y') }}</td>
-                        <td class="px-6 py-4"><x-badge :type="$record->status === 'active' ? 'success' : 'warning'">{{ ucfirst($record->status) }}</x-badge></td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $records->links() }}</div>
-        @else
-        <x-empty-state title="No progress data" description="Progress records will appear when learners are enrolled and active." />
-        @endif
-    </div>
+    <x-admin.report-datatable
+        table-id="progressTypeReportTable"
+        :has-records="$records->count() > 0"
+        entity="progress records"
+        :order-column="5"
+        order-direction="desc"
+        :export-file-name="$type . '-progress-report'"
+        empty-title="No progress data"
+        empty-description="Progress records will appear when learners are enrolled and active."
+    >
+        <thead><tr class="text-left">
+            <th>Product / Course</th>
+            <th>Learner</th>
+            <th>Progress %</th>
+            <th>Completed Lessons</th>
+            <th>Total Lessons</th>
+            <th>Last Activity</th>
+            <th>Status</th>
+        </tr></thead>
+        <tbody>
+            @foreach($records as $record)
+            @php $meta = $record->meta ?? []; @endphp
+            <tr>
+                <td class="text-slate-800">{{ $record->course?->title ?? '—' }}</td>
+                <td>{{ $record->user?->name }}</td>
+                <td data-order="{{ $record->progress ?? 0 }}">{{ number_format($record->progress ?? 0, 0) }}%</td>
+                <td>{{ $meta['completed_lessons'] ?? '—' }}</td>
+                <td>{{ $meta['total_lessons'] ?? '—' }}</td>
+                <td class="text-slate-500" data-order="{{ $record->updated_at?->timestamp ?? 0 }}">{{ $record->updated_at?->format('M d, Y') }}</td>
+                <td><x-badge :type="$record->status === 'active' ? 'success' : 'warning'">{{ ucfirst($record->status) }}</x-badge></td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

@@ -30,7 +30,7 @@ class MockTestController extends Controller
             $query->where('status', $request->status);
         }
 
-        $mockTests = $query->paginate(15)->withQueryString();
+        $mockTests = $query->get();
 
         return view('admin.mock-tests.index', compact('mockTests'));
     }
@@ -83,6 +83,57 @@ class MockTestController extends Controller
         return redirect()
             ->route('admin.mock-tests.index')
             ->with('success', 'Mock test created successfully.');
+    }
+
+    public function edit(MockTest $mockTest)
+    {
+        $this->authorizeOwner($mockTest);
+        $templates = config('mock-test-templates', []);
+
+        return view('admin.mock-tests.edit', compact('mockTest', 'templates'));
+    }
+
+    public function update(Request $request, MockTest $mockTest)
+    {
+        $this->authorizeOwner($mockTest);
+
+        $templates = array_keys(config('mock-test-templates', []));
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:60'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'is_free' => ['sometimes', 'boolean'],
+            'quiz_type' => ['required', Rule::in(['online', 'offline'])],
+            'template' => ['nullable', 'string', Rule::in($templates)],
+            'status' => ['required', 'in:draft,published,unpublished'],
+        ]);
+
+        $isFree = $request->boolean('is_free');
+
+        if ($isFree) {
+            $validated['price'] = 0;
+            $validated['is_free'] = true;
+        } else {
+            $validated['is_free'] = false;
+            $request->validate([
+                'price' => ['required', 'numeric', 'min:0'],
+            ]);
+            $validated['price'] = $request->input('price');
+        }
+
+        if ($validated['quiz_type'] === 'online' && empty($validated['template'])) {
+            return back()
+                ->withInput()
+                ->withErrors(['template' => 'Please select a template for the online quiz.']);
+        }
+
+        $mockTest->update($validated);
+
+        ActivityLogger::log('mock_test_updated', "Mock test {$mockTest->title} updated", $mockTest);
+
+        return redirect()
+            ->route('admin.mock-tests.index')
+            ->with('success', 'Mock test updated successfully.');
     }
 
     public function destroy(MockTest $mockTest)

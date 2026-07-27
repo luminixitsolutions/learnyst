@@ -29,7 +29,7 @@ class ResourceController extends Controller
             default => $query->latest(),
         };
 
-        $resources = $query->paginate(15)->withQueryString();
+        $resources = $query->get();
 
         return view('admin.resources.index', compact('resources', 'sort'));
     }

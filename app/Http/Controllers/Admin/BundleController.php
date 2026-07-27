@@ -28,7 +28,7 @@ class BundleController extends Controller
             $query->where('status', $request->status);
         }
 
-        $bundles = $query->paginate(15)->withQueryString();
+        $bundles = $query->get();
 
         return view('admin.bundles.index', compact('bundles'));
     }

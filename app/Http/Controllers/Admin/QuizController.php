@@ -22,10 +22,8 @@ class QuizController extends Controller
         $quizzes = CourseLesson::with('section.course')
             ->where('lesson_type', 'quiz')
             ->whereHas('section', fn ($q) => $q->whereIn('course_id', $courseIds))
-            ->when($request->search, fn ($q) => $q->where('title', 'like', '%'.$request->search.'%'))
             ->latest()
-            ->paginate(15)
-            ->withQueryString();
+            ->get();
 
         return view('admin.quizzes.index', compact('quizzes'));
     }
@@ -71,5 +69,72 @@ class QuizController extends Controller
         ActivityLogger::log('quiz_created', "Quiz {$lesson->title} created", $lesson);
 
         return redirect()->route('admin.quizzes.index')->with('success', 'Quiz created.');
+    }
+
+    public function edit(CourseLesson $lesson)
+    {
+        $lesson = $this->ownedQuiz($lesson);
+        $lesson->load('section.course');
+
+        return view('admin.quizzes.edit', [
+            'quiz' => $lesson,
+            'courses' => $this->owned(Course::query())->with('sections')->orderBy('title')->get(),
+        ]);
+    }
+
+    public function update(Request $request, CourseLesson $lesson)
+    {
+        $lesson = $this->ownedQuiz($lesson);
+        $ownedCourseIds = $this->ownedCourseIds();
+
+        $validated = $request->validate([
+            'course_id' => ['required', Rule::in($ownedCourseIds)],
+            'section_id' => ['required', 'exists:course_sections,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'total_marks' => ['nullable', 'numeric', 'min:0'],
+            'passing_marks' => ['nullable', 'numeric', 'min:0'],
+            'time_limit' => ['nullable', 'integer', 'min:1'],
+            'questions' => ['nullable', 'array'],
+        ]);
+
+        $section = CourseSection::where('id', $validated['section_id'])
+            ->whereIn('course_id', $ownedCourseIds)
+            ->firstOrFail();
+
+        $lesson->update([
+            'course_section_id' => $section->id,
+            'title' => $validated['title'],
+            'quiz_data' => [
+                'total_marks' => $validated['total_marks'] ?? null,
+                'passing_marks' => $validated['passing_marks'] ?? null,
+                'time_limit' => $validated['time_limit'] ?? null,
+                'questions' => $validated['questions'] ?? ($lesson->quiz_data['questions'] ?? []),
+            ],
+        ]);
+
+        ActivityLogger::log('quiz_updated', "Quiz {$lesson->title} updated", $lesson);
+
+        return redirect()->route('admin.quizzes.index')->with('success', 'Quiz updated.');
+    }
+
+    public function destroy(CourseLesson $lesson)
+    {
+        $lesson = $this->ownedQuiz($lesson);
+        $title = $lesson->title;
+        $lesson->delete();
+
+        ActivityLogger::log('quiz_deleted', "Quiz {$title} deleted", $lesson);
+
+        return redirect()->route('admin.quizzes.index')->with('success', 'Quiz deleted.');
+    }
+
+    protected function ownedQuiz(CourseLesson $lesson): CourseLesson
+    {
+        $lesson->loadMissing('section.course');
+        abort_unless($lesson->lesson_type === 'quiz', 404);
+        abort_unless($lesson->section?->course, 404);
+        $this->authorizeOwner($lesson->section->course);
+
+        return $lesson;
     }
 }

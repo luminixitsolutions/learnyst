@@ -34,7 +34,8 @@ class DashboardController extends Controller
             ->whereYear('created_at', now()->year)
             ->selectRaw('MONTH(created_at) as month, SUM(total) as total')
             ->groupBy('month')
-            ->pluck('total', 'month');
+            ->pluck('total', 'month')
+            ->mapWithKeys(fn ($total, $month) => [(int) $month => (float) $total]);
 
         $recentLearners = $this->visibleLearnersQuery()
             ->latest()

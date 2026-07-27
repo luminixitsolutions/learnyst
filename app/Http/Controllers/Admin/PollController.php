@@ -34,7 +34,7 @@ class PollController extends Controller
             $query->whereJsonContains('tags', $request->tag);
         }
 
-        $polls = $query->paginate(15)->withQueryString();
+        $polls = $query->get();
         $statusCounts = [
             'all' => $this->owned(Poll::query())->count(),
             'draft' => $this->owned(Poll::query())->where('status', 'draft')->count(),

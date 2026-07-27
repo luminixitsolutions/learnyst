@@ -20,10 +20,10 @@ class LiveClassController extends Controller
     {
         $classes = $this->owned(ScheduledEvent::query())
             ->with(['course', 'batch', 'instructor'])
+            ->where('type', 'class')
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest('starts_at')
-            ->paginate(15)
-            ->withQueryString();
+            ->get();
 
         return view('admin.live-classes.index', compact('classes'));
     }

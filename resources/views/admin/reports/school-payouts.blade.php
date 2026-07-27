@@ -8,30 +8,36 @@
 <div class="space-y-6">
     <x-report-toolbar searchPlaceholder="Search by transaction id..." :showDateRange="true" />
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($payouts->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Payout ID</th>
-                    <th class="px-6 py-4">Transaction ID</th>
-                    <th class="px-6 py-4">Amount</th>
-                    <th class="px-6 py-4">Payment Gateway</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4">Date</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($payouts as $payout)
-                    <tr>
-                        <td class="px-6 py-4">{{ $payout->id }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @else
-        <x-empty-state title="No payout records yet" description="Payout data will appear here once school payout tracking is configured." />
-        @endif
-    </div>
+    <x-admin.report-datatable
+        table-id="schoolPayoutsReportTable"
+        :has-records="$payouts->count() > 0"
+        entity="payouts"
+        :order-column="5"
+        order-direction="desc"
+        export-file-name="school-payouts-report"
+        empty-title="No payout records yet"
+        empty-description="Payout data will appear here once school payout tracking is configured."
+    >
+        <thead><tr class="text-left">
+            <th>Payout ID</th>
+            <th>Transaction ID</th>
+            <th>Amount</th>
+            <th>Payment Gateway</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr></thead>
+        <tbody>
+            @foreach($payouts as $payout)
+            <tr>
+                <td class="font-medium text-slate-800">{{ $payout->payout_id ?? $payout->id ?? '—' }}</td>
+                <td class="font-mono text-xs text-slate-500">{{ $payout->transaction_id ?? '—' }}</td>
+                <td class="text-indigo-600" data-order="{{ $payout->amount ?? 0 }}">₹{{ number_format($payout->amount ?? 0, 2) }}</td>
+                <td class="capitalize text-slate-500">{{ $payout->gateway ?? '—' }}</td>
+                <td><x-badge :type="($payout->status ?? '') === 'completed' ? 'success' : 'warning'">{{ ucfirst($payout->status ?? '—') }}</x-badge></td>
+                <td class="text-slate-500">{{ $payout->date ?? '—' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

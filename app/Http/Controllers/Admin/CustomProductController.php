@@ -33,7 +33,7 @@ class CustomProductController extends Controller
             default => $query->latest(),
         };
 
-        $customProducts = $query->paginate(15)->withQueryString();
+        $customProducts = $query->get();
 
         return view('admin.custom-products.index', compact('customProducts', 'sort'));
     }

@@ -15,16 +15,47 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 glass-card rounded-2xl p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Monthly Sales ({{ now()->year }})</h3>
-            <div class="flex items-end gap-2 h-48">
-                @for($m = 1; $m <= 12; $m++)
-                    @php $amount = $monthlySales[$m] ?? 0; $max = max($monthlySales->max() ?: 1, 1); $height = ($amount / $max) * 100; @endphp
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full bg-gradient-to-t from-indigo-600 to-violet-400 rounded-t-lg transition-all hover:from-indigo-500 hover:to-violet-300" style="height: {{ max($height, 4) }}%"></div>
-                        <span class="text-[10px] text-slate-500 font-medium">{{ date('M', mktime(0,0,0,$m,1)) }}</span>
-                    </div>
-                @endfor
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Monthly Sales ({{ now()->year }})</h3>
+                @php $yearTotal = $monthlySales->sum(); @endphp
+                @if($yearTotal > 0)
+                    <span class="text-sm font-semibold text-indigo-600">₹{{ number_format($yearTotal, 0) }} total</span>
+                @endif
             </div>
+            @php
+                $plotHeight = 168;
+                $maxSale = max($monthlySales->max() ?: 0, 1);
+            @endphp
+            <div class="relative pt-2" style="height: 12.5rem">
+                <div class="absolute inset-x-0 bottom-6 top-0 flex items-end gap-1.5 sm:gap-2">
+                    @for($m = 1; $m <= 12; $m++)
+                        @php
+                            $amount = (float) ($monthlySales->get($m, 0));
+                            $barPx = $amount > 0 ? max((int) round(($amount / $maxSale) * $plotHeight), 14) : 6;
+                        @endphp
+                        <div class="flex-1 h-full flex flex-col items-center justify-end group min-w-0">
+                            @if($amount > 0)
+                                <span class="text-[10px] font-semibold text-indigo-600 mb-1 truncate max-w-full opacity-0 group-hover:opacity-100 transition-opacity" title="₹{{ number_format($amount, 0) }}">₹{{ number_format($amount, 0) }}</span>
+                            @endif
+                            <div @class([
+                                'w-full max-w-[2.75rem] mx-auto rounded-t-lg transition-all',
+                                'bg-gradient-to-t from-indigo-600 to-violet-400 hover:from-indigo-500 hover:to-violet-300 shadow-sm' => $amount > 0,
+                                'bg-slate-100 border border-slate-200/80' => $amount <= 0,
+                            ]) style="height: {{ $barPx }}px" title="{{ date('F', mktime(0, 0, 0, $m, 1)) }}: ₹{{ number_format($amount, 0) }}"></div>
+                        </div>
+                    @endfor
+                </div>
+                <div class="absolute inset-x-0 bottom-0 flex gap-1.5 sm:gap-2 border-t border-slate-100 pt-2">
+                    @for($m = 1; $m <= 12; $m++)
+                        <div class="flex-1 text-center min-w-0">
+                            <span class="text-[10px] text-slate-500 font-medium">{{ date('M', mktime(0, 0, 0, $m, 1)) }}</span>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+            @if($monthlySales->isEmpty())
+                <p class="text-xs text-slate-400 text-center mt-2">No paid orders recorded for {{ now()->year }} yet.</p>
+            @endif
         </div>
 
         <div class="glass-card rounded-2xl p-6">

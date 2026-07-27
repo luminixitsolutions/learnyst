@@ -26,7 +26,7 @@ class TrackController extends Controller
             $query->where('status', $request->status);
         }
 
-        $tracks = $query->paginate(15)->withQueryString();
+        $tracks = $query->get();
 
         return view('admin.tracks.index', compact('tracks'));
     }

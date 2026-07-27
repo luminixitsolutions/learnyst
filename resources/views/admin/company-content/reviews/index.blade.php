@@ -6,6 +6,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<x-admin.datatable-styles />
 <style>
     .reviews-stat-grid {
         display: grid;
@@ -63,47 +64,6 @@
     .action-icon-btn--delete { color: #e11d48; border-color: #fecdd3; background: #fff1f2; }
     .action-icon-btn--delete:hover { background: #ffe4e6; }
 
-    #reviewsTable_wrapper .dataTables_filter input,
-    #reviewsTable_wrapper .dataTables_length select {
-        border: 1px solid #e2e8f0;
-        border-radius: .75rem;
-        padding: .45rem .75rem;
-        background: #fff;
-        color: #0f172a;
-        outline: none;
-    }
-    #reviewsTable_wrapper .dataTables_filter input:focus,
-    #reviewsTable_wrapper .dataTables_length select:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, .15);
-    }
-    #reviewsTable_wrapper .dataTables_length,
-    #reviewsTable_wrapper .dataTables_filter,
-    #reviewsTable_wrapper .dataTables_info,
-    #reviewsTable_wrapper .dataTables_paginate {
-        color: #64748b;
-        font-size: .85rem;
-        padding: .75rem 1.25rem;
-    }
-    #reviewsTable_wrapper .dataTables_paginate .paginate_button {
-        border-radius: .55rem !important;
-        border: 1px solid transparent !important;
-        padding: .25rem .55rem !important;
-        margin: 0 .1rem !important;
-    }
-    #reviewsTable_wrapper .dataTables_paginate .paginate_button.current {
-        background: #4f46e5 !important;
-        color: #fff !important;
-        border-color: #4f46e5 !important;
-    }
-    #reviewsTable_wrapper .dataTables_paginate .paginate_button:hover {
-        background: #eef2ff !important;
-        color: #4338ca !important;
-        border-color: #c7d2fe !important;
-    }
-    #reviewsTable thead th {
-        white-space: nowrap;
-    }
     .review-content-cell {
         max-width: 420px;
         color: #475569;
@@ -164,7 +124,7 @@
         </div>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($items->count())
             <div class="overflow-x-auto">
                 <table id="reviewsTable" class="w-full text-sm panel-table display" style="width:100%">
@@ -258,20 +218,24 @@
 (function () {
     if (!window.jQuery || !jQuery.fn.DataTable) return;
 
-    jQuery('#reviewsTable').DataTable({
+    const $table = jQuery('#reviewsTable');
+    $table.addClass('cell-border row-border');
+
+    $table.DataTable({
         order: [[4, 'desc']],
         pageLength: 10,
-        lengthMenu: [10, 25, 50, 100],
+        lengthChange: false,
+        dom: '<"dt-toolbar"f>rt<"dt-footer"ip>',
         columnDefs: [
             { orderable: false, targets: [5] },
             { searchable: false, targets: [5] }
         ],
         language: {
             search: 'Search:',
-            lengthMenu: 'Show _MENU_ reviews',
             info: 'Showing _START_ to _END_ of _TOTAL_ reviews',
             infoEmpty: 'No reviews available',
-            zeroRecords: 'No matching reviews found'
+            zeroRecords: 'No matching reviews found',
+            paginate: { previous: 'Previous', next: 'Next' }
         }
     });
 })();

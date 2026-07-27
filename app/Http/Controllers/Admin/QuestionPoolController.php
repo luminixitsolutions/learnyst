@@ -31,7 +31,7 @@ class QuestionPoolController extends Controller
             default => $query->latest(),
         };
 
-        $questionPools = $query->paginate(15)->withQueryString();
+        $questionPools = $query->get();
 
         return view('admin.question-pools.index', compact('questionPools', 'sort'));
     }

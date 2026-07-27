@@ -17,40 +17,24 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($items->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Product</th>
-                    <th class="px-6 py-4">Order</th>
-                    <th class="px-6 py-4">Learner</th>
-                    <th class="px-6 py-4">Net Amount</th>
-                    <th class="px-6 py-4">Discount</th>
-                    <th class="px-6 py-4">Coupon</th>
-                    <th class="px-6 py-4">Payment Status</th>
-                    <th class="px-6 py-4">Date</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($items as $item)
-                    <tr>
-                        <td class="px-6 py-4 text-slate-800">{{ $item->course?->title ?? '—' }}</td>
-                        <td class="px-6 py-4"><a href="{{ route('admin.orders.show', $item->order) }}" class="text-indigo-600">{{ $item->order?->order_number }}</a></td>
-                        <td class="px-6 py-4">{{ $item->order?->user?->name }}</td>
-                        <td class="px-6 py-4">₹{{ number_format($item->total, 2) }}</td>
-                        <td class="px-6 py-4">₹{{ number_format($item->discount ?? 0, 2) }}</td>
-                        <td class="px-6 py-4">{{ $item->order?->coupon?->code ?? '—' }}</td>
-                        <td class="px-6 py-4"><x-badge :type="$item->order?->payment_status === 'paid' ? 'success' : 'warning'">{{ ucfirst($item->order?->payment_status ?? '—') }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-500">{{ $item->order?->created_at?->format('M d, Y') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $items->links() }}</div>
-        @else
-        <x-empty-state title="No product sales in this period" />
-        @endif
-    </div>
+    <x-admin.report-datatable table-id="productSalesReportTable" :has-records="$items->count() > 0" entity="product sales" :order-column="7" order-direction="desc" export-file-name="product-sales-report" empty-title="No product sales in this period">
+        <thead><tr class="text-left">
+            <th>Product</th><th>Order</th><th>Learner</th><th>Net Amount</th><th>Discount</th><th>Coupon</th><th>Payment Status</th><th>Date</th>
+        </tr></thead>
+        <tbody>
+            @foreach($items as $item)
+            <tr>
+                <td class="text-slate-800">{{ $item->course?->title ?? '—' }}</td>
+                <td><a href="{{ route('admin.orders.show', $item->order) }}" class="text-indigo-600">{{ $item->order?->order_number }}</a></td>
+                <td>{{ $item->order?->user?->name }}</td>
+                <td data-order="{{ $item->total }}">₹{{ number_format($item->total, 2) }}</td>
+                <td data-order="{{ $item->discount ?? 0 }}">₹{{ number_format($item->discount ?? 0, 2) }}</td>
+                <td>{{ $item->order?->coupon?->code ?? '—' }}</td>
+                <td><x-badge :type="$item->order?->payment_status === 'paid' ? 'success' : 'warning'">{{ ucfirst($item->order?->payment_status ?? '—') }}</x-badge></td>
+                <td class="text-slate-500" data-order="{{ $item->order?->created_at?->timestamp ?? 0 }}">{{ $item->order?->created_at?->format('M d, Y') }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

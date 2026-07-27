@@ -17,38 +17,23 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($batches->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Batch Name</th>
-                    <th class="px-6 py-4">Product / Course</th>
-                    <th class="px-6 py-4">Instructor</th>
-                    <th class="px-6 py-4">Start Date</th>
-                    <th class="px-6 py-4">End Date</th>
-                    <th class="px-6 py-4">Total Learners</th>
-                    <th class="px-6 py-4">Status</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($batches as $batch)
-                    <tr>
-                        <td class="px-6 py-4"><a href="{{ route('admin.batches.show', $batch) }}" class="text-indigo-600">{{ $batch->title }}</a></td>
-                        <td class="px-6 py-4 text-slate-500">{{ $batch->course?->title }}</td>
-                        <td class="px-6 py-4">{{ $batch->instructor?->name ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $batch->start_date?->format('M d, Y') ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $batch->end_date?->format('M d, Y') ?? '—' }}</td>
-                        <td class="px-6 py-4">{{ $batch->learners_count }}</td>
-                        <td class="px-6 py-4"><x-badge type="info">{{ ucfirst($batch->status) }}</x-badge></td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $batches->links() }}</div>
-        @else
-        <x-empty-state title="No batches found" />
-        @endif
-    </div>
+    <x-admin.report-datatable table-id="batchesReportTable" :has-records="$batches->count() > 0" entity="batches" :order-column="3" order-direction="desc" export-file-name="batches-report" empty-title="No batches found">
+        <thead><tr class="text-left">
+            <th>Batch Name</th><th>Product / Course</th><th>Instructor</th><th>Start Date</th><th>End Date</th><th>Total Learners</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+            @foreach($batches as $batch)
+            <tr>
+                <td><a href="{{ route('admin.batches.show', $batch) }}" class="text-indigo-600">{{ $batch->title }}</a></td>
+                <td class="text-slate-500">{{ $batch->course?->title }}</td>
+                <td>{{ $batch->instructor?->name ?? '—' }}</td>
+                <td class="text-slate-500" data-order="{{ $batch->start_date?->timestamp ?? 0 }}">{{ $batch->start_date?->format('M d, Y') ?? '—' }}</td>
+                <td class="text-slate-500" data-order="{{ $batch->end_date?->timestamp ?? 0 }}">{{ $batch->end_date?->format('M d, Y') ?? '—' }}</td>
+                <td data-order="{{ $batch->learners_count }}">{{ $batch->learners_count }}</td>
+                <td><x-badge type="info">{{ ucfirst($batch->status) }}</x-badge></td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

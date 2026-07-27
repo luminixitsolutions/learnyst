@@ -33,7 +33,7 @@ class EbookController extends Controller
             default => $query->latest(),
         };
 
-        $ebooks = $query->paginate(15)->withQueryString();
+        $ebooks = $query->get();
 
         return view('admin.ebooks.index', compact('ebooks', 'sort'));
     }

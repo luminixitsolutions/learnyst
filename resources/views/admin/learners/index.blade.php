@@ -4,19 +4,14 @@
 @section('page-title', 'Learners')
 @section('breadcrumb', 'Manage learners')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <form method="GET" class="flex flex-wrap items-center gap-3">
-            <input type="search" name="search" value="{{ request('search') }}" placeholder="Search name, email, phone..."
-                   class="panel-input min-w-[220px]">
-            <select name="status" class="panel-select">
-                <option value="">All Status</option>
-                <option value="active" @selected(request('status') === 'active')>Active</option>
-                <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
-            </select>
-            <button type="submit" class="panel-btn-secondary">Filter</button>
-        </form>
+        <p class="text-sm text-slate-500">Manage learners, enrollments, and learner profiles.</p>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.learners.export') }}" class="panel-btn-secondary">Export CSV</a>
             <form method="POST" action="{{ route('admin.learners.import') }}" enctype="multipart/form-data" class="flex items-center gap-2">
@@ -28,10 +23,10 @@
         </div>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($learners->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
+            <table id="learnersTable" class="w-full text-sm panel-table display" style="width:100%">
                 <thead>
                     <tr class="text-left">
                         <th class="px-6 py-4">Name</th>
@@ -44,29 +39,36 @@
                 </thead>
                 <tbody>
                     @foreach($learners as $learner)
-                    <tr>
+                    <tr class="hover:bg-indigo-50/40">
                         <td class="px-6 py-4">
-                            <a href="{{ route('admin.learners.show', $learner) }}" class="text-slate-800 font-semibold hover:text-indigo-600 transition">{{ $learner->name }}</a>
+                            <a href="{{ route('admin.learners.show', $learner) }}" class="font-medium text-slate-800 hover:text-indigo-600">{{ $learner->name }}</a>
                         </td>
                         <td class="px-6 py-4">{{ $learner->email }}</td>
                         <td class="px-6 py-4">{{ $learner->phone ?? '—' }}</td>
-                        <td class="px-6 py-4 font-medium text-slate-800">{{ $learner->enrollments_count }}</td>
-                        <td class="px-6 py-4"><x-badge :type="$learner->is_active ? 'success' : 'danger'">{{ $learner->is_active ? 'Active' : 'Inactive' }}</x-badge></td>
-                        <td class="px-6 py-4 text-right whitespace-nowrap">
-                            <a href="{{ route('admin.learners.edit', $learner) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-3">Edit</a>
-                            <form method="POST" action="{{ route('admin.learners.destroy', $learner) }}" class="inline">@csrf @method('DELETE')
-                                <button type="button" @click="deleteForm = $el.closest('form'); deleteModal = true" class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
-                            </form>
+                        <td class="px-6 py-4">{{ $learner->enrollments_count }}</td>
+                        <td class="px-6 py-4">{{ $learner->is_active ? 'Active' : 'Inactive' }}</td>
+                        <td class="px-6 py-4">
+                            <x-admin.table-actions
+                                :edit-url="route('admin.learners.edit', $learner)"
+                                :delete-url="route('admin.learners.destroy', $learner)"
+                                edit-title="Edit learner"
+                                delete-title="Delete learner"
+                            />
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">{{ $learners->links() }}</div>
         @else
-        <x-empty-state title="No learners found" description="Add your first learner or adjust your search filters." :action="route('admin.learners.create')" actionLabel="Add Learner" />
+        <x-empty-state title="No learners found" description="Add your first learner to get started." :action="route('admin.learners.create')" actionLabel="Add Learner" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($learners->count())
+    <x-admin.datatable-scripts table-id="learnersTable" entity="learners" :order-column="0" order-direction="asc" :action-column="5" export-file-name="learners" />
+@endif
+@endpush

@@ -44,8 +44,10 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\InsightController;
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\SegmentController;
-use App\Http\Controllers\Admin\UserModuleController;
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SidebarSettingsController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
@@ -198,8 +200,8 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
 
     Route::resource('bundles', BundleController::class);
 
-    Route::resource('mock-tests', MockTestController::class)->except(['show', 'edit', 'update']);
-    Route::resource('test-series', TestSeriesController::class)->except(['show', 'edit', 'update']);
+    Route::resource('mock-tests', MockTestController::class)->except(['show']);
+    Route::resource('test-series', TestSeriesController::class)->except(['show']);
     Route::resource('polls', PollController::class)->except(['show', 'edit', 'update']);
     Route::resource('tracks', TrackController::class)->except(['show', 'edit', 'update']);
 
@@ -227,7 +229,13 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::get('website-sections-preview', [WebsiteSectionController::class, 'preview'])->name('website-sections.preview');
 
     Route::resource('live-classes', LiveClassController::class)->except(['show']);
+    Route::get('quizzes/{lesson}/edit', [QuizController::class, 'edit'])->name('quizzes.edit');
+    Route::put('quizzes/{lesson}', [QuizController::class, 'update'])->name('quizzes.update');
+    Route::delete('quizzes/{lesson}', [QuizController::class, 'destroy'])->name('quizzes.destroy');
     Route::resource('quizzes', QuizController::class)->only(['index', 'create', 'store']);
+    Route::get('assignments/{lesson}/edit', [AssignmentController::class, 'edit'])->name('assignments.edit');
+    Route::put('assignments/{lesson}', [AssignmentController::class, 'update'])->name('assignments.update');
+    Route::delete('assignments/{lesson}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
     Route::resource('assignments', AssignmentController::class)->only(['index', 'create', 'store']);
 
     foreach ([
@@ -254,12 +262,8 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('groups/{group}/courses', [GroupController::class, 'assignCourse'])->name('groups.courses.assign');
     Route::delete('groups/{group}/courses/{course}', [GroupController::class, 'removeCourse'])->name('groups.courses.remove');
 
-    foreach ([
-        'contacts' => 'contacts.index',
-        'legal-documents' => 'legal-documents.index',
-    ] as $uri => $routeName) {
-        Route::get($uri, fn () => app(UserModuleController::class)->show($uri))->name($routeName);
-    }
+    Route::resource('contacts', ContactController::class)->except(['show']);
+    Route::resource('legal-documents', LegalDocumentController::class)->except(['show']);
 
     Route::resource('orders', OrderController::class)->except(['edit', 'update', 'destroy']);
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
@@ -401,6 +405,9 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('settings/logo', [SettingController::class, 'uploadLogo'])->name('settings.logo');
     Route::get('settings/social', [SettingController::class, 'socialLinks'])->name('settings.social');
     Route::put('settings/social', [SettingController::class, 'updateSocialLinks'])->name('settings.social.update');
+    Route::get('settings/sidebar', [SidebarSettingsController::class, 'edit'])->name('settings.sidebar');
+    Route::put('settings/sidebar', [SidebarSettingsController::class, 'update'])->name('settings.sidebar.update');
+    Route::delete('settings/sidebar/reset', [SidebarSettingsController::class, 'reset'])->name('settings.sidebar.reset');
     Route::get('profile', [CompanyProfileController::class, 'edit'])->name('company-profile.edit');
     Route::put('profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
 

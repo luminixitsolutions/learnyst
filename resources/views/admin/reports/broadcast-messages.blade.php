@@ -17,34 +17,21 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($campaigns->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Campaign / Message</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4">Scheduled</th>
-                    <th class="px-6 py-4">Sent At</th>
-                    <th class="px-6 py-4">Channel</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($campaigns as $campaign)
-                    <tr>
-                        <td class="px-6 py-4 font-medium text-slate-800">{{ $campaign->title }}</td>
-                        <td class="px-6 py-4"><x-badge type="info">{{ ucfirst($campaign->status) }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-500">{{ $campaign->scheduled_at?->format('M d, Y H:i') ?? '—' }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $campaign->sent_at?->format('M d, Y H:i') ?? '—' }}</td>
-                        <td class="px-6 py-4 capitalize">{{ str_replace('_', ' ', $campaign->channel) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $campaigns->links() }}</div>
-        @else
-        <x-empty-state title="No broadcast campaigns" />
-        @endif
-    </div>
+    <x-admin.report-datatable table-id="broadcastReportTable" :has-records="$campaigns->count() > 0" entity="campaigns" :order-column="2" order-direction="desc" export-file-name="broadcast-messages-report" empty-title="No broadcast campaigns">
+        <thead><tr class="text-left">
+            <th>Campaign / Message</th><th>Status</th><th>Scheduled</th><th>Sent At</th><th>Channel</th>
+        </tr></thead>
+        <tbody>
+            @foreach($campaigns as $campaign)
+            <tr>
+                <td class="font-medium text-slate-800">{{ $campaign->title }}</td>
+                <td><x-badge type="info">{{ ucfirst($campaign->status) }}</x-badge></td>
+                <td class="text-slate-500" data-order="{{ $campaign->scheduled_at?->timestamp ?? 0 }}">{{ $campaign->scheduled_at?->format('M d, Y H:i') ?? '—' }}</td>
+                <td class="text-slate-500" data-order="{{ $campaign->sent_at?->timestamp ?? 0 }}">{{ $campaign->sent_at?->format('M d, Y H:i') ?? '—' }}</td>
+                <td class="capitalize">{{ str_replace('_', ' ', $campaign->channel) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

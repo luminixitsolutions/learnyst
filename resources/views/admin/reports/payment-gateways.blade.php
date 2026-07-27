@@ -16,35 +16,35 @@
         </x-slot:filters>
     </x-report-toolbar>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        @if($gateways->count())
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
-                    <th class="px-6 py-4">Gateway Name</th>
-                    <th class="px-6 py-4">Updated By</th>
-                    <th class="px-6 py-4">Configuration Type</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4">Transactions</th>
-                    <th class="px-6 py-4">Total Amount</th>
-                </tr></thead>
-                <tbody>
-                    @foreach($gateways as $gateway)
-                    <tr>
-                        <td class="px-6 py-4 font-medium text-slate-800">{{ $gateway->name }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $gateway->updated_by }}</td>
-                        <td class="px-6 py-4 text-slate-500">{{ $gateway->config_type }}</td>
-                        <td class="px-6 py-4"><x-badge type="success">{{ $gateway->status }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-800">{{ number_format($gateway->transaction_count) }}</td>
-                        <td class="px-6 py-4 text-indigo-600">₹{{ number_format($gateway->total_amount ?? 0, 2) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @else
-        <x-empty-state title="No payment gateway data" />
-        @endif
-    </div>
+    <x-admin.report-datatable
+        table-id="paymentGatewaysReportTable"
+        :has-records="$gateways->count() > 0"
+        entity="gateways"
+        :order-column="4"
+        order-direction="desc"
+        export-file-name="payment-gateways-report"
+        empty-title="No payment gateway data"
+    >
+        <thead><tr class="text-left">
+            <th>Gateway Name</th>
+            <th>Updated By</th>
+            <th>Configuration Type</th>
+            <th>Status</th>
+            <th>Transactions</th>
+            <th>Total Amount</th>
+        </tr></thead>
+        <tbody>
+            @foreach($gateways as $gateway)
+            <tr>
+                <td class="font-medium text-slate-800">{{ $gateway->name }}</td>
+                <td class="text-slate-500">{{ $gateway->updated_by }}</td>
+                <td class="text-slate-500">{{ $gateway->config_type }}</td>
+                <td><x-badge type="success">{{ $gateway->status }}</x-badge></td>
+                <td class="text-slate-800" data-order="{{ $gateway->transaction_count }}">{{ number_format($gateway->transaction_count) }}</td>
+                <td class="text-indigo-600" data-order="{{ $gateway->total_amount ?? 0 }}">₹{{ number_format($gateway->total_amount ?? 0, 2) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </x-admin.report-datatable>
 </div>
 @endsection

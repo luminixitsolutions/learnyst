@@ -44,7 +44,7 @@ class LearnerController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $learners = $query->paginate(20)->withQueryString();
+        $learners = $query->get();
 
         return view('admin.learners.index', compact('learners'));
     }
