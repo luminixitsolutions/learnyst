@@ -1,7 +1,7 @@
 @extends('website.layouts.app')
 
 @section('title', 'Student Registration – ' . config('website.brand'))
-@section('meta_description', 'Create your Learnyst student account to start learning online.')
+@section('meta_description', 'Create your StudyNest student account to start learning online.')
 
 @section('content')
 @php $brand = config('website.brand'); @endphp

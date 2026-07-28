@@ -1,7 +1,7 @@
 @extends('website.layouts.app')
 
 @section('title', 'Pricing – ' . config('website.brand'))
-@section('meta_description', $page['summary'] ?? 'Flexible Learnyst plans for startups and growing institutes.')
+@section('meta_description', $page['summary'] ?? 'Flexible StudyNest plans for startups and growing institutes.')
 
 @section('content')
 @php

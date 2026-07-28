@@ -23,6 +23,7 @@ return [
                 'content-dripping',
                 'learner-configurations',
                 'learning-path',
+                'drm-protection',
             ],
         ],
         'publish' => [
@@ -144,6 +145,13 @@ return [
             'icon' => 'path',
             'group' => 'features',
             'status_key' => 'learning_path',
+        ],
+        'drm-protection' => [
+            'title' => 'DRM / Content Protection',
+            'description' => 'Practical web protections: signed URLs, watermark, device limits',
+            'icon' => 'permissions',
+            'group' => 'features',
+            'status_key' => 'drm',
         ],
         'publish' => [
             'title' => 'Publish Course',

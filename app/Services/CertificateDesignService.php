@@ -371,7 +371,7 @@ class CertificateDesignService
             'cert_id' => $certificate->certificate_number,
             'verify_url' => $verifyUrl,
             'issue_date' => optional($certificate->issued_at)->format('F d, Y') ?? now()->format('F d, Y'),
-            'institute_name' => config('app.name', 'Learnyst'),
+            'institute_name' => config('app.name', 'StudyNest'),
         ];
     }
 
@@ -383,7 +383,7 @@ class CertificateDesignService
             'cert_id' => 'CERT-PREVIEW123',
             'verify_url' => url('/verify-certificate?number=CERT-PREVIEW123'),
             'issue_date' => now()->format('F d, Y'),
-            'institute_name' => config('app.name', 'Learnyst'),
+            'institute_name' => config('app.name', 'StudyNest'),
         ];
     }
 

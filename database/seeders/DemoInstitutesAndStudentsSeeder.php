@@ -77,7 +77,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
         $students = [
             [
                 'name' => 'Priya Sharma',
-                'email' => 'priya.sharma@learnyst.com',
+                'email' => 'priya.sharma@studynest.com',
                 'phone' => '+919811122001',
                 'address' => 'Flat 12B, Palm Heights, Andheri West, Mumbai, Maharashtra 400053',
                 'bio' => 'Aspiring full-stack developer focused on Laravel and React. Preparing for campus placements.',
@@ -87,7 +87,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
             ],
             [
                 'name' => 'Arjun Mehta',
-                'email' => 'arjun.mehta@learnyst.com',
+                'email' => 'arjun.mehta@studynest.com',
                 'phone' => '+919811122002',
                 'address' => '42, Residency Road, Bengaluru, Karnataka 560025',
                 'bio' => 'Data analytics learner with a background in commerce. Interested in Python and Power BI.',
@@ -97,7 +97,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
             ],
             [
                 'name' => 'Sneha Reddy',
-                'email' => 'sneha.reddy@learnyst.com',
+                'email' => 'sneha.reddy@studynest.com',
                 'phone' => '+919811122003',
                 'address' => '8-2-293, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033',
                 'bio' => 'UI/UX designer learning product thinking and Figma systems for edtech products.',
@@ -107,7 +107,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
             ],
             [
                 'name' => 'Vikram Patel',
-                'email' => 'vikram.patel@learnyst.com',
+                'email' => 'vikram.patel@studynest.com',
                 'phone' => '+919811122004',
                 'address' => '15, CG Road, Navrangpura, Ahmedabad, Gujarat 380009',
                 'bio' => 'Working professional upskilling in cloud and DevOps while managing a day job.',
@@ -117,7 +117,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
             ],
             [
                 'name' => 'Ananya Iyer',
-                'email' => 'ananya.iyer@learnyst.com',
+                'email' => 'ananya.iyer@studynest.com',
                 'phone' => '+919811122005',
                 'address' => '27, T. Nagar Main Road, Chennai, Tamil Nadu 600017',
                 'bio' => 'Competitive exam aspirant exploring digital marketing and soft-skills programs.',
@@ -164,7 +164,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
             [
                 'owner' => [
                     'name' => 'Luminix IT Solution',
-                    'email' => 'luminix@learnyst.com',
+                    'email' => 'luminix@studynest.com',
                     'phone' => '+918012345601',
                     'avatar' => 'companies/logos/luminix.png',
                     'bio' => 'Technology training institute specializing in software engineering careers.',
@@ -230,14 +230,14 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
                     ['author_name' => 'Devansh Gupta', 'author_title' => 'Junior Developer', 'content' => 'Projects and mock interviews made the biggest difference. I landed my first tech role in 4 months.', 'rating' => 5, 'avatar' => 'avatars/testimonial-2.jpg'],
                 ],
                 'reviews' => [
-                    ['reviewer_name' => 'Priya Sharma', 'reviewer_email' => 'priya.sharma@learnyst.com', 'rating' => 5, 'content' => 'Excellent mentoring and clear learning path. Highly recommend for career switchers.'],
+                    ['reviewer_name' => 'Priya Sharma', 'reviewer_email' => 'priya.sharma@studynest.com', 'rating' => 5, 'content' => 'Excellent mentoring and clear learning path. Highly recommend for career switchers.'],
                     ['reviewer_name' => 'Rohit Das', 'reviewer_email' => 'rohit.das@example.com', 'rating' => 4, 'content' => 'Strong curriculum and supportive faculty. Weekend batches are well managed.'],
                 ],
             ],
             [
                 'owner' => [
                     'name' => 'Nova Skills Academy',
-                    'email' => 'nova@learnyst.com',
+                    'email' => 'nova@studynest.com',
                     'phone' => '+918012345602',
                     'avatar' => 'companies/logos/nova.png',
                     'bio' => 'Modern skills academy for analytics, design, and business communication.',
@@ -298,14 +298,14 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
                     ['author_name' => 'Farhan Ali', 'author_title' => 'Business Analyst', 'content' => 'Clear teaching, useful templates, and mentors who actually review your work.', 'rating' => 4, 'avatar' => 'avatars/testimonial-3.jpg'],
                 ],
                 'reviews' => [
-                    ['reviewer_name' => 'Arjun Mehta', 'reviewer_email' => 'arjun.mehta@learnyst.com', 'rating' => 5, 'content' => 'Analytics modules are practical and well paced. Great for working professionals.'],
+                    ['reviewer_name' => 'Arjun Mehta', 'reviewer_email' => 'arjun.mehta@studynest.com', 'rating' => 5, 'content' => 'Analytics modules are practical and well paced. Great for working professionals.'],
                     ['reviewer_name' => 'Ishita Bansal', 'reviewer_email' => 'ishita@example.com', 'rating' => 5, 'content' => 'Loved the peer feedback sessions. Felt like a real studio environment.'],
                 ],
             ],
             [
                 'owner' => [
                     'name' => 'Apex Career Institute',
-                    'email' => 'apex@learnyst.com',
+                    'email' => 'apex@studynest.com',
                     'phone' => '+918012345603',
                     'avatar' => 'companies/logos/apex.png',
                     'bio' => 'Competitive exams and career foundation programs for school and college students.',
@@ -366,14 +366,14 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
                     ['author_name' => 'Ritika Shah', 'author_title' => 'Parent', 'content' => 'Weekly progress updates helped us support our daughter better. Very professional institute.', 'rating' => 5, 'avatar' => 'avatars/testimonial-1.jpg'],
                 ],
                 'reviews' => [
-                    ['reviewer_name' => 'Vikram Patel', 'reviewer_email' => 'vikram.patel@learnyst.com', 'rating' => 4, 'content' => 'Solid foundation teaching and helpful doubt clinics. Campus is well maintained.'],
+                    ['reviewer_name' => 'Vikram Patel', 'reviewer_email' => 'vikram.patel@studynest.com', 'rating' => 4, 'content' => 'Solid foundation teaching and helpful doubt clinics. Campus is well maintained.'],
                     ['reviewer_name' => 'Neel Joshi', 'reviewer_email' => 'neel@example.com', 'rating' => 5, 'content' => 'Faculty are patient and explain concepts clearly. Great environment for focused study.'],
                 ],
             ],
             [
                 'owner' => [
                     'name' => 'BrightPath Learning',
-                    'email' => 'brightpath@learnyst.com',
+                    'email' => 'brightpath@studynest.com',
                     'phone' => '+918012345604',
                     'avatar' => 'companies/logos/brightpath.png',
                     'bio' => 'English, communication, and professional readiness programs for young adults.',
@@ -434,14 +434,14 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
                     ['author_name' => 'Mohammed Faiz', 'author_title' => 'Sales Associate', 'content' => 'Practical English for work situations — emails, calls, and client meetings.', 'rating' => 4, 'avatar' => 'avatars/testimonial-3.jpg'],
                 ],
                 'reviews' => [
-                    ['reviewer_name' => 'Sneha Reddy', 'reviewer_email' => 'sneha.reddy@learnyst.com', 'rating' => 5, 'content' => 'Friendly coaches and lots of speaking time. Best communication course I have taken.'],
+                    ['reviewer_name' => 'Sneha Reddy', 'reviewer_email' => 'sneha.reddy@studynest.com', 'rating' => 5, 'content' => 'Friendly coaches and lots of speaking time. Best communication course I have taken.'],
                     ['reviewer_name' => 'Anita Rao', 'reviewer_email' => 'anita@example.com', 'rating' => 5, 'content' => 'Small batches mean real attention. My presentation skills improved within weeks.'],
                 ],
             ],
             [
                 'owner' => [
                     'name' => 'SkillForge Academy',
-                    'email' => 'skillforge@learnyst.com',
+                    'email' => 'skillforge@studynest.com',
                     'phone' => '+918012345605',
                     'avatar' => 'companies/logos/skillforge.png',
                     'bio' => 'Hands-on digital skills academy for freelancers and creators.',
@@ -503,7 +503,7 @@ class DemoInstitutesAndStudentsSeeder extends Seeder
                     ['author_name' => 'Shreya Banerjee', 'author_title' => 'Content Creator', 'content' => 'Practical, no fluff. SkillForge taught me systems I still use for client work.', 'rating' => 5, 'avatar' => 'avatars/testimonial-1.jpg'],
                 ],
                 'reviews' => [
-                    ['reviewer_name' => 'Ananya Iyer', 'reviewer_email' => 'ananya.iyer@learnyst.com', 'rating' => 5, 'content' => 'Great for digital marketing beginners who want freelance-ready skills fast.'],
+                    ['reviewer_name' => 'Ananya Iyer', 'reviewer_email' => 'ananya.iyer@studynest.com', 'rating' => 5, 'content' => 'Great for digital marketing beginners who want freelance-ready skills fast.'],
                     ['reviewer_name' => 'Kunal Oberoi', 'reviewer_email' => 'kunal@example.com', 'rating' => 4, 'content' => 'Energetic instructors and useful templates. Would love more advanced SEO modules.'],
                 ],
             ],

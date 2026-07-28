@@ -7,8 +7,8 @@ use App\Models\Company;
 class SidebarSettingsService
 {
     public const THEMES = [
-        'learnyst' => [
-            'label' => 'Learnyst Teal',
+        'StudyNest' => [
+            'label' => 'StudyNest Teal',
             'flat' => true,
             'preview' => '#0d9488',
             'accent' => '#0d9488',
@@ -129,7 +129,7 @@ class SidebarSettingsService
     {
         return [
             'layout' => 'horizontal',
-            'theme' => 'learnyst',
+            'theme' => 'StudyNest',
             'menu_order' => [],
             'custom_colors' => self::defaultCustomColors(),
         ];
@@ -161,9 +161,9 @@ class SidebarSettingsService
         $rawTheme = $stored['theme'] ?? '';
         $storedTheme = $rawTheme;
 
-        // Auto-apply Learnyst Teal for institutes still on legacy default themes.
+        // Auto-apply StudyNest Teal for institutes still on legacy default themes.
         if (in_array($rawTheme, ['nrisuvidha', 'indigo', ''], true)) {
-            $storedTheme = 'learnyst';
+            $storedTheme = 'StudyNest';
         }
 
         $layout = $stored['layout'] ?? '';
@@ -220,7 +220,7 @@ class SidebarSettingsService
 
         $profile['sidebar'] = [
             'layout' => $input['layout'] ?? 'vertical',
-            'theme' => in_array($input['theme'] ?? '', self::allowedThemeKeys(), true) ? $input['theme'] : 'learnyst',
+            'theme' => in_array($input['theme'] ?? '', self::allowedThemeKeys(), true) ? $input['theme'] : 'StudyNest',
             'menu_order' => $menuOrder,
             'custom_colors' => self::normalizeCustomColors([
                 'primary' => $input['custom_primary'] ?? data_get($existingSidebar, 'custom_colors.primary'),
@@ -282,7 +282,7 @@ class SidebarSettingsService
             return self::buildCustomTheme($customColors ?? self::defaultCustomColors());
         }
 
-        return self::THEMES[$key] ?? self::THEMES['learnyst'];
+        return self::THEMES[$key] ?? self::THEMES['StudyNest'];
     }
 
     public static function resolveTheme(array $settings): array
@@ -352,7 +352,7 @@ class SidebarSettingsService
         );
     }
 
-    public static function learnystThemeTokens(): array
+    public static function StudyNestThemeTokens(): array
     {
         return [
             '--theme-accent' => '#0d9488',
@@ -390,9 +390,9 @@ class SidebarSettingsService
         ];
     }
 
-    public static function usesLearnystTokens(array $settings): bool
+    public static function usesStudyNestTokens(array $settings): bool
     {
-        return ($settings['theme'] ?? 'learnyst') === 'learnyst';
+        return ($settings['theme'] ?? 'StudyNest') === 'StudyNest';
     }
 
     public static function cssVariables(array $settings): string
@@ -402,8 +402,8 @@ class SidebarSettingsService
 
         $vars = [];
 
-        if (self::usesLearnystTokens($settings)) {
-            foreach (self::learnystThemeTokens() as $key => $value) {
+        if (self::usesStudyNestTokens($settings)) {
+            foreach (self::StudyNestThemeTokens() as $key => $value) {
                 $vars[] = $key.': '.$value.';';
             }
         }

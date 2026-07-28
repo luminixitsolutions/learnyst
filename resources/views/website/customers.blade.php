@@ -27,11 +27,11 @@
 </section>
 
 @if(!empty($page['stats']))
-<section class="learnyst-stats-banner">
+<section class="StudyNest-stats-banner">
     <div class="ly-container">
-        <div class="learnyst-stats-grid">
+        <div class="StudyNest-stats-grid">
             @foreach($page['stats'] as $stat)
-                <div class="learnyst-stat-item">
+                <div class="StudyNest-stat-item">
                     <strong>{{ $stat['value'] }}</strong>
                     <span>{{ $stat['label'] }}</span>
                 </div>
@@ -87,7 +87,18 @@
                         <p class="ly-testimonial-result">{{ $item['result'] }}</p>
                     @endif
                     <div class="ly-testimonial-person">
-                        <span class="ly-testimonial-avatar">{{ strtoupper(substr($item['name'] ?? 'L', 0, 1)) }}</span>
+                        @php
+                            $photo = $item['image'] ?? null;
+                            $initial = strtoupper(substr($item['name'] ?? 'L', 0, 1));
+                        @endphp
+                        <span class="ly-testimonial-avatar" style="overflow:hidden;padding:0;">
+                            @if($photo)
+                                <img src="{{ $photo }}" alt="{{ $item['name'] }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"
+                                     onerror="this.style.display='none'; this.parentElement.textContent='{{ $initial }}';">
+                            @else
+                                {{ $initial }}
+                            @endif
+                        </span>
                         <span>
                             <strong>{{ $item['name'] ?? '' }}</strong>
                             <em>{{ $item['role'] ?? '' }}</em>
@@ -138,7 +149,7 @@
     <div class="ly-container">
         <div class="ly-section-head">
             <p class="ly-tag">{{ $page['caption'] ?? 'Customers' }}</p>
-            <h2>Unfiltered love from the Learnyst community</h2>
+            <h2>Unfiltered love from the StudyNest community</h2>
             <p>{{ $page['body'] }}</p>
         </div>
         <div class="ly-love-wall">
@@ -167,7 +178,7 @@
     <div class="ly-container">
         <div class="ly-section-head">
             <h2>More from our customers</h2>
-            <p>Explore stories, reviews, and community love across Learnyst.</p>
+            <p>Explore stories, reviews, and community love across StudyNest.</p>
         </div>
         <div class="ly-grid ly-grid-2">
             @foreach($related as $relatedSlug => $relatedItem)

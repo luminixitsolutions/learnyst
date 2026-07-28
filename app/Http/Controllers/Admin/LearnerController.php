@@ -9,6 +9,8 @@ use App\Models\CourseEnrollment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\ReferralService;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +20,11 @@ use Illuminate\Validation\Rules\Password;
 class LearnerController extends Controller
 {
     use ScopesToCurrentUser;
+
+    public function __construct(
+        protected WalletService $wallets,
+        protected ReferralService $referrals,
+    ) {}
 
     protected function authorizeLearner(User $learner): void
     {
@@ -83,6 +90,26 @@ class LearnerController extends Controller
 
         $learner = User::create($validated);
         ActivityLogger::log('learner_created', "Learner {$learner->name} created", $learner);
+
+        $wallet = $this->wallets->getOrCreateForLearner($learner, Auth::id());
+        $bonus = $this->wallets->signupBonusAmount();
+        if ($bonus > 0) {
+            $this->wallets->credit($wallet, $bonus, \App\Models\WalletTransaction::SOURCE_SIGNUP_REWARD, 'Signup bonus', Auth::user());
+        }
+
+        $this->referrals->ensureCode($learner, Auth::id());
+
+        if ($request->filled('referral_code')) {
+            try {
+                $this->referrals->applyCode($learner, $request->input('referral_code'), Auth::id());
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Learner is created; surface referral issue without rolling back.
+                return redirect()
+                    ->route('admin.learners.show', $learner)
+                    ->with('success', 'Learner created.')
+                    ->with('warning', $e->getMessage());
+            }
+        }
 
         return redirect()->route('admin.learners.show', $learner)->with('success', 'Learner created.');
     }

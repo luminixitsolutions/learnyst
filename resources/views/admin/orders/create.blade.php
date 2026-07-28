@@ -38,7 +38,7 @@
                 </x-form-input>
                 <x-form-input label="Extra Discount (₹)" name="discount" type="number" step="0.01" :value="old('discount', 0)" />
                 <x-form-input label="Payment Method" name="payment_method" type="select" required>
-                    @foreach(['razorpay','manual','free'] as $m)
+                    @foreach(['razorpay','manual','free','wallet'] as $m)
                         <option value="{{ $m }}" @selected(old('payment_method') === $m)>{{ ucfirst($m) }}</option>
                     @endforeach
                 </x-form-input>
@@ -47,7 +47,10 @@
                         <option value="{{ $st }}" @selected(old('payment_status', 'paid') === $st)>{{ ucfirst($st) }}</option>
                     @endforeach
                 </x-form-input>
+                <x-form-input label="Wallet Amount (₹)" name="wallet_amount" type="number" step="0.01" :value="old('wallet_amount', 0)" />
             </div>
+            <p class="text-xs text-slate-500 -mt-3">For full wallet checkout, set payment method to Wallet. Or enter a partial wallet amount with another method.</p>
+            <x-form-input label="Affiliate Code (optional)" name="affiliate_code" :value="old('affiliate_code')" placeholder="Track affiliate conversion" />
             <x-form-input label="Notes" name="notes" type="textarea" />
 
             @if(isset($consents) && $consents->count())

@@ -16,6 +16,7 @@
         <p class="text-sm text-white/80 mt-2">Continue learning from your student panel. Track courses, certificates, and communities in one place.</p>
         <div class="flex flex-wrap gap-3 mt-5">
             <a href="{{ route('learner.courses.index') }}" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-sm font-semibold">My Courses</a>
+            <a href="{{ route('learner.wallet.index') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold">My Wallet</a>
             <a href="{{ route('public.courses') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold">Browse Courses</a>
             <a href="{{ route('profile.edit') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold">Edit Profile</a>
         </div>

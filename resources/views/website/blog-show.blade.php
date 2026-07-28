@@ -66,7 +66,7 @@
     <section class="ly-cta-banner">
         <div class="ly-container">
             <h2>Ready to put this into practice?</h2>
-            <p>Start your free trial and build your academy with Learnyst.</p>
+            <p>Start your free trial and build your academy with StudyNest.</p>
             <div class="ly-cta-actions">
                 <a class="ly-btn ly-btn-green" href="{{ url($cta['trial'] ?? '/signup') }}">Start Free Trial</a>
                 <a class="ly-btn ly-btn-outline" href="{{ url($cta['demo'] ?? '/product-demo') }}">Book a Demo</a>

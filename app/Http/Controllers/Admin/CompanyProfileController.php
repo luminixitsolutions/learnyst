@@ -21,6 +21,16 @@ class CompanyProfileController extends Controller
         return view('admin.company-profile.edit', compact('company', 'publicUrl'));
     }
 
+    public function preview()
+    {
+        $company = CompanyService::resolveForUser(Auth::user());
+
+        return redirect()->route('website.companies.show', [
+            'slug' => $company->slug,
+            'preview' => 1,
+        ]);
+    }
+
     public function update(Request $request)
     {
         $company = CompanyService::resolveForUser(Auth::user());

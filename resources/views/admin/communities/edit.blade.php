@@ -22,6 +22,16 @@
                 <input type="checkbox" name="requires_approval" value="1" @checked(old('requires_approval', $community->requires_approval)) class="rounded border-slate-600 bg-slate-800 text-brand-500">
                 <span class="text-sm text-slate-300">Require approval to join</span>
             </label>
+            <div class="border-t border-slate-700 pt-4 space-y-4">
+                <p class="text-sm font-medium text-slate-200">Telegram</p>
+                <x-form-input label="Telegram invite URL" name="telegram_invite_url" :value="old('telegram_invite_url', $community->telegram_invite_url)" placeholder="https://t.me/+" />
+                <x-form-input label="Telegram chat ID" name="telegram_chat_id" :value="old('telegram_chat_id', $community->telegram_chat_id)" placeholder="-100..." />
+                <label class="flex items-center gap-3">
+                    <input type="hidden" name="telegram_push_enabled" value="0">
+                    <input type="checkbox" name="telegram_push_enabled" value="1" @checked(old('telegram_push_enabled', $community->telegram_push_enabled)) class="rounded border-slate-600 bg-slate-800 text-brand-500">
+                    <span class="text-sm text-slate-300">Push announcements to Telegram</span>
+                </label>
+            </div>
             <div class="flex justify-between pt-4">
                 <a href="{{ route('admin.communities.show', $community) }}" class="text-sm text-slate-500">Cancel</a>
                 <button type="submit" class="px-5 py-2.5 rounded-xl panel-btn-primary">Save Changes</button>

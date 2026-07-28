@@ -72,7 +72,7 @@
 <section class="ly-cta-banner">
     <div class="ly-container">
         <h2>{{ $page['cta_title'] ?? 'Ready to put these ideas into practice?' }}</h2>
-        <p>{{ $page['cta_text'] ?? 'Start your free trial and build your academy with Learnyst.' }}</p>
+        <p>{{ $page['cta_text'] ?? 'Start your free trial and build your academy with StudyNest.' }}</p>
         <div class="ly-cta-actions">
             <a class="ly-btn ly-btn-green" href="{{ url($cta['trial'] ?? '/signup') }}">{{ $page['cta_primary_label'] ?? 'Start Free Trial' }}</a>
             <a class="ly-btn ly-btn-outline" href="{{ url($cta['demo'] ?? '/product-demo') }}">{{ $page['cta_secondary_label'] ?? 'Book a Demo' }}</a>

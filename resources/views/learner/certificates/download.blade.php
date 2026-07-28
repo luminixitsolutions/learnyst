@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificate — {{ $certificate->course?->title ?? 'Learnyst' }}</title>
+    <title>Certificate — {{ $certificate->course?->title ?? 'StudyNest' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     @include('certificates.partials.styles')
     <style>

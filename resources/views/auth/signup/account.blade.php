@@ -51,7 +51,7 @@
 
         <label class="terms">
             <input type="checkbox" name="terms" value="1" id="terms" {{ old('terms') ? 'checked' : '' }}>
-            <span>By signing up, you acknowledge that you have read, understood, and agree to Learnyst's <a href="{{ route('website.page', 'terms-and-conditions') }}" target="_blank">Terms</a> and <a href="{{ route('website.page', 'privacy-policy') }}" target="_blank">Privacy Policy</a></span>
+            <span>By signing up, you acknowledge that you have read, understood, and agree to StudyNest's <a href="{{ route('website.page', 'terms-and-conditions') }}" target="_blank">Terms</a> and <a href="{{ route('website.page', 'privacy-policy') }}" target="_blank">Privacy Policy</a></span>
         </label>
     </form>
 

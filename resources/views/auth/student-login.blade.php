@@ -1,7 +1,7 @@
 @extends('website.layouts.app')
 
 @section('title', 'Student Login – ' . config('website.brand'))
-@section('meta_description', 'Sign in to your Learnyst student account to access courses, progress, and certificates.')
+@section('meta_description', 'Sign in to your StudyNest student account to access courses, progress, and certificates.')
 
 @section('content')
 @php $brand = config('website.brand'); @endphp
@@ -35,6 +35,13 @@
                 @if($errors->any())
                     <div class="ly-auth-error">{{ $errors->first() }}</div>
                 @endif
+
+                <div class="ly-auth-links" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.5rem;">
+                    <a href="{{ route('auth.social.redirect', 'facebook') }}" class="ly-btn" style="font-size:.8rem;">Facebook</a>
+                    <a href="{{ route('auth.social.redirect', 'linkedin') }}" class="ly-btn" style="font-size:.8rem;">LinkedIn</a>
+                    <a href="{{ route('auth.social.redirect', 'apple') }}" class="ly-btn" style="font-size:.8rem;">Apple</a>
+                </div>
+                <div class="ly-auth-or">OR</div>
 
                 <form method="POST" action="{{ route('student.login.submit') }}" class="ly-auth-form">
                     @csrf

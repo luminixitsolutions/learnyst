@@ -1,6 +1,6 @@
 @extends('website.layouts.app')
 
-@section('title', ($page['title'] ?? 'Learnyst') . ' – Learnyst')
+@section('title', ($page['title'] ?? 'StudyNest') . ' – StudyNest')
 @section('meta_description', $page['summary'] ?? '')
 
 @section('content')
@@ -43,7 +43,7 @@
                             </div>
 
                             @if(!empty($page['features']))
-                                <ul class="learnyst-feature-list">
+                                <ul class="StudyNest-feature-list">
                                     @foreach($page['features'] as $feature)
                                         <li>{{ $feature }}</li>
                                     @endforeach
@@ -54,7 +54,7 @@
                                 <div class="clearfix" style="margin-top:40px;">
                                     @foreach($page['testimonials'] as $item)
                                         <div style="padding:20px;background:#f8f9fb;margin-bottom:16px;">
-                                            <p class="learnyst-quote">“{{ $item['quote'] }}”</p>
+                                            <p class="StudyNest-quote">“{{ $item['quote'] }}”</p>
                                             <strong>{{ $item['name'] }}</strong> — {{ $item['role'] }}
                                         </div>
                                     @endforeach
@@ -74,8 +74,8 @@
                             @endif
 
                             <p style="margin-top:30px;">
-                                <a class="learnyst-cta" href="{{ route('signup.show') }}">Start Free Trial</a>
-                                <a class="learnyst-cta outline" href="{{ route('website.page', 'product-demo') }}" style="border-color:#163663;color:#163663 !important;">Book Demo</a>
+                                <a class="StudyNest-cta" href="{{ route('signup.show') }}">Start Free Trial</a>
+                                <a class="StudyNest-cta outline" href="{{ route('website.page', 'product-demo') }}" style="border-color:#163663;color:#163663 !important;">Book Demo</a>
                             </p>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                         <div class="gdlr-core-pbf-column-content-margin gdlr-core-js" style="padding:10px 20px;">
                             <div style="background:#f3f5f8;padding:24px;">
                                 <h3 style="font-size:18px;margin-bottom:14px;">Explore More</h3>
-                                <ul class="learnyst-feature-list" style="padding-left:16px;">
+                                <ul class="StudyNest-feature-list" style="padding-left:16px;">
                                     <li><a href="{{ route('website.product', 'sell-online-courses') }}">Online Courses</a></li>
                                     <li><a href="{{ route('website.product', 'sell-mock-tests') }}">Mock Tests</a></li>
                                     <li><a href="{{ route('website.product', 'branded-mobile-app') }}">Branded App</a></li>

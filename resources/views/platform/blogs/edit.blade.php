@@ -8,7 +8,7 @@
 @php
     $posts = old('posts', $content['posts'] ?? []);
     if (!is_array($posts) || count($posts) === 0) {
-        $posts = [['slug'=>'','title'=>'','excerpt'=>'','body'=>'','tag'=>'','date'=>'','read'=>'','author'=>'Learnyst Team','featured'=>false,'is_active'=>true]];
+        $posts = [['slug'=>'','title'=>'','excerpt'=>'','body'=>'','tag'=>'','date'=>'','read'=>'','author'=>'StudyNest Team','featured'=>false,'is_active'=>true]];
     }
 @endphp
 
@@ -46,7 +46,7 @@
         <div x-data="websiteRepeater(@js($posts))" class="space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-slate-800">Blog posts</h3>
-                <button type="button" class="panel-btn-secondary" @click="add({slug:'',title:'',excerpt:'',body:'',tag:'',date:'',read:'',author:'Learnyst Team',featured:false,is_active:true})">+ Add post</button>
+                <button type="button" class="panel-btn-secondary" @click="add({slug:'',title:'',excerpt:'',body:'',tag:'',date:'',read:'',author:'StudyNest Team',featured:false,is_active:true})">+ Add post</button>
             </div>
             @error('posts')
                 <p class="text-sm text-red-600">{{ $message }}</p>

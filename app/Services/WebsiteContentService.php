@@ -100,36 +100,42 @@ class WebsiteContentService
     {
         return match ($key) {
             'brand' => [
-                'name' => config('website.brand', 'Learnyst'),
+                'name' => config('website.brand', 'StudyNest'),
                 'tagline' => config('website.tagline', 'The Most Secure LMS to Sell Courses Online'),
-                'email' => config('website.email', 'hello@learnyst.com'),
+                'email' => config('website.email', 'hello@studynest.com'),
                 'phone' => config('website.phone', '080 4736 1000'),
                 'address' => implode("\n", config('website.address', [])),
             ],
             'slides' => [
                 'items' => [
                     [
-                        'image' => 'website/upload/slider-hp2-1.jpg',
-                        'title' => 'Discover Why Top Institutes Choose Learnyst For Unbeatable Growth',
+                        'image' => 'website/upload/shutterstock_218235004-800x533.jpg',
+                        'title' => 'Discover Why Top Institutes Choose StudyNest For Unbeatable Growth',
                         'text' => 'Protect your content, grow your student base, and lead with confidence on the most secure LMS built for educators.',
                         'is_active' => true,
                     ],
                     [
-                        'image' => 'website/upload/slider-1-2.jpg',
+                        'image' => 'website/upload/shutterstock_481869205-800x405.jpg',
                         'title' => 'Launch and Scale Your Academy From One Platform',
                         'text' => 'Create courses, run mock tests, host live classes, and market your brand — all from a single secure learning platform.',
                         'is_active' => true,
                     ],
                     [
-                        'image' => 'website/upload/slider-2.jpg',
+                        'image' => 'website/upload/shutterstock_361397258-800x533.jpg',
                         'title' => 'Best-in-Class Content Security for Educators',
                         'text' => 'Stop piracy with screenshot blocking, device limits, parallel login restriction, OTP checks, and watch-time controls.',
                         'is_active' => true,
                     ],
                     [
-                        'image' => 'website/upload/slider-hp2-2.jpg',
+                        'image' => 'website/upload/annie-spratt-294450-unsplash.jpg',
                         'title' => 'Your Own Branded Apps, Built for Learning',
                         'text' => 'Give learners a polished mobile experience with your logo, colors, and secure content delivery.',
+                        'is_active' => true,
+                    ],
+                    [
+                        'image' => 'website/upload/shutterstock_734589535-800x534.jpg',
+                        'title' => 'Empower Every Student to Learn Without Limits',
+                        'text' => 'Deliver engaging lessons, track progress, and support learners across web and mobile — wherever they study.',
                         'is_active' => true,
                     ],
                 ],
@@ -158,10 +164,11 @@ class WebsiteContentService
                 'heading_green' => 'All-in-One',
                 'heading_blue' => 'Platform',
                 'heading_rest' => 'to Launch and Scale Your Academy',
-                'subheading' => 'Learnyst offers the complete toolkit you need to create, manage, and market your online courses.',
+                'subheading' => 'StudyNest offers the complete toolkit you need to create, manage, and market your online courses.',
                 'items' => [
                     ['slug' => 'sell-online-courses', 'title' => 'Course Builder', 'desc' => 'Convert your knowledge into valuable assets.', 'image' => 'website/upload/platform/course.png', 'bg' => 'linear-gradient(149deg, #ccfcd9 10%, #f5fce8 76%)'],
                     ['slug' => 'manage-batches-cohorts', 'title' => 'Batch or Cohort', 'desc' => 'Bring the classroom back and engage learners.', 'image' => 'website/upload/platform/batch.png', 'bg' => 'linear-gradient(326deg, #f0ecff 28%, #c5b8ff 90%)'],
+                    ['slug' => 'sell-mock-tests', 'title' => 'Mock Tests', 'desc' => 'Create exam-ready mock tests and test series for students.', 'image' => 'website/upload/platform/digital.png', 'bg' => 'linear-gradient(330deg, #fff7ed 15%, #fdba74 88%)'],
                     ['slug' => 'branded-website-builder', 'title' => 'Branded Website', 'desc' => 'Build and manage your branded website. No code, no worries.', 'image' => 'website/upload/platform/website.png', 'bg' => 'linear-gradient(327deg, #f7f7f7 11%, #fac0d6 96%)'],
                     ['slug' => 'branded-mobile-app', 'title' => 'Branded App', 'desc' => 'Customised apps to reach learners anytime.', 'image' => 'website/upload/platform/app.png', 'bg' => 'linear-gradient(327deg, #ebeced 0%, #aac2f2 100%)'],
                     ['slug' => 'create-learning-community', 'title' => 'Communities', 'desc' => 'Build a space for learning, growth, and motivation.', 'image' => 'website/upload/platform/community.png', 'bg' => 'linear-gradient(328deg, #f7fdff 0%, #beedfa 92%)'],
@@ -208,17 +215,17 @@ class WebsiteContentService
             ],
             'testimonials' => [
                 'title' => 'Real Words, Real Impact',
-                'text' => '3000+ happy clients growing with Learnyst.',
+                'text' => '3000+ happy clients growing with StudyNest.',
                 'items' => config('website.testimonials', []),
             ],
             'success_stories' => [
                 'title' => 'Success Stories from Our Educators',
-                'text' => 'See how institutes scale revenue, enrollments, and brand presence with Learnyst.',
+                'text' => 'See how institutes scale revenue, enrollments, and brand presence with StudyNest.',
                 'items' => config('website.success_stories', []),
             ],
             'cta' => [
                 'title' => 'Start Teaching Online Today',
-                'text' => 'Share your knowledge, secure your content, and grow your community with Learnyst.',
+                'text' => 'Share your knowledge, secure your content, and grow your community with StudyNest.',
             ],
             default => [],
         };
@@ -282,7 +289,38 @@ class WebsiteContentService
         $drm['bullets'] = self::lines($drm['bullets'] ?? '');
 
         $testimonials = self::get('testimonials');
+        $defaultTestimonialItems = collect(config('website.testimonials', []))->keyBy('name');
+        $testimonials['items'] = collect($testimonials['items'] ?? [])
+            ->map(function ($item) use ($defaultTestimonialItems) {
+                $fallback = $defaultTestimonialItems->get($item['name'] ?? '');
+                if (empty($item['image']) && $fallback) {
+                    $item['image'] = $fallback['image'] ?? null;
+                }
+                if (empty($item['rating']) && $fallback) {
+                    $item['rating'] = $fallback['rating'] ?? 5;
+                }
+                if (empty($item['result']) && $fallback) {
+                    $item['result'] = $fallback['result'] ?? null;
+                }
+
+                return $item;
+            })
+            ->values()
+            ->all();
+
         $stories = self::get('success_stories');
+        $defaultStories = collect(config('website.success_stories', []))->keyBy('title');
+        $stories['items'] = collect($stories['items'] ?? [])
+            ->map(function ($item) use ($defaultStories) {
+                $fallback = $defaultStories->get($item['title'] ?? '');
+                if (empty($item['image']) && $fallback) {
+                    $item['image'] = $fallback['image'] ?? null;
+                }
+
+                return $item;
+            })
+            ->values()
+            ->all();
 
         return [
             'brand' => self::get('brand'),

@@ -90,6 +90,20 @@
                 </div>
                 @error('content_security')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
             </div>
+
+            <div class="space-y-3 border-t border-slate-100 pt-6">
+                <label class="block text-sm font-semibold text-slate-700">Registration & reminders</label>
+                <textarea name="description" rows="3" class="panel-input" placeholder="Short description">{{ old('description') }}</textarea>
+                <input type="datetime-local" name="starts_at" value="{{ old('starts_at') }}" class="panel-input">
+                <input type="url" name="meeting_url" value="{{ old('meeting_url') }}" class="panel-input" placeholder="Meeting URL">
+                <input type="number" name="reminder_hours_before" value="{{ old('reminder_hours_before', 24) }}" min="1" class="panel-input" placeholder="Reminder hours before">
+                <textarea name="confirmation_message" rows="2" class="panel-input" placeholder="Confirmation email message">{{ old('confirmation_message') }}</textarea>
+                <label class="inline-flex items-center gap-2">
+                    <input type="hidden" name="registration_enabled" value="0">
+                    <input type="checkbox" name="registration_enabled" value="1" @checked(old('registration_enabled', true)) class="rounded border-slate-300 text-indigo-600">
+                    <span class="text-sm text-slate-600">Enable public registration</span>
+                </label>
+            </div>
         </form>
     </div>
 

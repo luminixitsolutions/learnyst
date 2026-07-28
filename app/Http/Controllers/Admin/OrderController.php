@@ -14,7 +14,13 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\AffiliateService;
+use App\Services\FinanceService;
+use App\Services\GstInvoiceService;
+use App\Services\ReferralService;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +28,14 @@ use Illuminate\Validation\ValidationException;
 class OrderController extends Controller
 {
     use ScopesToCurrentUser;
+
+    public function __construct(
+        protected WalletService $wallets,
+        protected ReferralService $referrals,
+        protected AffiliateService $affiliates,
+        protected GstInvoiceService $gstInvoices,
+        protected FinanceService $finance,
+    ) {}
 
     protected function authorizeOrder(Order $order): void
     {
@@ -74,9 +88,11 @@ class OrderController extends Controller
             'course_ids.*' => [Rule::in($ownedCourseIds)],
             'coupon_id' => ['nullable', 'exists:coupons,id'],
             'discount' => ['nullable', 'numeric', 'min:0'],
-            'payment_method' => ['required', 'in:razorpay,manual,free'],
+            'payment_method' => ['required', 'in:razorpay,manual,free,wallet'],
             'payment_status' => ['required', 'in:pending,paid,failed'],
+            'wallet_amount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'affiliate_code' => ['nullable', 'string', 'max:40'],
             'consents' => ['nullable', 'array'],
             'consents.*' => ['boolean'],
         ]);
@@ -87,6 +103,23 @@ class OrderController extends Controller
             $discount = $validated['discount'] ?? 0;
             $tax = ($subtotal - $discount) * 0.18;
             $total = max(0, $subtotal - $discount + $tax);
+            $walletAmount = 0.0;
+
+            $learner = User::findOrFail($validated['user_id']);
+            $wallet = null;
+
+            if ($validated['payment_method'] === 'wallet' || (float) ($validated['wallet_amount'] ?? 0) > 0) {
+                $wallet = $this->wallets->getOrCreateForLearner($learner, Auth::id());
+                $walletAmount = $validated['payment_method'] === 'wallet'
+                    ? $total
+                    : min((float) $validated['wallet_amount'], $total);
+
+                if ($walletAmount > 0 && ! $wallet->canSpend($walletAmount)) {
+                    throw ValidationException::withMessages([
+                        'wallet_amount' => 'Insufficient or frozen wallet balance. Available: ₹'.number_format((float) $wallet->balance, 2),
+                    ]);
+                }
+            }
 
             $activeConsents = CheckoutConsent::active()->get();
             foreach ($activeConsents as $consent) {
@@ -102,11 +135,15 @@ class OrderController extends Controller
                 'coupon_id' => $validated['coupon_id'] ?? null,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
+                'wallet_amount' => $walletAmount,
                 'tax' => $tax,
                 'total' => $total,
                 'payment_status' => $validated['payment_status'],
                 'payment_method' => $validated['payment_method'],
                 'notes' => $validated['notes'] ?? null,
+                'affiliate_code' => ! empty($validated['affiliate_code'])
+                    ? strtoupper(trim($validated['affiliate_code']))
+                    : null,
                 'paid_at' => $validated['payment_status'] === 'paid' ? now() : null,
             ]);
 
@@ -128,6 +165,10 @@ class OrderController extends Controller
             }
 
             if ($validated['payment_status'] === 'paid') {
+                if ($wallet && $walletAmount > 0) {
+                    $this->wallets->spendOnOrder($wallet, $order, $walletAmount, Auth::user());
+                }
+
                 Payment::create([
                     'order_id' => $order->id,
                     'user_id' => $validated['user_id'],
@@ -137,7 +178,20 @@ class OrderController extends Controller
                     'paid_at' => now(),
                 ]);
 
+                $payment = Payment::where('order_id', $order->id)->latest()->first();
+                if ($payment) {
+                    $this->finance->syncIncomeFromPayment($payment, Auth::id());
+                }
+
                 User::find($validated['user_id'])->increment('total_spent', $total);
+                if (! empty($validated['coupon_id'])) {
+                    Coupon::whereKey($validated['coupon_id'])->increment('used_count');
+                }
+                $this->referrals->markQualifiedFromOrder($order);
+                $this->affiliates->recordConversionFromOrder(
+                    $order,
+                    $validated['affiliate_code'] ?? $order->affiliate_code
+                );
             }
 
             $activeConsents = CheckoutConsent::active()->get();
@@ -162,7 +216,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $this->authorizeOrder($order);
-        $order->load(['user', 'items.course', 'payments', 'coupon']);
+        $order->load(['user', 'items.course', 'payments', 'coupon', 'gstInvoice']);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -179,13 +233,30 @@ class OrderController extends Controller
     {
         $this->authorizeOrder($order);
 
-        $order->update([
-            'payment_status' => 'refunded',
-            'refund_status' => 'processed',
-        ]);
+        if ($order->payment_status === 'refunded') {
+            return back()->with('success', 'Order already refunded.');
+        }
 
-        ActivityLogger::log('order_refunded', "Order {$order->order_number} refunded", $order);
+        DB::transaction(function () use ($order) {
+            $order->update([
+                'payment_status' => 'refunded',
+                'refund_status' => 'processed',
+            ]);
 
-        return back()->with('success', 'Refund processed.');
+            $this->wallets->creditRefund($order, Auth::user());
+
+            $invoice = $this->gstInvoices->findForOrder($order);
+            if ($invoice) {
+                try {
+                    $this->gstInvoices->createCreditNote($invoice, 'Order refund '.$order->order_number, Auth::id());
+                } catch (ValidationException) {
+                    // Credit note may already exist for this invoice.
+                }
+            }
+
+            ActivityLogger::log('order_refunded', "Order {$order->order_number} refunded", $order);
+        });
+
+        return back()->with('success', 'Refund processed' . ($this->wallets->refundToWallet() ? ' and credited to wallet.' : '.'));
     }
 }

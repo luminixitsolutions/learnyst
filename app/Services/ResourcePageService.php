@@ -109,7 +109,7 @@ class ResourcePageService
                 'title' => 'Product Demo',
                 'caption' => 'Book a Tour',
                 'eyebrow' => 'Live Walkthrough',
-                'summary' => 'See how Learnyst can power your academy growth in a guided demo.',
+                'summary' => 'See how StudyNest can power your academy growth in a guided demo.',
                 'body' => 'Book a personalized tour with our team and explore course builder, mock tests, live classes, marketing tools, DRM security, and branded apps tailored to your institute.',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #14532d 45%, #22c55e 120%)',
                 'features' => [
@@ -133,7 +133,7 @@ class ResourcePageService
                     ['question' => 'Who should join the demo?', 'answer' => 'Founders, academic heads, and ops leads who care about content, sales, and learner experience.'],
                     ['question' => 'Do I need to prepare anything?', 'answer' => 'Just a short note on what you teach and where your students currently learn.'],
                 ],
-                'cta_title' => 'Book your free Learnyst demo',
+                'cta_title' => 'Book your free StudyNest demo',
                 'cta_text' => 'Get a guided tour and a practical plan to launch or migrate your academy.',
             ],
             'help-center' => [
@@ -164,14 +164,14 @@ class ResourcePageService
                 ],
                 'cta_title' => 'Still need help?',
                 'cta_text' => 'Start a trial or book a demo and our team will guide your setup.',
-                'external_note' => 'Inspired by the Learnyst Support Center topics.',
+                'external_note' => 'Inspired by the StudyNest Support Center topics.',
             ],
             'support-migration' => [
                 'title' => 'Support & Migration',
                 'caption' => 'Support',
                 'eyebrow' => 'Move with Confidence',
                 'summary' => 'Navigate your transition with expert support and practical resources.',
-                'body' => 'Moving from another platform? Our team helps you migrate courses, learners, and content smoothly so you can launch on Learnyst with confidence.',
+                'body' => 'Moving from another platform? Our team helps you migrate courses, learners, and content smoothly so you can launch on StudyNest with confidence.',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #14532d 45%, #22c55e 120%)',
                 'features' => [
                     'Migration planning call',
@@ -189,7 +189,7 @@ class ResourcePageService
                     ['question' => 'How long does migration take?', 'answer' => 'Most academies can plan and launch in days to a few weeks depending on catalog size.'],
                     ['question' => 'Will learners keep access?', 'answer' => 'We help you plan access continuity so students experience a smooth switch.'],
                 ],
-                'cta_title' => 'Plan your Learnyst migration',
+                'cta_title' => 'Plan your StudyNest migration',
                 'cta_text' => 'Book a demo and get a practical transition plan for your academy.',
             ],
             'guides' => [
@@ -197,7 +197,7 @@ class ResourcePageService
                 'caption' => 'Resources',
                 'eyebrow' => 'Playbooks & Templates',
                 'summary' => 'A library of practical templates, eBooks, and resources for growing your academy.',
-                'body' => 'Explore guides that help you create courses, grow enrollments, and run your online school more effectively with Learnyst.',
+                'body' => 'Explore guides that help you create courses, grow enrollments, and run your online school more effectively with StudyNest.',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #1e3a8a 50%, #38bdf8 120%)',
                 'items' => [
                     ['title' => 'Course launch checklist', 'tag' => 'Launch', 'read' => '6 min', 'desc' => 'A practical list to go from draft course to first enrollment.'],
@@ -214,26 +214,26 @@ class ResourcePageService
                 'title' => "What's New",
                 'caption' => 'Changelog',
                 'eyebrow' => 'Product Updates',
-                'summary' => 'Stay informed about the latest Learnyst feature releases and improvements.',
+                'summary' => 'Stay informed about the latest StudyNest feature releases and improvements.',
                 'body' => 'Follow new capabilities across course backup, AI tools, certificates, live classes, website builder, and more.',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #14532d 45%, #22c55e 120%)',
                 'items' => [
                     [
-                        'title' => 'Learnyst Course Backup',
+                        'title' => 'StudyNest Course Backup',
                         'type' => 'New',
                         'date' => '2026',
-                        'summary' => 'Keep your course content safe and recoverable with backups from your Learnyst account.',
+                        'summary' => 'Keep your course content safe and recoverable with backups from your StudyNest account.',
                         'highlights' => "Reliable course backups\nRecover deleted content\nProtect against accidental changes\nManage updates with confidence",
                     ],
                     [
-                        'title' => 'Learnyst AI Tools',
+                        'title' => 'StudyNest AI Tools',
                         'type' => 'New',
                         'date' => '2026',
                         'summary' => 'Refine course material, announcements, and lessons with AI rephrase tools.',
                         'highlights' => "Improve clarity and readability\nSimplify or expand content\nFix grammar instantly\nTranslate into multiple languages",
                     ],
                     [
-                        'title' => 'Learnyst Trashcan',
+                        'title' => 'StudyNest Trashcan',
                         'type' => 'New',
                         'date' => '2026',
                         'summary' => 'Move products to trash instead of deleting permanently, then restore within 7 days.',
@@ -261,7 +261,7 @@ class ResourcePageService
                         'highlights' => "Interactive classroom tools\nRole-based control\nAuto recordings\nSmoother live operations",
                     ],
                 ],
-                'cta_title' => 'Try the latest Learnyst features',
+                'cta_title' => 'Try the latest StudyNest features',
                 'cta_text' => 'Start your free trial and explore new tools as they ship.',
             ],
         ];

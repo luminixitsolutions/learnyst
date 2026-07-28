@@ -27,11 +27,11 @@
 </section>
 
 @if(!empty($page['stats']))
-<section class="learnyst-stats-banner">
+<section class="StudyNest-stats-banner">
     <div class="ly-container">
-        <div class="learnyst-stats-grid">
+        <div class="StudyNest-stats-grid">
             @foreach($page['stats'] as $stat)
-                <div class="learnyst-stat-item">
+                <div class="StudyNest-stat-item">
                     <strong>{{ $stat['value'] }}</strong>
                     <span>{{ $stat['label'] }}</span>
                 </div>
@@ -185,7 +185,7 @@
     <div class="ly-container ly-changelog-wrap">
         <div class="ly-section-head">
             <p class="ly-tag">{{ $page['caption'] ?? 'Changelog' }}</p>
-            <h2>Latest Learnyst releases</h2>
+            <h2>Latest StudyNest releases</h2>
             <p>{{ $page['body'] }}</p>
         </div>
         <div class="ly-changelog">

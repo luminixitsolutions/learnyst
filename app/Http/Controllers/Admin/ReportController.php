@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\ExportsReportCsv;
 use App\Http\Controllers\Admin\Concerns\ScopesToCurrentUser;
 use App\Http\Controllers\Controller;
+use App\Models\Affiliate;
+use App\Models\AffiliateLink;
 use App\Models\Batch;
 use App\Models\Bundle;
 use App\Models\Campaign;
@@ -24,6 +26,7 @@ use App\Models\ResourceDownload;
 use App\Models\ScheduledEvent;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Models\Webinar;
 use App\Services\CompanyService;
 use Illuminate\Http\Request;
@@ -608,7 +611,39 @@ class ReportController extends Controller
 
     public function referralWallet(Request $request)
     {
-        $records = $this->demoReportRecords('referral_wallet');
+        $query = $this->owned(WalletTransaction::query())
+            ->with('user')
+            ->where('status', 'completed')
+            ->latest();
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('referral_code', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            });
+        }
+
+        $txns = $query->get();
+
+        $records = $txns->map(function (WalletTransaction $txn) {
+            return (object) [
+                'learner' => $txn->user?->name ?? '—',
+                'referral_code' => $txn->referral_code ?? '—',
+                'referred_user' => data_get($txn->meta, 'referred_user', '—'),
+                'wallet_amount' => (float) $txn->amount,
+                'credit_debit' => $txn->isCredit() ? 'Credit' : 'Debit',
+                'transaction_type' => $txn->sourceLabel(),
+                'date' => $txn->created_at->format('M d, Y'),
+                'status' => ucfirst($txn->status),
+            ];
+        });
 
         if ($request->boolean('export')) {
             return $this->exportCsv('referral-wallet', [
@@ -630,7 +665,38 @@ class ReportController extends Controller
 
     public function affiliateProducts(Request $request)
     {
-        $records = $this->demoReportRecords('affiliate_products');
+        $query = $this->owned(AffiliateLink::query())
+            ->with('affiliate')
+            ->withSum(['commissions as commission_total' => fn ($q) => $q->whereIn('status', ['approved', 'paid', 'pending'])], 'amount')
+            ->latest();
+
+        if ($request->filled('from') || $request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->get('from') ?? $request->get('from_date'));
+        }
+        if ($request->filled('to') || $request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->get('to') ?? $request->get('to_date'));
+        }
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('slug', 'like', "%{$search}%")
+                    ->orWhere('product_type', 'like', "%{$search}%")
+                    ->orWhereHas('affiliate', fn ($a) => $a->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
+            });
+        }
+
+        $records = $query->get()->map(function (AffiliateLink $link) {
+            $latestCommission = $link->commissions()->latest()->first();
+
+            return (object) [
+                'affiliate' => $link->affiliate?->name ?? '—',
+                'product' => ucfirst($link->product_type).($link->product_id ? ' #'.$link->product_id : ''),
+                'sales_count' => (int) $link->conversions,
+                'commission' => (float) ($link->commission_total ?? 0),
+                'conversion' => $link->conversionRate().'%',
+                'payout_status' => $latestCommission ? ucfirst($latestCommission->status) : '—',
+                'date' => $link->updated_at?->format('M d, Y') ?? '—',
+            ];
+        });
 
         if ($request->boolean('export')) {
             return $this->exportCsv('affiliate-products', [
@@ -651,7 +717,36 @@ class ReportController extends Controller
 
     public function affiliates(Request $request)
     {
-        $records = $this->demoReportRecords('affiliates');
+        $query = $this->owned(Affiliate::query())
+            ->withCount('commissions')
+            ->latest();
+
+        if ($request->filled('from') || $request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->get('from') ?? $request->get('from_date'));
+        }
+        if ($request->filled('to') || $request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->get('to') ?? $request->get('to_date'));
+        }
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        $records = $query->get()->map(function (Affiliate $affiliate) {
+            return (object) [
+                'name' => $affiliate->name,
+                'email' => $affiliate->email,
+                'total_referrals' => (int) $affiliate->commissions_count,
+                'total_sales' => (float) $affiliate->total_sales,
+                'commission_earned' => (float) $affiliate->total_commission,
+                'commission_paid' => (float) $affiliate->paid_commission,
+                'pending' => $affiliate->pendingCommissionBalance(),
+                'status' => ucfirst($affiliate->status),
+            ];
+        });
 
         if ($request->boolean('export')) {
             return $this->exportCsv('affiliates', [

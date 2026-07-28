@@ -68,7 +68,7 @@
     <div class="kingster-copyright-wrapper">
         <div class="kingster-copyright-container kingster-container clearfix">
             <div class="kingster-copyright-left kingster-item-pdlr">
-                Copyright © {{ date('Y') }} Learnyst. All Rights Reserved
+                Copyright © {{ date('Y') }} StudyNest. All Rights Reserved
             </div>
             <div class="kingster-copyright-right kingster-item-pdlr">
                 <a href="{{ route('website.page', 'product-demo') }}" style="margin-right:14px;">Book Demo</a>

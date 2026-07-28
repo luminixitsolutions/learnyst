@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{{ asset('website/plugins/goodlayers-core/include/css/page-builder.css') }}" type="text/css" media="all" />
     <link rel="stylesheet" href="{{ asset('website/css/style-core.css') }}" type="text/css" media="all" />
     <link rel="stylesheet" href="{{ asset('website/css/kingster-style-custom.css') }}" type="text/css" media="all" />
-    <link rel="stylesheet" href="{{ asset('website/css/learnyst-home.css') }}?v=38" type="text/css" media="all" />
+    <link rel="stylesheet" href="{{ asset('website/css/learnyst-home.css') }}?v=46" type="text/css" media="all" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     @stack('styles')
 </head>

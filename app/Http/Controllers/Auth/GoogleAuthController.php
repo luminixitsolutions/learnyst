@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\AuthSecurityService;
 use App\Services\GoogleOAuthService;
 use App\Services\LoginGreetingService;
 use Illuminate\Http\Request;
@@ -14,8 +15,10 @@ use Throwable;
 
 class GoogleAuthController extends Controller
 {
-    public function __construct(protected GoogleOAuthService $google)
-    {
+    public function __construct(
+        protected GoogleOAuthService $google,
+        protected AuthSecurityService $security,
+    ) {
     }
 
     public function redirect(Request $request)
@@ -174,14 +177,18 @@ class GoogleAuthController extends Controller
     {
         Auth::login($user, true);
         $user->update(['last_login_at' => now()]);
-        ActivityLogger::log('login', $logMessage, $user);
+        ActivityLogger::log('login_google', $logMessage, $user, [
+            'provider' => 'google',
+            'panel' => 'company',
+        ]);
         $request->session()->regenerate();
+        $cookie = $this->security->afterSuccessfulLogin($user, $request, 'google');
 
         if (in_array($user->role?->slug, ['admin', 'sub-admin'], true)) {
             LoginGreetingService::flashForUser($user);
         }
 
-        return redirect()->intended(route('admin.dashboard'));
+        return redirect()->intended(route('admin.dashboard'))->cookie($cookie);
     }
 
     protected function disabledRedirect(Request $request)

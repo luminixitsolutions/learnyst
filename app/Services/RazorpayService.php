@@ -79,7 +79,7 @@ class RazorpayService
             'currency' => $currency,
             'order_id' => $gatewayOrderId,
             'receipt' => $order->order_number,
-            'name' => config('website.brand', config('app.name', 'Learnyst')),
+            'name' => config('website.brand', config('app.name', 'StudyNest')),
             'description' => 'Order '.$order->order_number,
             'local_order_id' => $order->id,
         ];

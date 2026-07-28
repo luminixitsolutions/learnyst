@@ -86,6 +86,16 @@ class CompanyService
             ->first();
     }
 
+    public static function findBySlug(string $slug): ?Company
+    {
+        self::syncMissingCompanies();
+
+        return Company::query()
+            ->where('slug', $slug)
+            ->with('owner')
+            ->first();
+    }
+
     public static function resolveForUser(User $user): Company
     {
         if ($user->isAdmin()) {

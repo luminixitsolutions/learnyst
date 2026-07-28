@@ -43,6 +43,42 @@
         </div>
 
         <div class="lg:col-span-2 glass-card rounded-2xl p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Announcements</h3>
+            <form method="POST" action="{{ route('admin.communities.announcements.store', $community) }}" class="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                @csrf
+                <x-form-input label="Title" name="title" required />
+                <x-form-input label="Body" name="body" type="textarea" required />
+                <label class="flex items-center gap-2 text-sm text-slate-600">
+                    <input type="checkbox" name="push_telegram" value="1" class="rounded border-slate-300 text-brand-600">
+                    Also push to Telegram
+                </label>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm">Publish announcement</button>
+            </form>
+            <div class="space-y-3 mb-8">
+                @forelse($community->announcements ?? [] as $announcement)
+                <div class="p-4 rounded-xl border border-slate-200">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="font-semibold text-slate-800">{{ $announcement->title }}</p>
+                            <p class="text-sm text-slate-600 mt-1">{{ $announcement->body }}</p>
+                            <p class="text-xs text-slate-400 mt-2">
+                                {{ $announcement->created_at->diffForHumans() }}
+                                @if($announcement->pushed_to_telegram) · Telegram ✓ @endif
+                            </p>
+                        </div>
+                        @if(! $announcement->pushed_to_telegram && $community->telegram_push_enabled)
+                        <form method="POST" action="{{ route('admin.communities.announcements.push', $announcement) }}">
+                            @csrf
+                            <button class="text-xs text-brand-600">Push TG</button>
+                        </form>
+                        @endif
+                    </div>
+                </div>
+                @empty
+                <p class="text-sm text-slate-500">No announcements yet</p>
+                @endforelse
+            </div>
+
             <h3 class="text-lg font-bold text-slate-800 mb-4">Posts</h3>
             <form method="POST" action="{{ route('admin.communities.posts.store', $community) }}" class="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 @csrf

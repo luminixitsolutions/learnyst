@@ -52,7 +52,7 @@ class SignupFormService
         return match ($question) {
             'business_type' => [
                 'title' => 'Help us to personalise your experience',
-                'subtitle' => "Tell us a bit about your business and goals. We'll use this to set up Learnyst the way that works best for you.",
+                'subtitle' => "Tell us a bit about your business and goals. We'll use this to set up StudyNest the way that works best for you.",
                 'label' => 'What best describes what you do?',
                 'options' => [
                     ['value' => 'exam_prep', 'label' => 'Competitive Exam Prep (UPSC, CAT, NEET, etc.)', 'is_active' => true, 'opens_teach' => false],
@@ -109,7 +109,7 @@ class SignupFormService
                 ],
             ],
             'source' => [
-                'title' => 'How did you find out about Learnyst?',
+                'title' => 'How did you find out about StudyNest?',
                 'subtitle' => null,
                 'label' => null,
                 'options' => [

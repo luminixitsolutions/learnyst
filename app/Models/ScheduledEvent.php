@@ -8,7 +8,8 @@ class ScheduledEvent extends Model
 {
     protected $fillable = [
         'title', 'description', 'batch_id', 'course_id', 'instructor_id', 'created_by',
-        'starts_at', 'ends_at', 'meeting_url', 'platform', 'status', 'type',
+        'starts_at', 'ends_at', 'meeting_url', 'meeting_id', 'meeting_passcode', 'recording_url',
+        'platform', 'status', 'type',
     ];
 
     protected function casts(): array

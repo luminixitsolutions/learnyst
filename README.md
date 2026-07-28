@@ -1,4 +1,4 @@
-# Learnyst LMS Platform
+# StudyNest LMS Platform
 
 A complete Laravel 11 + MySQL Learning Management System with Admin, Instructor, and Learner panels.
 
@@ -12,15 +12,15 @@ A complete Laravel 11 + MySQL Learning Management System with Admin, Instructor,
 ## Installation
 
 1. **Create database in phpMyAdmin:**
-   - Open phpMyAdmin → Create database `learnyst` (utf8mb4_unicode_ci)
-   - Or run: `database/learnyst.sql`
+   - Open phpMyAdmin → Create database `StudyNest` (utf8mb4_unicode_ci)
+   - Or run: `database/StudyNest.sql`
 
 2. **Configure environment:**
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=learnyst
+   DB_DATABASE=StudyNest
    DB_USERNAME=root
    DB_PASSWORD=
    ```
@@ -34,37 +34,37 @@ A complete Laravel 11 + MySQL Learning Management System with Admin, Instructor,
    ```
 
 4. **Run the app:**
-   - Laragon: set virtual host to `learnyst.test` pointing to `/public`
+   - Laragon: set virtual host to `StudyNest.test` pointing to `/public`
    - Or: `php artisan serve`
 
 ## Demo Accounts
 
 | Role       | Email                    | Password  |
 |------------|--------------------------|-----------|
-| Admin      | admin@learnyst.com       | password  |
-| Sub Admin  | subadmin@learnyst.com    | password  |
-| Instructor | instructor@learnyst.com  | password  |
-| Learner    | learner@learnyst.com     | password  |
+| Admin      | admin@studynest.com       | password  |
+| Sub Admin  | subadmin@studynest.com    | password  |
+| Instructor | instructor@studynest.com  | password  |
+| Learner    | learner@studynest.com     | password  |
 
 ### Demo students
 
 | Student       | Email                         | Password  |
 |---------------|-------------------------------|-----------|
-| Priya Sharma  | priya.sharma@learnyst.com     | password  |
-| Arjun Mehta   | arjun.mehta@learnyst.com      | password  |
-| Sneha Reddy   | sneha.reddy@learnyst.com      | password  |
-| Vikram Patel  | vikram.patel@learnyst.com     | password  |
-| Ananya Iyer   | ananya.iyer@learnyst.com      | password  |
+| Priya Sharma  | priya.sharma@studynest.com     | password  |
+| Arjun Mehta   | arjun.mehta@studynest.com      | password  |
+| Sneha Reddy   | sneha.reddy@studynest.com      | password  |
+| Vikram Patel  | vikram.patel@studynest.com     | password  |
+| Ananya Iyer   | ananya.iyer@studynest.com      | password  |
 
 ### Demo institutes (company admin login)
 
 | Institute              | Email                     | Password  | Public page |
 |------------------------|---------------------------|-----------|-------------|
-| Luminix IT Solution    | luminix@learnyst.com      | password  | `/companies/luminix-it-solution` |
-| Nova Skills Academy    | nova@learnyst.com         | password  | `/companies/nova-skills-academy` |
-| Apex Career Institute  | apex@learnyst.com         | password  | `/companies/apex-career-institute` |
-| BrightPath Learning    | brightpath@learnyst.com   | password  | `/companies/brightpath-learning` |
-| SkillForge Academy     | skillforge@learnyst.com   | password  | `/companies/skillforge-academy` |
+| Luminix IT Solution    | luminix@studynest.com      | password  | `/companies/luminix-it-solution` |
+| Nova Skills Academy    | nova@studynest.com         | password  | `/companies/nova-skills-academy` |
+| Apex Career Institute  | apex@studynest.com         | password  | `/companies/apex-career-institute` |
+| BrightPath Learning    | brightpath@studynest.com   | password  | `/companies/brightpath-learning` |
+| SkillForge Academy     | skillforge@studynest.com   | password  | `/companies/skillforge-academy` |
 
 ## Modules
 

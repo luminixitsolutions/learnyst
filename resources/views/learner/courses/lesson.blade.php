@@ -7,6 +7,9 @@
 @section('content')
 @php
     $isCompleted = $isCompleted ?? false;
+    $drmPolicy = $drmPolicy ?? [];
+    $mediaUrl = $mediaUrl ?? null;
+    $watermark = $watermark ?? null;
 @endphp
 
 <div class="space-y-6">
@@ -26,18 +29,69 @@
     @if(session('success'))
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
     @endif
+    @if($errors->any())
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ $errors->first() }}</div>
+    @endif
 
     <div class="glass-card rounded-2xl overflow-hidden">
         @if($lesson->lesson_type === 'video' && $lesson->hasPlayableMedia())
-            <div class="aspect-video bg-black">
+            <div class="aspect-video bg-black relative" id="sn-player-wrap">
                 @if($lesson->isExternalEmbed() && $lesson->embedSrc())
                     <iframe src="{{ $lesson->embedSrc() }}" class="w-full h-full" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                @elseif($lesson->fileUrl())
-                    <video controls class="w-full h-full" src="{{ $lesson->fileUrl() }}"></video>
-                @elseif($lesson->embedSrc())
-                    <video controls class="w-full h-full" src="{{ $lesson->embedSrc() }}"></video>
+                @else
+                    @php
+                        $src = $mediaUrl ?: ($lesson->fileUrl() ?: $lesson->embedSrc());
+                        $controlsList = ($drmPolicy['block_download'] ?? false) ? 'nodownload' : '';
+                    @endphp
+                    <video
+                        id="sn-video"
+                        controls
+                        class="w-full h-full"
+                        src="{{ $src }}"
+                        @if($controlsList) controlsList="{{ $controlsList }}" oncontextmenu="return false" @endif
+                    ></video>
+                @endif
+                @if($watermark)
+                    <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-40 select-none" aria-hidden="true">
+                        <div class="absolute top-1/3 left-1/4 -rotate-12 text-white text-xs md:text-sm whitespace-nowrap drop-shadow">
+                            {{ $watermark }}
+                        </div>
+                        <div class="absolute top-2/3 right-1/4 -rotate-12 text-white text-xs md:text-sm whitespace-nowrap drop-shadow">
+                            {{ $watermark }}
+                        </div>
+                    </div>
                 @endif
             </div>
+            @if(!empty($mediaToken))
+            <script>
+                (function () {
+                    const token = @json($mediaToken);
+                    const video = document.getElementById('sn-video');
+                    if (!video || !token) return;
+                    @if(!empty($drmPolicy['restrict_seeking']))
+                    let maxAllowed = 0;
+                    video.addEventListener('timeupdate', () => { if (video.currentTime > maxAllowed) maxAllowed = video.currentTime; });
+                    video.addEventListener('seeking', () => {
+                        if (video.currentTime > maxAllowed + 1) video.currentTime = maxAllowed;
+                    });
+                    @endif
+                    setInterval(() => {
+                        if (video.paused) return;
+                        fetch(@json(route('learner.media.heartbeat')), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': @json(csrf_token()),
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ token, seconds: 15 }),
+                        }).then(r => r.json()).then(data => {
+                            if (data && data.ok === false) video.pause();
+                        }).catch(() => {});
+                    }, 15000);
+                })();
+            </script>
+            @endif
         @elseif($lesson->lesson_type === 'pdf' && $lesson->fileUrl())
             <div class="p-6">
                 <a href="{{ $lesson->fileUrl() }}" target="_blank" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-brand-600 text-white text-sm hover:bg-brand-500">
@@ -83,10 +137,6 @@
                 @endif
             </div>
         </div>
-    </div>
-
-    <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-        <div class="h-full bg-brand-500 rounded-full transition-all" style="width: {{ $enrollment->fresh()->progress ?? $enrollment->progress ?? 0 }}%"></div>
     </div>
 </div>
 @endsection

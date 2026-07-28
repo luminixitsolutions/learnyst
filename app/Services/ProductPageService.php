@@ -138,7 +138,7 @@ class ProductPageService
     protected static function defaultStats(): array
     {
         return [
-            ['value' => '50,000+', 'label' => 'Educators trust Learnyst'],
+            ['value' => '50,000+', 'label' => 'Educators trust StudyNest'],
             ['value' => '10M+', 'label' => 'Learners reached'],
             ['value' => '99.9%', 'label' => 'Uptime for live academies'],
         ];
@@ -165,7 +165,7 @@ class ProductPageService
                 'faq' => [
                     ['question' => 'Can I drip content over time?', 'answer' => 'Yes. Schedule lessons to unlock on a timeline or after prerequisites are completed.'],
                     ['question' => 'Do students get certificates?', 'answer' => 'You can issue certificates on course completion and customize the design.'],
-                    ['question' => 'Is video content protected?', 'answer' => 'Learnyst supports secure streaming and DRM options to reduce piracy risk.'],
+                    ['question' => 'Is video content protected?', 'answer' => 'StudyNest supports secure streaming and DRM options to reduce piracy risk.'],
                 ],
                 'cta_title' => 'Start selling courses under your brand',
                 'cta_text' => 'Create your first course today and invite students to enroll in minutes.',
@@ -211,7 +211,7 @@ class ProductPageService
                     ['question' => 'Can I sell bundles?', 'answer' => 'Yes. Bundle digital products with courses or sell them standalone.'],
                 ],
                 'cta_title' => 'Add digital products to your academy',
-                'cta_text' => 'Create another revenue stream without leaving your Learnyst brand.',
+                'cta_text' => 'Create another revenue stream without leaving your StudyNest brand.',
             ],
             'manage-batches-cohorts' => [
                 'eyebrow' => 'Cohort Learning',
@@ -270,7 +270,7 @@ class ProductPageService
                     ['title' => 'Premium academies', 'desc' => 'Offer an app experience that matches your brand promise.'],
                 ],
                 'faq' => [
-                    ['question' => 'Do you help with app store publishing?', 'answer' => 'Learnyst supports branded app publishing workflows for iOS and Android.'],
+                    ['question' => 'Do you help with app store publishing?', 'answer' => 'StudyNest supports branded app publishing workflows for iOS and Android.'],
                     ['question' => 'Can the app match my website branding?', 'answer' => 'Yes. Colors, logo, and naming stay consistent with your academy brand.'],
                 ],
                 'cta_title' => 'Put your academy in every pocket',
@@ -308,7 +308,7 @@ class ProductPageService
                     ['icon' => 'fa-line-chart', 'title' => 'Measure what works', 'desc' => 'See which campaigns drive real enrollments.'],
                 ],
                 'use_cases' => [
-                    ['title' => 'Lead gen campaigns', 'desc' => 'Run ads to a Learnyst landing page and nurture automatically.'],
+                    ['title' => 'Lead gen campaigns', 'desc' => 'Run ads to a StudyNest landing page and nurture automatically.'],
                     ['title' => 'Launch sequences', 'desc' => 'Announce new batches and courses with multi-channel messaging.'],
                 ],
                 'faq' => [

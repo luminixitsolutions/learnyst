@@ -4,7 +4,7 @@
 @yield('signup_title', 'Institute Register') – {{ config('website.brand') }}
 @endsection
 
-@section('meta_description', 'Create your Learnyst institute account and start selling courses online. Free trial — no credit card required.')
+@section('meta_description', 'Create your StudyNest institute account and start selling courses online. Free trial — no credit card required.')
 
 @push('styles')
 <style>

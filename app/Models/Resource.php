@@ -8,14 +8,16 @@ use Illuminate\Support\Str;
 class Resource extends Model
 {
     protected $fillable = [
-        'title', 'slug', 'description', 'resource_type',
-        'file_path', 'external_url', 'category_id', 'status', 'published_at', 'download_count',
+        'created_by', 'title', 'slug', 'description', 'resource_type',
+        'file_path', 'external_url', 'category_id', 'status', 'published_at',
+        'download_count', 'allow_download',
     ];
 
     protected function casts(): array
     {
         return [
             'published_at' => 'datetime',
+            'allow_download' => 'boolean',
         ];
     }
 

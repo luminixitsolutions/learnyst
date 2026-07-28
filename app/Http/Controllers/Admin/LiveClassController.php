@@ -94,7 +94,10 @@ class LiveClassController extends Controller
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i'],
             'meeting_url' => ['nullable', 'url'],
-            'platform' => ['required', 'in:zoom,google_meet,youtube,other'],
+            'meeting_id' => ['nullable', 'string', 'max:120'],
+            'meeting_passcode' => ['nullable', 'string', 'max:80'],
+            'recording_url' => ['nullable', 'url'],
+            'platform' => ['required', 'in:zoom,google_meet,youtube,microsoft_teams,other'],
             'status' => ['required', 'in:scheduled,live,completed,cancelled'],
             'description' => ['nullable', 'string'],
         ]);

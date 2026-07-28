@@ -8,8 +8,8 @@ class LiveClass extends Model
 {
     public const TYPES = [
         'super_live' => 'Super Live',
-        'learnyst_meeting' => 'Learnyst Meeting',
-        'learnyst_webinar' => 'Learnyst Webinar',
+        'StudyNest_meeting' => 'StudyNest Meeting',
+        'StudyNest_webinar' => 'StudyNest Webinar',
         'embed_live_class' => 'Embed Live Class',
     ];
 

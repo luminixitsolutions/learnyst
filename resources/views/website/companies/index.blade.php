@@ -1,7 +1,7 @@
 @extends('website.layouts.app')
 
 @section('title', 'Institutes – ' . config('website.brand'))
-@section('meta_description', 'Discover institutes building branded learning businesses on Learnyst.')
+@section('meta_description', 'Discover institutes building branded learning businesses on StudyNest.')
 
 @section('content')
 @php $brand = config('website.brand'); @endphp
@@ -24,7 +24,7 @@
         <div class="ly-section-head">
             <p class="ly-tag">Institutes</p>
             <h2>{{ $companies->total() }} registered {{ Str::plural('institute', $companies->total()) }}</h2>
-            <p>Every public profile is managed by the institute from their Learnyst panel.</p>
+            <p>Every public profile is managed by the institute from their StudyNest panel.</p>
         </div>
 
         @if($companies->count())

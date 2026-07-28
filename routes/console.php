@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('certificates:update-statuses --remind')->dailyAt('06:00');
+Schedule::job(new \App\Jobs\SendWebinarRemindersJob)->hourly();

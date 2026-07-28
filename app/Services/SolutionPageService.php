@@ -52,7 +52,7 @@ class SolutionPageService
             'stats' => self::defaultStats(),
             'faq' => [],
             'cta_title' => 'Ready to launch your academy?',
-            'cta_text' => 'Start a free trial and build your branded learning business on Learnyst.',
+            'cta_text' => 'Start a free trial and build your branded learning business on StudyNest.',
             'cta_primary_label' => 'Start Free Trial',
             'cta_secondary_label' => 'Book a Demo',
         ], $rich);
@@ -123,7 +123,7 @@ class SolutionPageService
     protected static function defaultStats(): array
     {
         return [
-            ['value' => '12,000+', 'label' => 'Institutes on Learnyst'],
+            ['value' => '12,000+', 'label' => 'Institutes on StudyNest'],
             ['value' => '10M+', 'label' => 'Learners served'],
             ['value' => 'Best-in-class', 'label' => 'DRM content protection'],
         ];
@@ -166,9 +166,9 @@ class SolutionPageService
                 ],
                 'faq' => [
                     ['question' => 'Can I sell both courses and test series?', 'answer' => 'Yes. Offer courses, mock tests, and mentorship products from one academy storefront.'],
-                    ['question' => 'Is content protected from piracy?', 'answer' => 'Learnyst supports secure streaming and DRM options designed for high-value exam content.'],
+                    ['question' => 'Is content protected from piracy?', 'answer' => 'StudyNest supports secure streaming and DRM options designed for high-value exam content.'],
                 ],
-                'cta_title' => 'Build your UPSC academy on Learnyst',
+                'cta_title' => 'Build your UPSC academy on StudyNest',
                 'cta_text' => 'Launch courses, mocks, and mentorship with the security and branding serious aspirants expect.',
             ],
             'sell-ca-courses' => [
@@ -298,7 +298,7 @@ class SolutionPageService
                 ],
                 'faq' => [
                     ['question' => 'Can I drip current affairs content?', 'answer' => 'Yes. Schedule releases so students get fresh material on a timeline.'],
-                    ['question' => 'Are large batch enrollments supported?', 'answer' => 'Learnyst is built for institutes that need to scale enrollments and attempts.'],
+                    ['question' => 'Are large batch enrollments supported?', 'answer' => 'StudyNest is built for institutes that need to scale enrollments and attempts.'],
                 ],
                 'cta_title' => 'Scale your banking exam academy',
                 'cta_text' => 'Courses, mocks, live batches, and marketing — all under your brand.',
@@ -342,10 +342,10 @@ class SolutionPageService
                 ],
                 'faq' => [
                     ['question' => 'Can I restrict access after purchase?', 'answer' => 'Yes. Control who can watch live sessions and course content.'],
-                    ['question' => 'Is DRM available for trading content?', 'answer' => 'Learnyst offers strong protection options for high-value video content.'],
+                    ['question' => 'Is DRM available for trading content?', 'answer' => 'StudyNest offers strong protection options for high-value video content.'],
                 ],
                 'cta_title' => 'Grow your trading academy securely',
-                'cta_text' => 'Teach markets, protect your edge, and scale enrollments with Learnyst.',
+                'cta_text' => 'Teach markets, protect your edge, and scale enrollments with StudyNest.',
             ],
             'sell-lifestyle-and-fitness-courses' => [
                 'eyebrow' => 'Wellness & Lifestyle',
@@ -385,7 +385,7 @@ class SolutionPageService
                     ['title' => 'Creator coaches', 'desc' => 'Sell masterminds, courses, and community memberships.'],
                 ],
                 'faq' => [
-                    ['question' => 'Do I need technical skills to launch?', 'answer' => 'No. Learnyst gives you course tools, website building, and payments in one place.'],
+                    ['question' => 'Do I need technical skills to launch?', 'answer' => 'No. StudyNest gives you course tools, website building, and payments in one place.'],
                     ['question' => 'Can I market to my existing audience?', 'answer' => 'Use landing pages, email, push, and WhatsApp workflows to convert followers into students.'],
                 ],
                 'cta_title' => 'Build your creator academy today',

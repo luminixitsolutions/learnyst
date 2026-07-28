@@ -13,17 +13,22 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'role_id', 'created_by', 'name', 'email', 'google_id', 'phone', 'address', 'notes', 'avatar', 'bio', 'expertise',
+        'role_id', 'created_by', 'name', 'email', 'google_id', 'facebook_id', 'apple_id', 'linkedin_id',
+        'phone', 'address', 'notes', 'avatar', 'bio', 'expertise',
         'social_links', 'password', 'total_spent', 'is_active', 'last_login_at', 'email_verified_at',
+        'phone_verified_at', 'two_factor_secret', 'two_factor_enabled', 'two_factor_recovery_codes', 'two_factor_confirmed_at',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_enabled' => 'boolean',
             'password' => 'hashed',
             'total_spent' => 'decimal:2',
             'is_active' => 'boolean',
@@ -141,6 +146,16 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class);
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class)->latestOfMany();
+    }
+
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'course_instructors');
@@ -159,6 +174,18 @@ class User extends Authenticatable
     public function certificates()
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'badge_user')
+            ->withPivot('awarded_at')
+            ->withTimestamps();
+    }
+
+    public function gamificationProfiles()
+    {
+        return $this->hasMany(GamificationProfile::class);
     }
 
     public function notifications()

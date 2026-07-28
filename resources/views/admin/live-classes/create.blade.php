@@ -30,7 +30,7 @@
                     @endforeach
                 </x-form-input>
                 <x-form-input label="Platform" name="platform" type="select" required>
-                    @foreach(['zoom' => 'Zoom', 'google_meet' => 'Google Meet', 'youtube' => 'YouTube', 'other' => 'Other'] as $val => $label)
+                    @foreach(['zoom' => 'Zoom', 'google_meet' => 'Google Meet', 'youtube' => 'YouTube', 'microsoft_teams' => 'Microsoft Teams', 'other' => 'Other'] as $val => $label)
                         <option value="{{ $val }}" @selected(old('platform', 'zoom') === $val)>{{ $label }}</option>
                     @endforeach
                 </x-form-input>
@@ -44,6 +44,11 @@
                 </x-form-input>
             </div>
             <x-form-input label="Meeting Link" name="meeting_url" placeholder="https://" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <x-form-input label="Meeting ID (optional)" name="meeting_id" placeholder="Teams / Zoom meeting id" />
+                <x-form-input label="Passcode (optional)" name="meeting_passcode" />
+            </div>
+            <x-form-input label="Recording URL (optional)" name="recording_url" placeholder="https://" />
             <x-form-input label="Description" name="description" type="textarea" />
             <div class="flex justify-between pt-4 border-t">
                 <a href="{{ route('admin.live-classes.index') }}" class="text-sm text-slate-500">Cancel</a>

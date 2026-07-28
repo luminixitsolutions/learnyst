@@ -1,7 +1,7 @@
 @extends('website.layouts.app')
 
 @section('title', 'Courses – '.config('website.brand'))
-@section('meta_description', 'Browse all published courses by category on Learnyst. Find free, paid, and trial programs from trusted institutes.')
+@section('meta_description', 'Browse all published courses by category on StudyNest. Find free, paid, and trial programs from trusted institutes.')
 
 @section('content')
 @php $brand = config('website.brand'); @endphp

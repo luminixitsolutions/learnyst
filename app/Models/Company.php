@@ -10,21 +10,33 @@ class Company extends Model
 {
     protected $fillable = [
         'owner_user_id',
+        'subscription_package_id',
+        'package_assigned_at',
         'name',
         'slug',
         'tagline',
         'about',
         'logo',
+        'favicon',
+        'primary_color',
+        'secondary_color',
+        'theme_tokens',
+        'email_from_name',
+        'email_from_address',
         'cover_image',
         'email',
         'phone',
         'website_url',
+        'custom_domain',
+        'domain_verification_token',
+        'domain_verified_at',
         'address',
         'city',
         'social_links',
         'highlights',
         'profile',
         'is_public',
+        'is_active',
     ];
 
     protected function casts(): array
@@ -33,13 +45,22 @@ class Company extends Model
             'social_links' => 'array',
             'highlights' => 'array',
             'profile' => 'array',
+            'theme_tokens' => 'array',
             'is_public' => 'boolean',
+            'is_active' => 'boolean',
+            'domain_verified_at' => 'datetime',
+            'package_assigned_at' => 'datetime',
         ];
     }
 
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    public function subscriptionPackage()
+    {
+        return $this->belongsTo(SubscriptionPackage::class);
     }
 
     public function courses()
@@ -89,7 +110,12 @@ class Company extends Model
 
     public function scopePublicListed($query)
     {
-        return $query->where('is_public', true);
+        return $query->where('is_public', true)->where('is_active', true);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     public function logoUrl(): string
@@ -174,6 +200,7 @@ class Company extends Model
             'about' => $owner->bio,
             'logo' => $owner->avatar,
             'is_public' => true,
+            'is_active' => true,
             'highlights' => [
                 'Branded online academy',
                 'Secure course delivery',

@@ -36,11 +36,21 @@ class DatabaseSeeder extends Seeder
         $this->seedCheckoutConsents();
         $this->call(DemoInstitutesAndStudentsSeeder::class);
         $this->call(SubscriptionPackageSeeder::class);
+
+        if (is_file(database_path('seeders/seed_wallets.php'))) {
+            require database_path('seeders/seed_wallets.php');
+        }
+        if (is_file(database_path('seeders/seed_affiliates.php'))) {
+            require database_path('seeders/seed_affiliates.php');
+        }
+        if (is_file(database_path('seeders/seed_subscriptions.php'))) {
+            require database_path('seeders/seed_subscriptions.php');
+        }
     }
 
     protected function seedBundlesAndGroups(): void
     {
-        $admin = User::where('email', 'admin@learnyst.com')->first();
+        $admin = User::where('email', 'admin@studynest.com')->first();
         $courses = Course::take(2)->pluck('id');
 
         if ($courses->count() >= 2) {
@@ -64,7 +74,7 @@ class DatabaseSeeder extends Seeder
     {
         CheckoutConsent::firstOrCreate(['title' => 'Terms & Conditions'], [
             'description' => 'Standard purchase terms',
-            'body' => 'I agree to the terms and conditions and refund policy of Learnyst platform.',
+            'body' => 'I agree to the terms and conditions and refund policy of StudyNest platform.',
             'is_required' => true,
             'is_active' => true,
             'sort_order' => 1,
@@ -129,7 +139,7 @@ class DatabaseSeeder extends Seeder
         $instructorRole = Role::where('slug', 'instructor')->first();
         $learnerRole = Role::where('slug', 'learner')->first();
 
-        User::firstOrCreate(['email' => 'admin@learnyst.com'], [
+        User::firstOrCreate(['email' => 'admin@studynest.com'], [
             'role_id' => $adminRole->id,
             'name' => 'Company Admin',
             'password' => Hash::make('password'),
@@ -139,7 +149,7 @@ class DatabaseSeeder extends Seeder
 
         $superAdminRole = Role::where('slug', 'super-admin')->first();
         if ($superAdminRole) {
-            User::firstOrCreate(['email' => 'superadmin@learnyst.com'], [
+            User::firstOrCreate(['email' => 'superadmin@studynest.com'], [
                 'role_id' => $superAdminRole->id,
                 'name' => 'Platform Super Admin',
                 'password' => Hash::make('password'),
@@ -148,7 +158,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        User::firstOrCreate(['email' => 'instructor@learnyst.com'], [
+        User::firstOrCreate(['email' => 'instructor@studynest.com'], [
             'role_id' => $instructorRole->id,
             'name' => 'Sarah Mitchell',
             'password' => Hash::make('password'),
@@ -157,7 +167,7 @@ class DatabaseSeeder extends Seeder
             'bio' => 'Senior instructor with 10+ years experience.',
         ]);
 
-        User::firstOrCreate(['email' => 'learner@learnyst.com'], [
+        User::firstOrCreate(['email' => 'learner@studynest.com'], [
             'role_id' => $learnerRole->id,
             'name' => 'Alex Johnson',
             'password' => Hash::make('password'),
@@ -166,7 +176,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         for ($i = 1; $i <= 5; $i++) {
-            User::firstOrCreate(['email' => "learner{$i}@learnyst.com"], [
+            User::firstOrCreate(['email' => "learner{$i}@studynest.com"], [
                 'role_id' => $learnerRole->id,
                 'name' => "Learner User {$i}",
                 'password' => Hash::make('password'),
@@ -176,7 +186,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $subAdminRole = Role::where('slug', 'sub-admin')->first();
-        User::firstOrCreate(['email' => 'subadmin@learnyst.com'], [
+        User::firstOrCreate(['email' => 'subadmin@studynest.com'], [
             'role_id' => $subAdminRole?->id,
             'name' => 'Sub Admin User',
             'password' => Hash::make('password'),
@@ -186,7 +196,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $alumniRole = Role::where('slug', 'alumni')->first();
-        User::firstOrCreate(['email' => 'alumni@learnyst.com'], [
+        User::firstOrCreate(['email' => 'alumni@studynest.com'], [
             'role_id' => $alumniRole?->id,
             'name' => 'Jamie Alumni',
             'password' => Hash::make('password'),
@@ -195,7 +205,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $parentRole = Role::where('slug', 'parent')->first();
-        User::firstOrCreate(['email' => 'parent@learnyst.com'], [
+        User::firstOrCreate(['email' => 'parent@studynest.com'], [
             'role_id' => $parentRole?->id,
             'name' => 'Taylor Parent',
             'password' => Hash::make('password'),
@@ -204,7 +214,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $counselorRole = Role::where('slug', 'counselor')->first();
-        User::firstOrCreate(['email' => 'counselor@learnyst.com'], [
+        User::firstOrCreate(['email' => 'counselor@studynest.com'], [
             'role_id' => $counselorRole?->id,
             'name' => 'Chris Counselor',
             'password' => Hash::make('password'),
@@ -229,7 +239,7 @@ class DatabaseSeeder extends Seeder
 
     protected function seedCourses(): void
     {
-        $admin = User::where('email', 'admin@learnyst.com')->first();
+        $admin = User::where('email', 'admin@studynest.com')->first();
         $category = Category::first();
 
         $course = Course::firstOrCreate(['title' => 'Complete Laravel Mastery'], [
@@ -294,7 +304,7 @@ class DatabaseSeeder extends Seeder
 
     protected function seedCommunities(): void
     {
-        $admin = User::where('email', 'admin@learnyst.com')->first();
+        $admin = User::where('email', 'admin@studynest.com')->first();
 
         Community::firstOrCreate(['name' => 'Developers Hub'], [
             'description' => 'A community for developers to share knowledge and collaborate.',
@@ -306,19 +316,38 @@ class DatabaseSeeder extends Seeder
     protected function seedSettings(): void
     {
         $settings = [
-            ['group' => 'general', 'key' => 'site_name', 'value' => 'Learnyst', 'type' => 'text'],
+            ['group' => 'general', 'key' => 'site_name', 'value' => 'StudyNest', 'type' => 'text'],
             ['group' => 'general', 'key' => 'site_tagline', 'value' => 'Premium Learning Platform', 'type' => 'text'],
             ['group' => 'general', 'key' => 'theme_color', 'value' => '#10b981', 'type' => 'color'],
             ['group' => 'payment', 'key' => 'razorpay_key', 'value' => '', 'type' => 'text'],
             ['group' => 'payment', 'key' => 'razorpay_secret', 'value' => '', 'type' => 'password'],
             ['group' => 'payment', 'key' => 'currency', 'value' => 'INR', 'type' => 'text'],
             ['group' => 'tax', 'key' => 'gst_rate', 'value' => '18', 'type' => 'number'],
+            ['group' => 'tax', 'key' => 'cgst_rate', 'value' => '9', 'type' => 'number'],
+            ['group' => 'tax', 'key' => 'sgst_rate', 'value' => '9', 'type' => 'number'],
+            ['group' => 'tax', 'key' => 'igst_rate', 'value' => '18', 'type' => 'number'],
+            ['group' => 'tax', 'key' => 'company_gstin', 'value' => '29AAAAA0000A1Z5', 'type' => 'text'],
+            ['group' => 'tax', 'key' => 'company_state', 'value' => 'Karnataka', 'type' => 'text'],
+            ['group' => 'tax', 'key' => 'invoice_prefix', 'value' => 'INV', 'type' => 'text'],
+            ['group' => 'tax', 'key' => 'invoice_next_number', 'value' => '1', 'type' => 'number'],
+            ['group' => 'tax', 'key' => 'credit_note_prefix', 'value' => 'CN', 'type' => 'text'],
+            ['group' => 'tax', 'key' => 'credit_note_next_number', 'value' => '1', 'type' => 'number'],
+            ['group' => 'wallet', 'key' => 'enabled', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'wallet', 'key' => 'allow_checkout_redeem', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'wallet', 'key' => 'refund_to_wallet', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'wallet', 'key' => 'signup_bonus', 'value' => '50', 'type' => 'number'],
+            ['group' => 'wallet', 'key' => 'min_topup', 'value' => '100', 'type' => 'number'],
+            ['group' => 'referral', 'key' => 'enabled', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'referral', 'key' => 'reward_type', 'value' => 'wallet', 'type' => 'text'],
+            ['group' => 'referral', 'key' => 'reward_on', 'value' => 'signup', 'type' => 'text'],
+            ['group' => 'referral', 'key' => 'referrer_reward', 'value' => '100', 'type' => 'number'],
+            ['group' => 'referral', 'key' => 'referred_reward', 'value' => '50', 'type' => 'number'],
             ['group' => 'email', 'key' => 'smtp_host', 'value' => 'smtp.mailtrap.io', 'type' => 'text'],
-            ['group' => 'social', 'key' => 'facebook', 'value' => 'https://facebook.com/learnyst', 'type' => 'url'],
-            ['group' => 'social', 'key' => 'youtube', 'value' => 'https://youtube.com/@learnyst', 'type' => 'url'],
-            ['group' => 'social', 'key' => 'linkedin', 'value' => 'https://linkedin.com/company/learnyst', 'type' => 'url'],
-            ['group' => 'social', 'key' => 'instagram', 'value' => 'https://instagram.com/learnyst', 'type' => 'url'],
-            ['group' => 'social', 'key' => 'website', 'value' => 'https://learnyst.com', 'type' => 'url'],
+            ['group' => 'social', 'key' => 'facebook', 'value' => 'https://facebook.com/StudyNest', 'type' => 'url'],
+            ['group' => 'social', 'key' => 'youtube', 'value' => 'https://youtube.com/@StudyNest', 'type' => 'url'],
+            ['group' => 'social', 'key' => 'linkedin', 'value' => 'https://linkedin.com/company/StudyNest', 'type' => 'url'],
+            ['group' => 'social', 'key' => 'instagram', 'value' => 'https://instagram.com/StudyNest', 'type' => 'url'],
+            ['group' => 'social', 'key' => 'website', 'value' => 'https://StudyNest.com', 'type' => 'url'],
         ];
 
         foreach ($settings as $setting) {

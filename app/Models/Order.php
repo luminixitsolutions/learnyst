@@ -10,9 +10,9 @@ class Order extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'order_number', 'user_id', 'coupon_id', 'subtotal', 'discount',
+        'order_number', 'user_id', 'coupon_id', 'subtotal', 'discount', 'wallet_amount',
         'tax', 'total', 'payment_status', 'payment_method', 'gateway_order_id',
-        'refund_status', 'notes', 'paid_at',
+        'refund_status', 'notes', 'affiliate_code', 'paid_at',
     ];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class Order extends Model
         return [
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
+            'wallet_amount' => 'decimal:2',
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_at' => 'datetime',
@@ -53,5 +54,20 @@ class Order extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function gstInvoice()
+    {
+        return $this->hasOne(GstInvoice::class);
+    }
+
+    public function gstInvoices()
+    {
+        return $this->hasMany(GstInvoice::class);
+    }
+
+    public function learnerSubscriptions()
+    {
+        return $this->hasMany(LearnerSubscription::class);
     }
 }

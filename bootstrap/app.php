@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'ip.access' => \App\Http\Middleware\CheckIpAccess::class,
+            'device.active' => \App\Http\Middleware\EnsureDeviceNotRevoked::class,
         ]);
 
         $middleware->redirectUsersTo(function () {

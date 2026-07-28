@@ -47,9 +47,15 @@ class WebinarController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:60'],
+            'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'is_free' => ['sometimes', 'boolean'],
             'content_security' => ['required', Rule::in(['encryption', 'no_encryption'])],
+            'starts_at' => ['nullable', 'date'],
+            'registration_enabled' => ['boolean'],
+            'reminder_hours_before' => ['nullable', 'integer', 'min:1', 'max:168'],
+            'confirmation_message' => ['nullable', 'string'],
+            'meeting_url' => ['nullable', 'url', 'max:255'],
         ]);
 
         $isFree = $request->boolean('is_free');
@@ -67,6 +73,8 @@ class WebinarController extends Controller
 
         $validated['created_by'] = Auth::id();
         $validated['status'] = 'draft';
+        $validated['registration_enabled'] = $request->boolean('registration_enabled', true);
+        $validated['reminder_hours_before'] = $validated['reminder_hours_before'] ?? 24;
 
         $webinar = Webinar::create($validated);
 

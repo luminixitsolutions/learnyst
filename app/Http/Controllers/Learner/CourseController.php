@@ -11,10 +11,17 @@ use App\Models\LessonProgress;
 use App\Services\ActivityLogger;
 use App\Services\CertificateDesignService;
 use App\Services\CertificateLifecycleService;
+use App\Services\DrmService;
+use App\Services\GamificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class CourseController extends Controller
 {
+    public function __construct(
+        protected GamificationService $gamification,
+        protected DrmService $drm,
+    ) {}
     public function index()
     {
         $enrollments = CourseEnrollment::with('course.category')
@@ -127,7 +134,7 @@ class CourseController extends Controller
 
     public function lesson(CourseLesson $lesson)
     {
-        $lesson->load('section.course');
+        $lesson->load('section.course.settings');
         $course = $lesson->section->course;
 
         $enrollment = $this->activeEnrollment($course->id);
@@ -143,8 +150,28 @@ class CourseController extends Controller
             ->first();
 
         $isCompleted = (bool) ($progress?->is_completed);
+        $drmPolicy = $this->drm->policyFor($course);
+        $mediaUrl = null;
+        $mediaToken = null;
+        $watermark = null;
 
-        return view('learner.courses.lesson', compact('lesson', 'course', 'enrollment', 'isCompleted'));
+        if ($lesson->lesson_type === 'video' && $lesson->hasPlayableMedia() && ! $lesson->isExternalEmbed()) {
+            try {
+                $issued = $this->drm->issueMediaUrl(Auth::user(), $lesson, request());
+                $mediaUrl = $issued['url'];
+                $mediaToken = $issued['token'];
+            } catch (ValidationException $e) {
+                return back()->withErrors($e->errors());
+            }
+        }
+
+        if (($drmPolicy['enabled'] ?? false) && ($drmPolicy['watermark'] ?? true)) {
+            $watermark = $this->drm->watermarkText(Auth::user());
+        }
+
+        return view('learner.courses.lesson', compact(
+            'lesson', 'course', 'enrollment', 'isCompleted', 'drmPolicy', 'mediaUrl', 'mediaToken', 'watermark'
+        ));
     }
 
     public function complete(CourseLesson $lesson)
@@ -173,6 +200,8 @@ class CourseController extends Controller
         $this->recalculateEnrollmentProgress($enrollment, $course);
 
         ActivityLogger::log('lesson_completed', "Completed lesson {$lesson->title}", $lesson);
+
+        $this->gamification->awardForLessonComplete(Auth::user(), $lesson, $course);
 
         return back()->with('success', 'Lesson marked as complete.');
     }

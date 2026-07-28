@@ -45,6 +45,11 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.live-classes.attendance', $class) }}"
+                                   class="action-icon-btn action-icon-btn--edit"
+                                   title="Mark attendance">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </a>
                                 <a href="{{ route('admin.live-classes.edit', $class) }}"
                                    class="action-icon-btn action-icon-btn--edit"
                                    title="Edit live class">

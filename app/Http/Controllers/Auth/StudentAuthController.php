@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\AuthSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class StudentAuthController extends Controller
 {
+    public function __construct(protected AuthSecurityService $security) {}
+
     public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
@@ -36,6 +39,7 @@ class StudentAuthController extends Controller
         ]);
 
         if (! Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+            $this->security->recordLogin(null, $request, 'failed', 'password', $credentials['email']);
             throw ValidationException::withMessages([
                 'email' => __('These credentials do not match our records.'),
             ]);
@@ -57,13 +61,26 @@ class StudentAuthController extends Controller
             ]);
         }
 
+        if ($user->two_factor_enabled) {
+            Auth::logout();
+            $request->session()->put([
+                '2fa:user:id' => $user->id,
+                '2fa:remember' => $request->boolean('remember'),
+                '2fa:panel' => 'learner',
+                '2fa:redirect' => $this->resolveRedirect($request),
+            ]);
+
+            return redirect()->route('auth.2fa.challenge');
+        }
+
         $user->update(['last_login_at' => now()]);
         ActivityLogger::log('login', "Student {$user->name} logged in", $user);
         $request->session()->regenerate();
+        $cookie = $this->security->afterSuccessfulLogin($user, $request, 'password');
 
         return redirect()->to(
             $this->resolveRedirect($request) ?? route('learner.dashboard')
-        );
+        )->cookie($cookie);
     }
 
     public function showRegisterForm(Request $request)

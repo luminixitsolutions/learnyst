@@ -168,7 +168,7 @@
                 <span class="text-white font-bold text-lg">{{ $isPlatformPanel ? 'P' : ($isStudentPanel || in_array($role, $studentPanelRoles, true) ? 'S' : 'L') }}</span>
             </div>
             <div>
-                <h1 class="text-slate-800 font-bold text-lg tracking-tight">Learnyst</h1>
+                <h1 class="text-slate-800 font-bold text-lg tracking-tight">StudyNest</h1>
                 <p class="text-xs font-semibold panel-sidebar-brand-sub">{{ $panelTitle }}</p>
             </div>
         </div>
@@ -210,6 +210,7 @@
                                  class="ml-3 mt-1 space-y-0.5 border-l-2 panel-sidebar-sub-border pl-3">
                                 @foreach($section['items'] as $item)
                                     <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                                       @if(!empty($item['target'])) target="{{ $item['target'] }}" rel="noopener" @endif
                                        class="panel-sidebar-sub-link flex items-center justify-between gap-2 px-2.5 py-1.5 text-sm rounded-lg transition {{ $isMenuItemActive($item) ? 'panel-sidebar-sub-active' : '' }}">
                                         <span>{{ $item['label'] }}</span>
                                         @if(!empty($item['badge']))
@@ -257,6 +258,7 @@
                                  class="ml-3 mt-1 space-y-0.5 border-l-2 panel-sidebar-sub-border pl-3">
                                 @foreach($section['items'] as $item)
                                     <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                                       @if(!empty($item['target'])) target="{{ $item['target'] }}" rel="noopener" @endif
                                        class="panel-sidebar-sub-link flex items-center justify-between gap-2 px-2.5 py-1.5 text-sm rounded-lg transition {{ $isMenuItemActive($item) ? 'panel-sidebar-sub-active' : '' }}">
                                         <span>{{ $item['label'] }}</span>
                                         @if(!empty($item['badge']))
@@ -350,7 +352,7 @@
             <span class="text-white font-bold">L</span>
         </div>
         <div class="min-w-0">
-            <p class="text-sm font-bold text-slate-800 truncate" style="font-family: Inter, sans-serif;">Learnyst</p>
+            <p class="text-sm font-bold text-slate-800 truncate" style="font-family: Inter, sans-serif;">StudyNest</p>
             <p class="text-[10px] font-medium panel-sidebar-brand-sub truncate">{{ $panelTitle }}</p>
         </div>
         <div class="ml-auto flex items-center gap-2 shrink-0">
@@ -435,6 +437,7 @@
                                 @foreach($section['items'] as $item)
                                     @if(!empty($item['hidden'])) @continue @endif
                                     <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                                       @if(!empty($item['target'])) target="{{ $item['target'] }}" rel="noopener" @endif
                                        @click="open = false"
                                        class="block px-3 py-2 text-sm font-medium {{ $isMenuItemActive($item) ? 'text-teal-800 bg-teal-50' : 'text-slate-600 hover:bg-slate-50' }}">
                                         {{ $item['label'] }}

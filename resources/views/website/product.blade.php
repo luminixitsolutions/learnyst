@@ -1,6 +1,6 @@
 @extends('website.layouts.app')
 
-@section('title', ($page['title'] ?? 'Learnyst') . ' – ' . config('website.brand'))
+@section('title', ($page['title'] ?? 'StudyNest') . ' – ' . config('website.brand'))
 @section('meta_description', $page['summary'] ?? '')
 
 @section('content')
@@ -96,11 +96,11 @@
 @endif
 
 @if(!empty($page['stats']))
-<section class="learnyst-stats-banner">
+<section class="StudyNest-stats-banner">
     <div class="ly-container">
-        <div class="learnyst-stats-grid">
+        <div class="StudyNest-stats-grid">
             @foreach($page['stats'] as $stat)
-                <div class="learnyst-stat-item">
+                <div class="StudyNest-stat-item">
                     <strong>{{ $stat['value'] }}</strong>
                     <span>{{ $stat['label'] }}</span>
                 </div>
@@ -161,7 +161,7 @@
             <h2>{{ $isSolution ? 'Explore related solutions' : 'Explore related products' }}</h2>
             <p>
                 @if($isSolution)
-                    Discover more verticals educators grow successfully on Learnyst.
+                    Discover more verticals educators grow successfully on StudyNest.
                 @else
                     Build a complete teaching and sales stack under one brand.
                 @endif

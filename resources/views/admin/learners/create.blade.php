@@ -15,6 +15,7 @@
             <x-form-input label="Password" name="password" type="password" required />
             <x-form-input label="Address" name="address" type="textarea" />
             <x-form-input label="Notes" name="notes" type="textarea" placeholder="Internal notes about this learner" />
+            <x-form-input label="Referral Code (optional)" name="referral_code" :value="old('referral_code')" placeholder="Apply a referrer's code on signup" />
             <div class="space-y-1.5">
                 <label class="block text-sm font-medium text-slate-700">Profile Photo</label>
                 <input type="file" name="avatar" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-900 file:text-white">

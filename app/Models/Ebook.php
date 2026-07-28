@@ -13,10 +13,14 @@ class Ebook extends Model
     protected $fillable = [
         'title',
         'slug',
+        'description',
+        'file_path',
+        'cover_path',
         'price',
         'is_free',
         'content_security',
         'status',
+        'allow_download',
         'sort_order',
         'created_by',
     ];
@@ -26,6 +30,7 @@ class Ebook extends Model
         return [
             'price' => 'decimal:2',
             'is_free' => 'boolean',
+            'allow_download' => 'boolean',
         ];
     }
 

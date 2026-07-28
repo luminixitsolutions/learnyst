@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'brand' => 'Learnyst',
+    'brand' => 'StudyNest',
     'tagline' => 'The Most Secure LMS to Sell Courses Online',
-    'email' => 'hello@learnyst.com',
+    'email' => 'hello@studynest.com',
     'phone' => '080 4736 1000',
     'address' => [
-        'Learnyst Insight Private Limited',
+        'StudyNest Insight Private Limited',
         '#110, Krishna Garden Main Road',
         'Rajarajeshwari Nagar, Bangalore 560098',
     ],
@@ -124,7 +124,7 @@ return [
         'create-learning-community' => [
             'title' => 'Communities',
             'menu' => 'Communities',
-            'menu_desc' => 'Create and grow student communities with Learnyst',
+            'menu_desc' => 'Create and grow student communities with StudyNest',
             'group' => 'presence',
             'icon' => 'fa-graduation-cap',
             'caption' => 'Products',
@@ -342,8 +342,8 @@ return [
         'about-us' => [
             'title' => 'About Us',
             'caption' => 'Know Us Better',
-            'summary' => 'Learnyst helps institutes protect content, grow students, and lead with confidence.',
-            'body' => 'Join 12,000+ institutes already using Learnyst — the secure online course platform built to help educators create, market, and sell courses from their own brand. Our team listens first, acts fast, and keeps improving the platform with your feedback.',
+            'summary' => 'StudyNest helps institutes protect content, grow students, and lead with confidence.',
+            'body' => 'Join 12,000+ institutes already using StudyNest — the secure online course platform built to help educators create, market, and sell courses from their own brand. Our team listens first, acts fast, and keeps improving the platform with your feedback.',
         ],
         'pricing' => [
             'title' => 'Pricing',
@@ -354,20 +354,20 @@ return [
         'product-demo' => [
             'title' => 'Product Demo',
             'caption' => 'Book a Tour',
-            'summary' => 'See how Learnyst can power your academy growth.',
+            'summary' => 'See how StudyNest can power your academy growth.',
             'body' => 'Book a guided demo with our team and explore course builder, mock tests, live classes, marketing tools, DRM security, and branded apps tailored to your institute.',
         ],
         'support-migration' => [
             'title' => 'Support & Migration',
             'caption' => 'Support',
             'summary' => 'Navigate your transition with expert support and resources.',
-            'body' => 'Moving from another platform? Our support team helps you migrate courses, learners, and content smoothly so you can launch on Learnyst with confidence.',
+            'body' => 'Moving from another platform? Our support team helps you migrate courses, learners, and content smoothly so you can launch on StudyNest with confidence.',
         ],
         'guides' => [
             'title' => 'Guides',
             'caption' => 'Resources',
             'summary' => 'Library of free templates, eBooks, and useful resources.',
-            'body' => 'Explore practical guides and templates to help you create courses, grow enrollments, and run your online academy more effectively with Learnyst.',
+            'body' => 'Explore practical guides and templates to help you create courses, grow enrollments, and run your online academy more effectively with StudyNest.',
         ],
         'drm-security' => [
             'title' => 'DRM Security',
@@ -379,7 +379,7 @@ return [
             'title' => 'For Corporate',
             'caption' => 'Corporate LMS',
             'summary' => 'Train teams with a secure, branded learning platform.',
-            'body' => 'Use Learnyst for employee training, partner enablement, and corporate academies with secure delivery, progress tracking, and reporting.',
+            'body' => 'Use StudyNest for employee training, partner enablement, and corporate academies with secure delivery, progress tracking, and reporting.',
         ],
         'ai' => [
             'title' => 'AI Cofounder',
@@ -390,20 +390,20 @@ return [
         'careers' => [
             'title' => 'Careers',
             'caption' => 'Join Us',
-            'summary' => 'Build the future of online education with Learnyst.',
+            'summary' => 'Build the future of online education with StudyNest.',
             'body' => 'We are a product-driven team helping thousands of educators grow. Explore open roles and help us make secure online teaching better for every institute.',
         ],
         'privacy-policy' => [
             'title' => 'Privacy Policy',
             'caption' => 'Legal',
-            'summary' => 'How Learnyst collects and protects your information.',
-            'body' => 'We respect your privacy. This page outlines how personal data is collected, used, stored, and protected when you use Learnyst products and services.',
+            'summary' => 'How StudyNest collects and protects your information.',
+            'body' => 'We respect your privacy. This page outlines how personal data is collected, used, stored, and protected when you use StudyNest products and services.',
         ],
         'terms-and-conditions' => [
             'title' => 'Terms & Conditions',
             'caption' => 'Legal',
-            'summary' => 'Terms that govern use of the Learnyst platform.',
-            'body' => 'By using Learnyst, you agree to our terms of service covering accounts, content ownership, payments, acceptable use, and platform responsibilities.',
+            'summary' => 'Terms that govern use of the StudyNest platform.',
+            'body' => 'By using StudyNest, you agree to our terms of service covering accounts, content ownership, payments, acceptable use, and platform responsibilities.',
         ],
     ],
 
@@ -411,11 +411,11 @@ return [
         'success-stories' => [
             'title' => 'Success Stories',
             'menu' => 'Success Stories',
-            'menu_desc' => 'Get inspired by the success stories of Learnyst customers',
+            'menu_desc' => 'Get inspired by the success stories of StudyNest customers',
             'icon' => 'fa-book',
             'caption' => 'Customers',
-            'summary' => 'Real growth stories from educators using Learnyst.',
-            'body' => 'From exam prep to coding and trading academies, institutes use Learnyst to protect content and scale revenue with confidence.',
+            'summary' => 'Real growth stories from educators using StudyNest.',
+            'body' => 'From exam prep to coding and trading academies, institutes use StudyNest to protect content and scale revenue with confidence.',
         ],
         'testimonials' => [
             'title' => 'Testimonials',
@@ -424,7 +424,7 @@ return [
             'icon' => 'fa-star-o',
             'caption' => 'Customers',
             'summary' => 'Real words, real impact from 3000+ happy clients.',
-            'body' => 'Educators trust Learnyst for supportive teams, user-friendly tools, and consistent product improvements that help academies grow faster.',
+            'body' => 'Educators trust StudyNest for supportive teams, user-friendly tools, and consistent product improvements that help academies grow faster.',
         ],
         'wall-of-love' => [
             'title' => 'Wall Of Love',
@@ -432,8 +432,8 @@ return [
             'menu_desc' => 'Explore unfiltered stories from educators who made it happen.',
             'icon' => 'fa-heart-o',
             'caption' => 'Customers',
-            'summary' => 'Love notes from institutes growing with Learnyst.',
-            'body' => 'See what founders and educators share about support quality, platform reliability, and business outcomes after switching to Learnyst.',
+            'summary' => 'Love notes from institutes growing with StudyNest.',
+            'body' => 'See what founders and educators share about support quality, platform reliability, and business outcomes after switching to StudyNest.',
         ],
     ],
 
@@ -471,7 +471,7 @@ return [
         ],
         'whats-new' => [
             'menu' => "What's New",
-            'menu_desc' => 'Stay informed about the latest & trendiest updates on Learnyst',
+            'menu_desc' => 'Stay informed about the latest & trendiest updates on StudyNest',
             'group' => 'resources',
             'icon' => 'fa-file-text-o',
             'route' => 'website.whats-new',
@@ -486,14 +486,14 @@ return [
     ],
 
     'comparisons' => [
-        'learnyst-vs-graphy-alternative' => ['title' => 'Learnyst vs Graphy', 'competitor' => 'Graphy'],
-        'learnyst-vs-teachable-alternative' => ['title' => 'Learnyst vs Teachable', 'competitor' => 'Teachable'],
-        'learnyst-vs-thinkific-alternative' => ['title' => 'Learnyst vs Thinkific', 'competitor' => 'Thinkific'],
-        'learnyst-vs-kajabi-alternative' => ['title' => 'Learnyst vs Kajabi', 'competitor' => 'Kajabi'],
-        'learnyst-vs-podia-alternative' => ['title' => 'Learnyst vs Podia', 'competitor' => 'Podia'],
-        'learnyst-vs-moodle-alternative' => ['title' => 'Learnyst vs Moodle', 'competitor' => 'Moodle'],
-        'learnyst-vs-learnworlds-alternative' => ['title' => 'Learnyst vs Learnworlds', 'competitor' => 'Learnworlds'],
-        'learnyst-vs-edmingle-alternative' => ['title' => 'Learnyst vs Edmingle', 'competitor' => 'Edmingle'],
+        'studynest-vs-graphy-alternative' => ['title' => 'StudyNest vs Graphy', 'competitor' => 'Graphy'],
+        'studynest-vs-teachable-alternative' => ['title' => 'StudyNest vs Teachable', 'competitor' => 'Teachable'],
+        'studynest-vs-thinkific-alternative' => ['title' => 'StudyNest vs Thinkific', 'competitor' => 'Thinkific'],
+        'studynest-vs-kajabi-alternative' => ['title' => 'StudyNest vs Kajabi', 'competitor' => 'Kajabi'],
+        'studynest-vs-podia-alternative' => ['title' => 'StudyNest vs Podia', 'competitor' => 'Podia'],
+        'studynest-vs-moodle-alternative' => ['title' => 'StudyNest vs Moodle', 'competitor' => 'Moodle'],
+        'studynest-vs-learnworlds-alternative' => ['title' => 'StudyNest vs Learnworlds', 'competitor' => 'Learnworlds'],
+        'studynest-vs-edmingle-alternative' => ['title' => 'StudyNest vs Edmingle', 'competitor' => 'Edmingle'],
     ],
 
     'testimonials' => [
@@ -501,35 +501,50 @@ return [
             'quote' => 'They have a fabulous young team that is always full of ideas. Would recommend to everyone without doubt.',
             'name' => 'Rajesh Balasubramanian',
             'role' => 'Founder & Director, 2iim',
+            'image' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=240&h=240&q=80',
+            'rating' => 5,
+            'result' => 'Trusted by CAT aspirants nationwide',
         ],
         [
-            'quote' => 'Learnyst’s supportive team and user-friendly UI helped us achieve 50x revenue growth—highly recommended!',
+            'quote' => 'StudyNest’s supportive team and user-friendly UI helped us achieve 50x revenue growth—highly recommended!',
             'name' => 'Gomathi Shankar',
             'role' => 'CEO & Founder, Scalpers Trading Academy',
+            'image' => 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
+            'rating' => 5,
+            'result' => '50x revenue growth',
         ],
         [
-            'quote' => 'Learnyst values our feedback, listens carefully, and implements changes quickly to improve the platform consistently.',
+            'quote' => 'StudyNest values our feedback, listens carefully, and implements changes quickly to improve the platform consistently.',
             'name' => 'Abhiram V',
             'role' => 'Founder & CEO, Tchr',
+            'image' => 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=240&h=240&q=80',
+            'rating' => 5,
+            'result' => 'Rapid product improvements',
         ],
         [
-            'quote' => 'Running an online academy with Learnyst has been a complete game-changer, simplifying management and accelerating growth.',
+            'quote' => 'Running an online academy with StudyNest has been a complete game-changer, simplifying management and accelerating growth.',
             'name' => 'Vimal Prajapati',
             'role' => 'Founder, Agroacademy',
+            'image' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=240&h=240&q=80',
+            'rating' => 5,
+            'result' => 'Simplified academy operations',
         ],
         [
-            'quote' => 'Learnyst’s Launcher Plan is perfect for startups, offering quick, helpful support and a seamless experience for MBA prep.',
+            'quote' => 'StudyNest’s Launcher Plan is perfect for startups, offering quick, helpful support and a seamless experience for MBA prep.',
             'name' => 'Nirmala Shivkumar',
             'role' => 'Director, Elite Prep',
+            'image' => 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=240&h=240&q=80',
+            'rating' => 5,
+            'result' => 'Ideal for early-stage institutes',
         ],
     ],
 
     'success_stories' => [
-        ['title' => 'How EduTap is Revolutionising Ed-Tech in India', 'tag' => 'Banking', 'date' => 'February 27, 2022', 'read' => '5 min read'],
-        ['title' => 'How Xylem Achieved 255 Crores in Just 38 Months', 'tag' => 'NEET', 'date' => 'June 20, 2023', 'read' => '7 min read'],
-        ['title' => 'How LCO Grew to a 120 Crore Valuation with Learnyst', 'tag' => 'Coding', 'date' => 'October 22, 2022', 'read' => '5 min read'],
-        ['title' => 'How 2IIM Doubled Its Online Business in 18 Months', 'tag' => 'CAT', 'date' => 'November 26, 2022', 'read' => '5 min read'],
-        ['title' => 'How Scalper Academy Achieved 50x Profit Growth', 'tag' => 'Trading', 'date' => 'March 22, 2022', 'read' => '6 min read'],
-        ['title' => 'How Sleepy Classes Achieved 2x Student Signups', 'tag' => 'UPSC', 'date' => 'June 26, 2023', 'read' => '5 min read'],
+        ['title' => 'How EduTap is Revolutionising Ed-Tech in India', 'tag' => 'Banking', 'date' => 'February 27, 2022', 'read' => '5 min read', 'image' => 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&h=500&q=80'],
+        ['title' => 'How Xylem Achieved 255 Crores in Just 38 Months', 'tag' => 'NEET', 'date' => 'June 20, 2023', 'read' => '7 min read', 'image' => 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&h=500&q=80'],
+        ['title' => 'How LCO Grew to a 120 Crore Valuation with StudyNest', 'tag' => 'Coding', 'date' => 'October 22, 2022', 'read' => '5 min read', 'image' => 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&h=500&q=80'],
+        ['title' => 'How 2IIM Doubled Its Online Business in 18 Months', 'tag' => 'CAT', 'date' => 'November 26, 2022', 'read' => '5 min read', 'image' => 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&h=500&q=80'],
+        ['title' => 'How Scalper Academy Achieved 50x Profit Growth', 'tag' => 'Trading', 'date' => 'March 22, 2022', 'read' => '6 min read', 'image' => 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&h=500&q=80'],
+        ['title' => 'How Sleepy Classes Achieved 2x Student Signups', 'tag' => 'UPSC', 'date' => 'June 26, 2023', 'read' => '5 min read', 'image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&h=500&q=80'],
     ],
 ];

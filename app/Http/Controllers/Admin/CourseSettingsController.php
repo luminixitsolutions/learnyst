@@ -94,6 +94,7 @@ class CourseSettingsController extends Controller
             'content-dripping' => 'updateContentDripping',
             'learner-configurations' => 'updateLearnerConfigurations',
             'learning-path' => 'updateLearningPath',
+            'drm-protection' => 'updateDrmProtection',
             default => null,
         };
 
@@ -445,7 +446,7 @@ class CourseSettingsController extends Controller
             'ratings-reviews' => [
                 'reviews' => $course->reviews()->with('user')->latest()->paginate(15),
             ],
-            'discussions-bookmarks', 'leaderboard', 'content-dripping', 'learner-configurations', 'learning-path' => [],
+            'discussions-bookmarks', 'leaderboard', 'content-dripping', 'learner-configurations', 'learning-path', 'drm-protection' => [],
             'certificates' => [
                 'presets' => app(CertificateDesignService::class)->presets(),
                 'courseTemplate' => app(CertificateDesignService::class)->forCourse($course),
@@ -908,6 +909,30 @@ class CourseSettingsController extends Controller
         ]);
     }
 
+    protected function updateDrmProtection(Request $request, Course $course, CourseSetting $settings): void
+    {
+        $validated = $request->validate([
+            'url_ttl_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
+            'max_devices' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'max_parallel_sessions' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'max_watch_seconds_per_day' => ['nullable', 'integer', 'min:60'],
+        ]);
+
+        $settings->update([
+            'drm_config' => [
+                'enabled' => $request->boolean('enabled'),
+                'signed_urls' => $request->boolean('signed_urls', true),
+                'url_ttl_minutes' => $validated['url_ttl_minutes'] ?? 60,
+                'watermark' => $request->boolean('watermark', true),
+                'max_devices' => $validated['max_devices'] ?? 3,
+                'max_parallel_sessions' => $validated['max_parallel_sessions'] ?? 1,
+                'max_watch_seconds_per_day' => $validated['max_watch_seconds_per_day'] ?? null,
+                'restrict_seeking' => $request->boolean('restrict_seeking'),
+                'block_download' => $request->boolean('block_download', true),
+            ],
+        ]);
+    }
+
     /* -------------------- helpers -------------------- */
 
     protected function ensureSettings(Course $course): CourseSetting
@@ -1052,6 +1077,7 @@ class CourseSettingsController extends Controller
             'drip' => ucfirst(str_replace('_', ' ', $settings->drip_mode ?? 'immediate')),
             'learner' => 'Configured',
             'learning_path' => $settings->learning_path_enabled ? 'Enabled' : 'Disabled',
+            'drm' => data_get($settings->drm_config, 'enabled') ? 'Enabled' : 'Disabled',
             'publish' => ucfirst($course->status),
             'trash' => $course->trashed() ? 'In trash' : 'Active',
             'associated' => collect($this->associations($course))->sum('count').' links',

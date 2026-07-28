@@ -29,7 +29,7 @@
     </div>
 
     <div class="header">
-        <div class="logo">Learnyst</div>
+        <div class="logo">StudyNest</div>
         <div>
             <div class="invoice-title">INVOICE</div>
             <p style="text-align: right; color: #64748b; margin-top: 4px;">#{{ $order->order_number }}</p>

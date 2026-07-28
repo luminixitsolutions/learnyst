@@ -148,8 +148,8 @@ class WebsiteController extends Controller
         $page = [
             'title' => $comparison['title'],
             'caption' => 'Comparisons',
-            'summary' => "See why institutes choose Learnyst as a {$comparison['competitor']} alternative.",
-            'body' => "Compare Learnyst with {$comparison['competitor']} on DRM security, branded apps, mock tests, live classes, marketing tools, and support. Learnyst is built for institutes that need strong content protection and faster growth.",
+            'summary' => "See why institutes choose StudyNest as a {$comparison['competitor']} alternative.",
+            'body' => "Compare StudyNest with {$comparison['competitor']} on DRM security, branded apps, mock tests, live classes, marketing tools, and support. StudyNest is built for institutes that need strong content protection and faster growth.",
             'features' => [
                 'Best-in-class DRM content protection',
                 'Branded website and mobile apps',

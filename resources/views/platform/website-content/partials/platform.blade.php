@@ -1,5 +1,15 @@
 @php
-    $items = old('items', $content['items'] ?? [['slug'=>'','title'=>'','desc'=>'','bg'=>'','image'=>'']]);
+    use App\Models\WebsiteContent;
+
+    $items = old('items', $content['items'] ?? [['slug' => '', 'title' => '', 'desc' => '', 'bg' => '', 'image' => '']]);
+    $items = collect($items)->map(function ($item) {
+        if (! is_array($item)) {
+            return $item;
+        }
+        $item['image_url'] = WebsiteContent::mediaUrl($item['image'] ?? null);
+
+        return $item;
+    })->values()->all();
 @endphp
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -9,7 +19,7 @@
 <x-form-input label="Rest of heading" name="heading_rest" :value="old('heading_rest', $content['heading_rest'] ?? '')" />
 <x-form-input label="Subheading" name="subheading" type="textarea" :value="old('subheading', $content['subheading'] ?? '')" />
 
-<div x-data="websiteRepeater(@js($items))" class="space-y-4 pt-2">
+<div x-data="websitePlatformRepeater(@js($items))" class="space-y-4 pt-2">
     <h3 class="text-sm font-semibold text-slate-800">Platform cards</h3>
     <template x-for="(item, index) in items" :key="index">
         <div class="rounded-xl border border-slate-200 p-4 space-y-3 bg-slate-50/60">
@@ -22,10 +32,19 @@
                 <input type="text" :name="'items['+index+'][slug]'" x-model="item.slug" class="panel-input" placeholder="Product slug">
                 <input type="text" :name="'items['+index+'][desc]'" x-model="item.desc" class="panel-input md:col-span-2" placeholder="Description">
                 <input type="text" :name="'items['+index+'][bg]'" x-model="item.bg" class="panel-input md:col-span-2" placeholder="CSS background">
-                <div class="md:col-span-2 space-y-1">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="block text-sm font-semibold text-slate-700">Card image</label>
                     <input type="hidden" :name="'items['+index+'][existing_image]'" :value="item.image || ''">
-                    <input type="file" :name="'items['+index+'][image]'" accept="image/*" class="panel-input">
-                    <p class="text-xs text-slate-500 truncate" x-text="item.image ? ('Current: ' + item.image) : ''"></p>
+                    <input type="file" :name="'items['+index+'][image]'" accept="image/*" class="panel-input" @change="previewImage($event, index)">
+                    <template x-if="item.preview_url || item.image_url">
+                        <div class="mt-2 space-y-1">
+                            <img :src="item.preview_url || item.image_url"
+                                 :alt="item.title ? item.title + ' image' : 'Platform card image'"
+                                 class="h-36 w-full max-w-md rounded-lg border border-slate-200 bg-white object-cover shadow-sm">
+                            <p class="text-xs text-slate-500 truncate" x-show="item.image && !item.preview_url" x-text="'Current: ' + item.image"></p>
+                            <p class="text-xs text-emerald-600" x-show="item.preview_url">New image selected — save to apply.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -34,3 +53,24 @@
 </div>
 
 @include('platform.website-content.partials._repeater-script')
+
+<script>
+function websitePlatformRepeater(initial) {
+    return {
+        items: Array.isArray(initial) && initial.length ? initial : [{ slug: '', title: '', desc: '', bg: '', image: '' }],
+        add(row) { this.items.push(row || {}); },
+        remove(index) { if (this.items.length > 1) this.items.splice(index, 1); },
+        previewImage(event, index) {
+            const file = event.target.files?.[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.items[index].preview_url = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+    };
+}
+</script>

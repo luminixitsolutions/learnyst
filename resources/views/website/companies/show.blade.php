@@ -1,9 +1,15 @@
-@extends('website.layouts.app')
+@extends(($preview ?? false) ? 'website.layouts.preview' : 'website.layouts.app')
 
 @section('title', $company->name . ' – ' . config('website.brand'))
 @section('meta_description', $company->tagline ?: Str::limit(strip_tags($company->about ?? ''), 160))
 
 @section('content')
+@if(!empty($brandCss))
+<style>{!! $brandCss !!}
+.company-brand-accent { color: var(--brand-primary); }
+.company-brand-btn { background: var(--brand-primary); }
+</style>
+@endif
 @php
     $cta = config('website.cta');
     $brand = config('website.brand');
@@ -41,7 +47,9 @@
 <section class="ly-cp-hero" @if($company->coverUrl()) style="--ly-cp-cover:url('{{ $company->coverUrl() }}')" @endif>
     <div class="ly-cp-hero-overlay"></div>
     <div class="ly-container ly-cp-hero-inner">
-        <a class="ly-company-back" href="{{ route('website.companies.index') }}">← All institutes</a>
+        @unless($preview ?? false)
+            <a class="ly-company-back" href="{{ route('website.companies.index') }}">← All institutes</a>
+        @endunless
         <div class="ly-cp-hero-grid">
             <div class="ly-cp-brand-block">
                 <div class="ly-company-avatar ly-company-avatar-xl">

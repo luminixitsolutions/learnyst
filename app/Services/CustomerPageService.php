@@ -40,7 +40,7 @@ class CustomerPageService
             'stats' => self::defaultStats(),
             'items' => [],
             'cta_title' => 'Ready to write your success story?',
-            'cta_text' => 'Join thousands of educators growing securely with Learnyst.',
+            'cta_text' => 'Join thousands of educators growing securely with StudyNest.',
             'cta_primary_label' => 'Start Free Trial',
             'cta_secondary_label' => 'Book a Demo',
         ], $rich);
@@ -103,7 +103,7 @@ class CustomerPageService
     protected static function defaultStats(): array
     {
         return [
-            ['value' => '12,000+', 'label' => 'Institutes trust Learnyst'],
+            ['value' => '12,000+', 'label' => 'Institutes trust StudyNest'],
             ['value' => '3,000+', 'label' => 'Happy client reviews'],
             ['value' => '10M+', 'label' => 'Learners reached'],
         ];
@@ -141,15 +141,15 @@ class CustomerPageService
                 'eyebrow' => 'Social Proof',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #14532d 45%, #22c55e 120%)',
                 'items' => $testimonials,
-                'cta_title' => 'Join educators who trust Learnyst',
-                'cta_text' => 'Start your free trial and see why institutes recommend Learnyst for growth and content security.',
+                'cta_title' => 'Join educators who trust StudyNest',
+                'cta_text' => 'Start your free trial and see why institutes recommend StudyNest for growth and content security.',
             ],
             'success-stories' => [
                 'eyebrow' => 'Case Studies',
                 'hero_gradient' => 'linear-gradient(135deg, #0b1220 0%, #1e3a8a 50%, #60a5fa 120%)',
                 'items' => $stories,
                 'cta_title' => 'Your growth story can be next',
-                'cta_text' => 'Launch on Learnyst and build an academy story worth sharing.',
+                'cta_text' => 'Launch on StudyNest and build an academy story worth sharing.',
             ],
             'wall-of-love' => [
                 'eyebrow' => 'Community Love',
@@ -165,7 +165,7 @@ class CustomerPageService
                     ['quote' => 'Migration was smoother than we expected. Students barely noticed — in a good way.', 'name' => 'Arjun P.', 'role' => 'Admin, CA Coaching', 'source' => 'Support'],
                 ],
                 'cta_title' => 'Become part of the wall',
-                'cta_text' => 'Build with Learnyst and give your students an experience worth talking about.',
+                'cta_text' => 'Build with StudyNest and give your students an experience worth talking about.',
             ],
         ];
     }

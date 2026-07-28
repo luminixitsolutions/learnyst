@@ -24,11 +24,28 @@ class CompanyDirectoryController extends Controller
         return view('website.companies.index', compact('companies'));
     }
 
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         WebsiteContentService::applyBrandToConfig();
 
-        $company = CompanyService::findPublicBySlug($slug);
+        $preview = false;
+        if ($request->boolean('preview') && Auth::check()) {
+            $user = Auth::user();
+            if ($user->isSuperAdmin()) {
+                $preview = true;
+            } elseif ($user->isCompanyStaff()) {
+                try {
+                    $ownCompany = CompanyService::resolveForUser($user);
+                    $preview = $ownCompany->slug === $slug;
+                } catch (\Throwable $e) {
+                    $preview = false;
+                }
+            }
+        }
+
+        $company = $preview
+            ? CompanyService::findBySlug($slug)
+            : CompanyService::findPublicBySlug($slug);
         abort_unless($company, 404);
 
         $courses = Course::query()
@@ -46,6 +63,8 @@ class CompanyDirectoryController extends Controller
         $team = $company->teamMembers()->published()->get();
         $avgRating = round((float) $company->reviews()->approved()->avg('rating'), 1);
         $reviewCount = $company->reviews()->approved()->count();
+        $brandCss = app(\App\Services\CompanyBrandingService::class)->cssVariables($company);
+        app(\App\Services\CompanyBrandingService::class)->applyMailFrom($company);
 
         return view('website.companies.show', compact(
             'company',
@@ -57,7 +76,9 @@ class CompanyDirectoryController extends Controller
             'gallery',
             'team',
             'avgRating',
-            'reviewCount'
+            'reviewCount',
+            'preview',
+            'brandCss'
         ));
     }
 
@@ -134,12 +155,14 @@ class CompanyDirectoryController extends Controller
 
         // Keep marketing leads in sync (same pattern as course enquiries).
         Lead::create([
+            'created_by' => $company->owner_user_id,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'course_id' => null,
             'source' => 'company_enquiry:'.$company->slug,
             'status' => 'new',
+            'stage' => 'new',
             'notes' => trim(($enquiry->subject ? $enquiry->subject."\n" : '').$data['message']),
         ]);
 

@@ -74,7 +74,7 @@ class PlatformBlogController extends Controller
                 'tag' => trim((string) ($row['tag'] ?? '')),
                 'date' => trim((string) ($row['date'] ?? '')),
                 'read' => trim((string) ($row['read'] ?? '')),
-                'author' => trim((string) ($row['author'] ?? 'Learnyst Team')),
+                'author' => trim((string) ($row['author'] ?? 'StudyNest Team')),
                 'featured' => ! empty($row['featured']),
                 'is_active' => ! empty($row['is_active']),
             ];

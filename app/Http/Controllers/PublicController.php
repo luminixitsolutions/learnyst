@@ -204,12 +204,14 @@ class PublicController extends Controller
 
         // Keep legacy lead capture in sync for marketing lists.
         Lead::create([
+            'created_by' => $course->created_by,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'course_id' => $course->id,
             'source' => 'course_enquiry',
             'status' => 'new',
+            'stage' => 'new',
             'notes' => $data['message'],
         ]);
 
@@ -228,6 +230,11 @@ class PublicController extends Controller
         ]);
 
         $validated['source'] = 'landing_page';
+        $validated['status'] = 'new';
+        $validated['stage'] = 'new';
+        if (! empty($validated['course_id'])) {
+            $validated['created_by'] = Course::whereKey($validated['course_id'])->value('created_by');
+        }
         Lead::create($validated);
 
         return back()->with('success', 'Thank you! We will contact you soon.');

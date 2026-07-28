@@ -2,7 +2,7 @@
 
 @section('signup_title', $title)
 @section('signup_heading', 'Personalise your setup')
-@section('signup_lead', 'A few quick questions help us configure Learnyst for your institute.')
+@section('signup_lead', 'A few quick questions help us configure StudyNest for your institute.')
 
 @section('progress')
 @include('auth.signup.partials.progress')

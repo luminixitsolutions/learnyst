@@ -140,6 +140,11 @@ class SubscriptionPackage extends Model
             : url(config('website.cta.trial', '/signup'));
     }
 
+    public function companies()
+    {
+        return $this->hasMany(Company::class);
+    }
+
     public function featureList(): array
     {
         return array_values(array_filter(

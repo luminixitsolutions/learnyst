@@ -7,8 +7,8 @@
 
 @section('title', ($isPlatform ? 'Platform Admin Login' : 'Institute Login') . ' – ' . $brand)
 @section('meta_description', $isPlatform
-    ? 'Sign in to the Learnyst platform admin panel.'
-    : 'Sign in to your Learnyst institute panel to manage courses, learners, and academy settings.')
+    ? 'Sign in to the StudyNest platform admin panel.'
+    : 'Sign in to your StudyNest institute panel to manage courses, learners, and academy settings.')
 
 @section('content')
 <section class="ly-auth-hero {{ $isPlatform ? 'ly-auth-hero-platform' : '' }}">
@@ -16,7 +16,7 @@
         <h1>{{ $isPlatform ? 'Platform Admin Login' : 'Institute Login' }}</h1>
         <p class="ly-product-lead">
             {{ $isPlatform
-                ? 'Sign in to manage the Learnyst platform, institutes, and global settings.'
+                ? 'Sign in to manage the StudyNest platform, institutes, and global settings.'
                 : 'Sign in to manage your institute — courses, learners, sales, and public profile.' }}
         </p>
     </div>
@@ -27,7 +27,7 @@
         <div class="ly-auth-layout">
             <div class="ly-auth-copy">
                 <p class="ly-tag">{{ $isPlatform ? 'Platform access' : 'For institutes & creators' }}</p>
-                <h2>{{ $isPlatform ? 'Manage the Learnyst platform' : 'Grow your learning business' }}</h2>
+                <h2>{{ $isPlatform ? 'Manage the StudyNest platform' : 'Grow your learning business' }}</h2>
                 <p>
                     {{ $isPlatform
                         ? 'Access platform tools for institutes, users, website content, and system settings.'

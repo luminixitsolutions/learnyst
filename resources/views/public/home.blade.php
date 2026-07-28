@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learnyst — Premium Learning Platform</title>
+    <title>StudyNest — Premium Learning Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{400:'#34d399',500:'#10b981',600:'#059669'},surface:{950:'#020617'}}}}}</script>
@@ -13,7 +13,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
             <a href="{{ route('home') }}" class="flex items-center gap-2">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold">L</div>
-                <span class="text-white font-bold text-lg">Learnyst</span>
+                <span class="text-white font-bold text-lg">StudyNest</span>
             </a>
             <div class="flex items-center gap-6">
                 <a href="{{ route('public.courses') }}" class="text-sm text-slate-400 hover:text-white">Courses</a>
@@ -91,7 +91,7 @@
 
     <footer class="border-t border-slate-800 py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p class="text-sm text-slate-500">© {{ date('Y') }} Learnyst. All rights reserved.</p>
+            <p class="text-sm text-slate-500">© {{ date('Y') }} StudyNest. All rights reserved.</p>
             <div class="flex flex-wrap items-center gap-4">
                 @foreach(['facebook' => 'Facebook', 'youtube' => 'YouTube', 'linkedin' => 'LinkedIn', 'instagram' => 'Instagram', 'telegram' => 'Telegram', 'whatsapp' => 'WhatsApp', 'website' => 'Website'] as $key => $label)
                     @if(!empty($social[$key]))

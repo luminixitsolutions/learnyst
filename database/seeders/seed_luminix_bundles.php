@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Seed demo bundles for Luminix (luminix@learnyst.com).
+ * Seed demo bundles for Luminix (luminix@studynest.com).
  * Run: php database/seeders/seed_luminix_bundles.php
  */
 
@@ -15,9 +15,9 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Support\Str;
 
-$owner = User::where('email', 'luminix@learnyst.com')->first();
+$owner = User::where('email', 'luminix@studynest.com')->first();
 if (! $owner) {
-    fwrite(STDERR, "User luminix@learnyst.com not found. Run DemoInstitutesAndStudentsSeeder first.\n");
+    fwrite(STDERR, "User luminix@studynest.com not found. Run DemoInstitutesAndStudentsSeeder first.\n");
     exit(1);
 }
 
@@ -25,7 +25,7 @@ $ownerId = (int) $owner->id;
 $company = Company::where('slug', 'luminix-it-solution')->first();
 if ($company && (int) $company->owner_user_id !== $ownerId) {
     $company->update(['owner_user_id' => $ownerId]);
-    echo "Linked company owner to luminix@learnyst.com (user #{$ownerId}).\n";
+    echo "Linked company owner to luminix@studynest.com (user #{$ownerId}).\n";
 }
 
 $courses = Course::where('created_by', $ownerId)
@@ -35,7 +35,7 @@ $courses = Course::where('created_by', $ownerId)
     ->keyBy('title');
 
 if ($courses->count() < 2) {
-    fwrite(STDERR, "Need at least 2 published courses owned by luminix@learnyst.com.\n");
+    fwrite(STDERR, "Need at least 2 published courses owned by luminix@studynest.com.\n");
     exit(1);
 }
 
@@ -97,7 +97,7 @@ foreach ($bundles as $data) {
     if ($existing) {
         if ((int) $existing->created_by !== $ownerId) {
             $existing->update(['created_by' => $ownerId]);
-            echo "  Reassigned: {$data['title']} → luminix@learnyst.com\n";
+            echo "  Reassigned: {$data['title']} → luminix@studynest.com\n";
             $reassigned++;
         } else {
             echo "  Skip (exists): {$data['title']}\n";
@@ -129,4 +129,4 @@ foreach ($bundles as $data) {
 }
 
 $total = Bundle::where('created_by', $ownerId)->count();
-echo "\nDone. Created: {$created}, Reassigned: {$reassigned}, Skipped: {$skipped}, Total for luminix@learnyst.com: {$total}\n";
+echo "\nDone. Created: {$created}, Reassigned: {$reassigned}, Skipped: {$skipped}, Total for luminix@studynest.com: {$total}\n";

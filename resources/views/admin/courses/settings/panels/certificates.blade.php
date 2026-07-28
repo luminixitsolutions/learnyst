@@ -342,7 +342,7 @@
                              :class="activeElement === 'footer' && 'is-active'"
                              :style="elementStyle('footer')"
                              @mousedown.prevent="startDrag('footer', $event)">
-                            <div class="cert-footer-item">Verify at: <strong>learnyst.com/verify</strong></div>
+                            <div class="cert-footer-item">Verify at: <strong>studynest.com/verify</strong></div>
                             <div class="cert-footer-item">Certificate Number: <strong>CERT-000001</strong></div>
                         </div>
                     </div>

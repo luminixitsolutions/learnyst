@@ -11,8 +11,15 @@
             <x-badge :type="match($order->payment_status) { 'paid' => 'success', 'failed' => 'danger', 'refunded' => 'info', default => 'warning' }">{{ ucfirst($order->payment_status) }}</x-badge>
             <p class="text-sm text-slate-500 mt-2">{{ $order->created_at->format('M d, Y h:i A') }}</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.orders.invoice', $order) }}" class="panel-btn-secondary">Download Invoice</a>
+            @if($order->payment_status === 'paid' && ! $order->gstInvoice)
+            <form method="POST" action="{{ route('admin.orders.gst-invoice', $order) }}">@csrf
+                <button type="submit" class="panel-btn-primary">Generate GST Invoice</button>
+            </form>
+            @elseif($order->gstInvoice)
+            <a href="{{ route('admin.gst-invoices.show', $order->gstInvoice) }}" class="panel-btn-primary">View GST Invoice</a>
+            @endif
             @if($order->payment_status === 'paid')
             <form method="POST" action="{{ route('admin.orders.refund', $order) }}">@csrf
                 <button type="submit" class="px-4 py-2 rounded-xl bg-red-600/20 text-red-400 text-sm hover:bg-red-600/30" onclick="return confirm('Process refund?')">Refund</button>
