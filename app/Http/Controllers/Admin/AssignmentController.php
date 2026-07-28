@@ -8,12 +8,17 @@ use App\Models\Course;
 use App\Models\CourseLesson;
 use App\Models\CourseSection;
 use App\Services\ActivityLogger;
+use App\Services\AiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AssignmentController extends Controller
 {
     use ScopesToCurrentUser;
+
+    public function __construct(protected AiService $ai) {}
 
     public function index(Request $request)
     {
@@ -32,6 +37,58 @@ class AssignmentController extends Controller
     {
         return view('admin.assignments.create', [
             'courses' => $this->owned(Course::query())->with('sections')->orderBy('title')->get(),
+        ]);
+    }
+
+    public function aiAnalyze(Request $request)
+    {
+        $ownedCourseIds = $this->ownedCourseIds();
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'brief' => ['nullable', 'string', 'max:2000'],
+            'course_id' => ['nullable', Rule::in($ownedCourseIds)],
+        ]);
+
+        $courseTitle = null;
+        if (! empty($validated['course_id'])) {
+            $courseTitle = $this->owned(Course::query())->whereKey($validated['course_id'])->value('title');
+        }
+
+        try {
+            $details = $this->ai->generateAssignmentDetails(
+                Auth::user(),
+                $validated['title'],
+                $validated['brief'] ?? null,
+                $courseTitle
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->errors()['ai'][0] ?? 'AI request failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        \App\Models\AiGeneration::create([
+            'created_by' => Auth::id(),
+            'user_id' => Auth::id(),
+            'feature' => 'assignment_details',
+            'title' => $validated['title'],
+            'prompt' => 'Title: '.$validated['title']
+                .(! empty($courseTitle) ? "\nCourse: ".$courseTitle : '')
+                .(! empty($validated['brief']) ? "\nBrief: ".$validated['brief'] : ''),
+            'output' => json_encode($details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            'status' => 'draft',
+            'meta' => ['source' => 'assignment_create_form'],
+        ]);
+
+        ActivityLogger::log('ai_assignment_details', 'AI filled assignment details for: '.$validated['title']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Assignment details generated. Review and save when ready.',
+            'data' => $details,
         ]);
     }
 

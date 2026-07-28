@@ -19,6 +19,12 @@
                 @if(!empty($data['details']['phone']))
                     <p class="text-sm text-slate-500">{{ $data['details']['phone'] }}</p>
                 @endif
+                @if(!empty($data['details']['expertise']))
+                    <p class="text-sm font-medium text-indigo-600 mt-1">{{ $data['details']['expertise'] }}</p>
+                @endif
+                @if(!empty($data['details']['bio']))
+                    <p class="text-xs text-slate-500 mt-2 whitespace-pre-line">{{ \Illuminate\Support\Str::limit($data['details']['bio'], 180) }}</p>
+                @endif
             </div>
             <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
                 <p class="text-xs text-slate-500 uppercase tracking-wide mb-2">Role</p>

@@ -54,6 +54,19 @@ body.kingster-boxed .kingster-body-wrapper {
     line-height: 1;
     padding: 8px 0;
 }
+.kingster-logo-inner .learnyst-brand-logo,
+.kingster-logo-inner .brand-logo-img {
+    max-height: 52px;
+    width: auto;
+}
+.kingster-mobile-header .kingster-logo-inner .learnyst-brand-logo,
+.kingster-mobile-header .kingster-logo-inner .brand-logo-img {
+    max-height: 42px;
+}
+.kingster-footer-wrapper .learnyst-footer-logo,
+.kingster-footer-wrapper .brand-logo-img {
+    max-height: 48px;
+}
 
 /* Polished top blue strip */
 .kingster-body .kingster-top-bar.learnyst-top-bar {

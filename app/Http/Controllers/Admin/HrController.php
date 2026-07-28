@@ -25,7 +25,7 @@ class HrController extends Controller
 
     public function employees()
     {
-        $employees = $this->owned(Employee::query())->with('user')->latest()->paginate(20);
+        $employees = $this->owned(Employee::query())->with('user')->latest()->get();
         $staff = User::whereIn('id', $this->ownedUsersQuery()->pluck('id'))
             ->orWhere('id', Auth::id())
             ->orderBy('name')
@@ -83,8 +83,9 @@ class HrController extends Controller
             ->whereDate('work_date', $date)
             ->get()
             ->keyBy('employee_id');
+        $isToday = $date === now()->toDateString();
 
-        return view('admin.hr.attendance', compact('employees', 'date', 'rows'));
+        return view('admin.hr.attendance', compact('employees', 'date', 'rows', 'isToday'));
     }
 
     public function storeAttendance(Request $request)
@@ -94,6 +95,9 @@ class HrController extends Controller
             'entries' => ['required', 'array'],
             'entries.*.employee_id' => ['required', 'integer'],
             'entries.*.status' => ['required', 'in:present,absent,half_day,leave,holiday'],
+            'entries.*.check_in' => ['nullable', 'date_format:H:i'],
+            'entries.*.check_out' => ['nullable', 'date_format:H:i'],
+            'entries.*.notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         foreach ($validated['entries'] as $row) {
@@ -101,13 +105,104 @@ class HrController extends Controller
             if (! $employee) {
                 continue;
             }
+
+            $payload = [
+                'created_by' => Auth::id(),
+                'status' => $row['status'],
+                'notes' => $row['notes'] ?? null,
+            ];
+
+            if (! empty($row['check_in'])) {
+                $payload['check_in'] = $row['check_in'].':00';
+            }
+            if (! empty($row['check_out'])) {
+                $payload['check_out'] = $row['check_out'].':00';
+            }
+
             HrAttendance::updateOrCreate(
                 ['employee_id' => $employee->id, 'work_date' => $validated['work_date']],
-                ['created_by' => Auth::id(), 'status' => $row['status']]
+                $payload
             );
         }
 
+        ActivityLogger::log('hr_attendance_saved', 'Attendance saved for '.$validated['work_date']);
+
         return back()->with('success', 'Attendance saved.');
+    }
+
+    public function punchIn(Request $request)
+    {
+        $validated = $request->validate([
+            'employee_id' => ['required', 'integer'],
+            'work_date' => ['required', 'date'],
+        ]);
+
+        $employee = $this->owned(Employee::query())
+            ->whereKey($validated['employee_id'])
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $existing = HrAttendance::where('employee_id', $employee->id)
+            ->whereDate('work_date', $validated['work_date'])
+            ->first();
+
+        if ($existing?->check_in) {
+            return back()->with('error', "{$employee->name} already punched in at ".substr((string) $existing->check_in, 0, 5).'.');
+        }
+
+        $now = now()->format('H:i:s');
+        HrAttendance::updateOrCreate(
+            ['employee_id' => $employee->id, 'work_date' => $validated['work_date']],
+            [
+                'created_by' => Auth::id(),
+                'status' => 'present',
+                'check_in' => $now,
+            ]
+        );
+
+        ActivityLogger::log('hr_punch_in', "{$employee->name} punched in at {$now}", $employee);
+
+        return back()->with('success', "{$employee->name} punched in at ".substr($now, 0, 5).'.');
+    }
+
+    public function punchOut(Request $request)
+    {
+        $validated = $request->validate([
+            'employee_id' => ['required', 'integer'],
+            'work_date' => ['required', 'date'],
+        ]);
+
+        $employee = $this->owned(Employee::query())
+            ->whereKey($validated['employee_id'])
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $existing = HrAttendance::where('employee_id', $employee->id)
+            ->whereDate('work_date', $validated['work_date'])
+            ->first();
+
+        if (! $existing?->check_in) {
+            return back()->with('error', "{$employee->name} must punch in before punch out.");
+        }
+
+        if ($existing->check_out) {
+            return back()->with('error', "{$employee->name} already punched out at ".substr((string) $existing->check_out, 0, 5).'.');
+        }
+
+        $now = now()->format('H:i:s');
+        if ($now < (string) $existing->check_in) {
+            return back()->with('error', 'Punch out time cannot be earlier than punch in.');
+        }
+
+        $existing->update([
+            'check_out' => $now,
+            'status' => $existing->status === 'absent' ? 'present' : $existing->status,
+            'created_by' => Auth::id(),
+        ]);
+
+        ActivityLogger::log('hr_punch_out', "{$employee->name} punched out at {$now}", $employee);
+
+        return back()->with('success', "{$employee->name} punched out at ".substr($now, 0, 5).'.');
     }
 
     public function leaves()
@@ -115,7 +210,7 @@ class HrController extends Controller
         $leaves = LeaveRequest::with('employee')
             ->whereHas('employee', fn ($q) => $q->where('created_by', Auth::id()))
             ->latest()
-            ->paginate(25);
+            ->get();
         $employees = $this->owned(Employee::query())->where('status', 'active')->orderBy('name')->get();
 
         return view('admin.hr.leaves', compact('leaves', 'employees'));
@@ -156,7 +251,7 @@ class HrController extends Controller
 
     public function payroll()
     {
-        $runs = $this->owned(PayrollRun::query())->withCount('slips')->latest()->paginate(20);
+        $runs = $this->owned(PayrollRun::query())->withCount('slips')->latest()->get();
 
         return view('admin.hr.payroll', compact('runs'));
     }

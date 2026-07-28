@@ -16,7 +16,7 @@ class LandingPageController extends Controller
 
     public function index()
     {
-        $pages = $this->owned(LandingPage::query())->latest()->paginate(20);
+        $pages = $this->owned(LandingPage::query())->latest()->get();
 
         return view('admin.landing-pages.index', compact('pages'));
     }

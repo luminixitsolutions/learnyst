@@ -4,6 +4,10 @@
 @section('page-title', 'All Questions')
 @section('breadcrumb', 'Products')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div>
@@ -46,10 +50,10 @@
         </div>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($questions->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
+            <table id="questionsTable" class="w-full text-sm panel-table display" style="width:100%">
                 <thead>
                     <tr class="text-left">
                         <th class="px-6 py-4 font-medium">Question</th>
@@ -66,7 +70,7 @@
                         <td class="px-6 py-4 max-w-md">
                             <p class="text-slate-800 font-medium line-clamp-2">{{ $question->question_text }}</p>
                         </td>
-                        <td class="px-6 py-4">{{ $question->typeLabel() }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $question->typeLabel() }}</td>
                         <td class="px-6 py-4 text-slate-600">{{ $question->questionPool?->title ?? '—' }}</td>
                         <td class="px-6 py-4">
                             <x-badge :type="match($question->status) { 'published' => 'success', 'draft' => 'warning', default => 'default' }">
@@ -86,7 +90,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $questions->links() }}</div>
         @else
         <div class="py-20 px-6 text-center">
             <div class="w-24 h-24 mx-auto mb-6 text-slate-300">
@@ -102,3 +105,9 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($questions->count())
+    <x-admin.datatable-scripts table-id="questionsTable" entity="questions" :order-column="4" order-direction="desc" :action-column="5" export-file-name="questions" />
+@endif
+@endpush

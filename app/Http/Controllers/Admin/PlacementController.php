@@ -19,7 +19,7 @@ class PlacementController extends Controller
 
     public function companies()
     {
-        $companies = $this->owned(PlacementCompany::query())->withCount('jobs')->latest()->paginate(20);
+        $companies = $this->owned(PlacementCompany::query())->withCount('jobs')->latest()->get();
 
         return view('admin.placements.companies', compact('companies'));
     }
@@ -44,7 +44,7 @@ class PlacementController extends Controller
 
     public function jobs()
     {
-        $jobs = $this->owned(PlacementJob::query())->with('company')->withCount('applications')->latest()->paginate(20);
+        $jobs = $this->owned(PlacementJob::query())->with('company')->withCount('applications')->latest()->get();
         $companies = $this->owned(PlacementCompany::query())->where('is_active', true)->orderBy('name')->get();
 
         return view('admin.placements.jobs', compact('jobs', 'companies'));
@@ -80,7 +80,7 @@ class PlacementController extends Controller
             $query->where('status', $request->status);
         }
 
-        $applications = $query->latest()->paginate(30)->withQueryString();
+        $applications = $query->latest()->limit(500)->get();
 
         return view('admin.placements.applications', compact('applications'));
     }

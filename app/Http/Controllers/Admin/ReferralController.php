@@ -26,7 +26,7 @@ class ReferralController extends Controller
             ->with(['user'])
             ->withCount('referrals')
             ->latest()
-            ->paginate(20, ['*'], 'codes_page');
+            ->get();
 
         $query = $this->owned(Referral::query())
             ->with(['referrer', 'referred', 'referralCode'])
@@ -44,7 +44,7 @@ class ReferralController extends Controller
             });
         }
 
-        $referrals = $query->paginate(20)->withQueryString();
+        $referrals = $query->limit(500)->get();
 
         $stats = [
             'codes' => $this->owned(ReferralCode::query())->count(),

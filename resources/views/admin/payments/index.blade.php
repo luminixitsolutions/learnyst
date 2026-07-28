@@ -4,6 +4,10 @@
 @section('page-title', 'Payments')
 @section('breadcrumb', 'Payment transactions')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -27,11 +31,12 @@
         <button type="submit" class="panel-btn-secondary">Filter</button>
     </form>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($payments->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="paymentsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4">ID</th>
                         <th class="px-6 py-4">Customer</th>
                         <th class="px-6 py-4">Order</th>
@@ -39,16 +44,16 @@
                         <th class="px-6 py-4">Gateway</th>
                         <th class="px-6 py-4">Status</th>
                         <th class="px-6 py-4">Date</th>
-                        <th class="px-6 py-4"></th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($payments as $payment)
                     <tr class="hover:bg-indigo-50/40">
                         <td class="px-6 py-4 text-slate-500">#{{ $payment->id }}</td>
-                        <td class="px-6 py-4 text-white">{{ $payment->user?->name }}</td>
+                        <td class="px-6 py-4 text-slate-800">{{ $payment->user?->name }}</td>
                         <td class="px-6 py-4"><a href="{{ route('admin.orders.show', $payment->order) }}" class="text-indigo-600">{{ $payment->order?->order_number }}</a></td>
-                        <td class="px-6 py-4 text-white">₹{{ number_format($payment->amount, 2) }}</td>
+                        <td class="px-6 py-4 text-slate-800">₹{{ number_format($payment->amount, 2) }}</td>
                         <td class="px-6 py-4 text-slate-500 capitalize">{{ $payment->gateway }}</td>
                         <td class="px-6 py-4"><x-badge :type="$payment->status === 'success' ? 'success' : ($payment->status === 'pending' ? 'warning' : 'danger')">{{ ucfirst($payment->status) }}</x-badge></td>
                         <td class="px-6 py-4 text-slate-500">{{ $payment->paid_at?->format('M d, Y') ?? $payment->created_at->format('M d, Y') }}</td>
@@ -58,10 +63,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $payments->links() }}</div>
         @else
         <x-empty-state title="No payments found" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($payments->count())
+    <x-admin.datatable-scripts table-id="paymentsTable" entity="payments" :order-column="0" order-direction="desc" :action-column="7" export-file-name="payments" />
+@endif
+@endpush

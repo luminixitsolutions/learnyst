@@ -4,6 +4,10 @@
 @section('page-title', 'CRM Leads')
 @section('breadcrumb', 'CRM / Leads')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-4">
@@ -25,33 +29,44 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">Lead</th>
-                <th class="px-6 py-4">Stage</th>
-                <th class="px-6 py-4">Source</th>
-                <th class="px-6 py-4">Counselor</th>
-                <th class="px-6 py-4"></th>
-            </tr></thead>
-            <tbody>
-                @forelse($leads as $lead)
-                <tr>
-                    <td class="px-6 py-4">
-                        <div class="text-white font-medium">{{ $lead->name }}</div>
-                        <div class="text-xs text-slate-500">{{ $lead->email }}</div>
-                    </td>
-                    <td class="px-6 py-4"><x-badge type="info">{{ $stages[$lead->stage] ?? ucfirst($lead->stage) }}</x-badge></td>
-                    <td class="px-6 py-4 text-slate-400">{{ $lead->source ?? '—' }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $lead->assignee?->name ?? '—' }}</td>
-                    <td class="px-6 py-4"><a href="{{ route('admin.crm.leads.show', $lead) }}" class="text-emerald-400 text-sm">Open</a></td>
-                </tr>
-                @empty
-                <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No leads.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $leads->links() }}</div>
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+        @if($leads->count())
+        <div class="overflow-x-auto">
+            <table id="crmLeadsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">Lead</th>
+                        <th class="px-6 py-4">Stage</th>
+                        <th class="px-6 py-4">Source</th>
+                        <th class="px-6 py-4">Counselor</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($leads as $lead)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4">
+                            <div class="text-slate-800 font-medium">{{ $lead->name }}</div>
+                            <div class="text-xs text-slate-500">{{ $lead->email }}</div>
+                        </td>
+                        <td class="px-6 py-4"><x-badge type="info">{{ $stages[$lead->stage] ?? ucfirst($lead->stage) }}</x-badge></td>
+                        <td class="px-6 py-4 text-slate-600">{{ $lead->source ?? '—' }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $lead->assignee?->name ?? '—' }}</td>
+                        <td class="px-6 py-4"><a href="{{ route('admin.crm.leads.show', $lead) }}" class="text-emerald-600 text-sm">Open</a></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <x-empty-state title="No leads." description="Leads will appear here as they are captured." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($leads->count())
+    <x-admin.datatable-scripts table-id="crmLeadsTable" entity="leads" :order-column="0" order-direction="desc" :action-column="4" export-file-name="crm-leads" />
+@endif
+@endpush

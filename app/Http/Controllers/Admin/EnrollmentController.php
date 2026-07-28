@@ -41,7 +41,7 @@ class EnrollmentController extends Controller
             $query->where('status', $request->status);
         }
 
-        $enrollments = $query->paginate(20)->withQueryString();
+        $enrollments = $query->get();
         $learners = $this->visibleLearnersQuery()->orderBy('name')->get();
         $courses = $this->owned(Course::query())->where('status', 'published')->orderBy('title')->get();
         $batches = Batch::whereIn('course_id', $this->ownedCourseIds())->orderBy('title')->get();

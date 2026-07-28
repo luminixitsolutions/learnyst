@@ -4,6 +4,10 @@
 @section('page-title', 'Discussions')
 @section('breadcrumb', 'Course discussions')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <form method="GET">
@@ -11,17 +15,18 @@
                class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm">
     </form>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($discussions->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="discussionsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4">Title</th>
                         <th class="px-6 py-4">Course</th>
                         <th class="px-6 py-4">Author</th>
                         <th class="px-6 py-4">Status</th>
                         <th class="px-6 py-4">Date</th>
-                        <th class="px-6 py-4"></th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,7 +41,7 @@
                         <td class="px-6 py-4 text-slate-500">{{ $discussion->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 text-right">
                             <form method="POST" action="{{ route('admin.discussions.destroy', $discussion) }}" class="inline">@csrf @method('DELETE')
-                                <button type="button" @click="deleteForm = $el.closest('form'); deleteModal = true" class="text-red-400 text-sm">Delete</button>
+                                <button type="button" @click="deleteForm = $el.closest('form'); deleteModal = true" class="text-red-500 text-sm">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -44,10 +49,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $discussions->links() }}</div>
         @else
         <x-empty-state title="No discussions found" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($discussions->count())
+    <x-admin.datatable-scripts table-id="discussionsTable" entity="discussions" :order-column="0" order-direction="desc" :action-column="5" export-file-name="discussions" />
+@endif
+@endpush

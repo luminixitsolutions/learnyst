@@ -38,7 +38,7 @@ class DiscussionController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $discussions = $query->paginate(20)->withQueryString();
+        $discussions = $query->get();
 
         return view('admin.discussions.index', compact('discussions'));
     }

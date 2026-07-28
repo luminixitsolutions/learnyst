@@ -12,6 +12,9 @@
             <div>
                 <p class="text-slate-500 text-sm">{{ $instructor->email }}</p>
                 @if($instructor->phone)<p class="text-slate-500 text-sm">{{ $instructor->phone }}</p>@endif
+                @if($instructor->expertise)
+                    <p class="text-sm font-medium text-indigo-600 mt-1">{{ $instructor->expertise }}</p>
+                @endif
             </div>
         </div>
         <div class="flex gap-2">

@@ -3,6 +3,10 @@
 @section('page-title', 'Leave')
 @section('breadcrumb', 'HR / Leave')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
@@ -22,36 +26,52 @@
             <div class="md:col-span-3"><button class="px-5 py-2.5 rounded-xl panel-btn-primary">Submit</button></div>
         </form>
     </div>
-    <div class="glass-card rounded-2xl overflow-hidden">
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">Employee</th><th class="px-6 py-4">Dates</th><th class="px-6 py-4">Status</th><th class="px-6 py-4"></th>
-            </tr></thead>
-            <tbody>
-            @forelse($leaves as $leave)
-                <tr>
-                    <td class="px-6 py-4 text-white">{{ $leave->employee?->name }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $leave->from_date->format('M d') }} – {{ $leave->to_date->format('M d') }}</td>
-                    <td class="px-6 py-4"><x-badge type="info">{{ $leave->status }}</x-badge></td>
-                    <td class="px-6 py-4 space-x-2">
-                        @if($leave->status==='pending')
-                        <form method="POST" action="{{ route('admin.hr.leaves.review', $leave) }}" class="inline">@csrf
-                            <input type="hidden" name="status" value="approved">
-                            <button class="text-emerald-400 text-sm">Approve</button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.hr.leaves.review', $leave) }}" class="inline">@csrf
-                            <input type="hidden" name="status" value="rejected">
-                            <button class="text-red-400 text-sm">Reject</button>
-                        </form>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No leave requests.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $leaves->links() }}</div>
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+        @if($leaves->count())
+        <div class="overflow-x-auto">
+            <table id="leavesTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">Employee</th>
+                        <th class="px-6 py-4">Dates</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($leaves as $leave)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 font-medium text-slate-800">{{ $leave->employee?->name }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $leave->from_date->format('M d') }} – {{ $leave->to_date->format('M d') }}</td>
+                        <td class="px-6 py-4"><x-badge type="info">{{ $leave->status }}</x-badge></td>
+                        <td class="px-6 py-4 space-x-2">
+                            @if($leave->status==='pending')
+                            <form method="POST" action="{{ route('admin.hr.leaves.review', $leave) }}" class="inline">@csrf
+                                <input type="hidden" name="status" value="approved">
+                                <button class="text-emerald-600 text-sm">Approve</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.hr.leaves.review', $leave) }}" class="inline">@csrf
+                                <input type="hidden" name="status" value="rejected">
+                                <button class="text-red-500 text-sm">Reject</button>
+                            </form>
+                            @else
+                            <span class="text-slate-400 text-sm">—</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <x-empty-state title="No leave requests." description="Submit a leave request using the form above." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($leaves->count())
+    <x-admin.datatable-scripts table-id="leavesTable" entity="leave requests" :order-column="0" order-direction="desc" :action-column="3" export-file-name="leave-requests" />
+@endif
+@endpush

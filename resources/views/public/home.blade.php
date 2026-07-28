@@ -12,8 +12,7 @@
     <nav class="border-b border-slate-800/80 bg-surface-950/90 backdrop-blur-xl sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
             <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold">L</div>
-                <span class="text-white font-bold text-lg">StudyNest</span>
+                <img src="{{ \App\Support\Brand::logoUrl() }}" alt="{{ \App\Support\Brand::name() }}" class="h-9 w-auto object-contain rounded-lg bg-white/10 p-0.5">
             </a>
             <div class="flex items-center gap-6">
                 <a href="{{ route('public.courses') }}" class="text-sm text-slate-400 hover:text-white">Courses</a>

@@ -13,7 +13,7 @@ class RolePermissionController extends Controller
 {
     public function roles()
     {
-        $roles = Role::withCount('users', 'permissions')->latest()->paginate(15);
+        $roles = Role::withCount('users', 'permissions')->latest()->get();
 
         return view('admin.roles.index', compact('roles'));
     }

@@ -13,6 +13,7 @@ use App\Models\CourseSection;
 use App\Models\LiveClass;
 use App\Models\Tag;
 use App\Services\ActivityLogger;
+use App\Services\AiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -22,6 +23,8 @@ class CourseController extends Controller
 {
     use ExportsReportCsv;
     use ScopesToCurrentUser;
+
+    public function __construct(protected AiService $ai) {}
 
     public function index(Request $request)
     {
@@ -82,6 +85,48 @@ class CourseController extends Controller
         $productType = $request->get('type', 'course');
 
         return view('admin.courses.create', compact('categories', 'tags', 'instructors', 'productType'));
+    }
+
+    public function aiAnalyze(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'brief' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name'])
+            ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
+            ->all();
+        $tags = Tag::orderBy('name')->get(['id', 'name'])
+            ->map(fn ($t) => ['id' => $t->id, 'name' => $t->name])
+            ->all();
+
+        $details = $this->ai->generateCourseDetails(
+            Auth::user(),
+            $validated['title'],
+            $validated['brief'] ?? null,
+            $categories,
+            $tags
+        );
+
+        \App\Models\AiGeneration::create([
+            'created_by' => Auth::id(),
+            'user_id' => Auth::id(),
+            'feature' => 'course_details',
+            'title' => $validated['title'],
+            'prompt' => 'Title: '.$validated['title'].(! empty($validated['brief']) ? "\nBrief: ".$validated['brief'] : ''),
+            'output' => json_encode($details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            'status' => 'draft',
+            'meta' => ['source' => 'course_create_form'],
+        ]);
+
+        ActivityLogger::log('ai_course_details', 'AI filled course details for: '.$validated['title']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Course details generated. Review and save when ready.',
+            'data' => $details,
+        ]);
     }
 
     public function store(Request $request)

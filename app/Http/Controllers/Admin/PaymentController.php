@@ -35,7 +35,7 @@ class PaymentController extends Controller
             $query->where('gateway', $request->gateway);
         }
 
-        $payments = $query->paginate(20)->withQueryString();
+        $payments = $query->limit(500)->get();
         $failedCount = $this->ownedPaymentsQuery()->where('status', 'failed')->count();
         $totalReceived = $this->ownedPaymentsQuery()->where('status', 'success')->sum('amount');
 

@@ -4,6 +4,10 @@
 @section('page-title', 'Roles & Permissions')
 @section('breadcrumb', 'Manage user roles')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
@@ -16,11 +20,12 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($roles->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="rolesTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4 font-medium">Role</th>
                         <th class="px-6 py-4 font-medium">Users</th>
                         <th class="px-6 py-4 font-medium">Permissions</th>
@@ -35,8 +40,8 @@
                             <p class="text-slate-800 font-semibold">{{ $role->name }}</p>
                             @if($role->description)<p class="text-xs text-slate-500">{{ Str::limit($role->description, 50) }}</p>@endif
                         </td>
-                        <td class="px-6 py-4 text-slate-300">{{ $role->users_count }}</td>
-                        <td class="px-6 py-4 text-slate-300">{{ $role->permissions_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $role->users_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $role->permissions_count }}</td>
                         <td class="px-6 py-4">
                             <x-badge :type="$role->is_system ? 'info' : 'default'">{{ $role->is_system ? 'System' : 'Custom' }}</x-badge>
                         </td>
@@ -53,10 +58,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $roles->links() }}</div>
         @else
         <x-empty-state title="No roles found" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($roles->count())
+    <x-admin.datatable-scripts table-id="rolesTable" entity="roles" :order-column="0" order-direction="asc" :action-column="4" export-file-name="roles" />
+@endif
+@endpush

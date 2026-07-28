@@ -24,7 +24,7 @@ class AlumniController extends Controller
             })
             ->withCount('certificates')
             ->latest()
-            ->paginate(20);
+            ->get();
 
         return view('admin.alumni.index', compact('alumni'));
     }

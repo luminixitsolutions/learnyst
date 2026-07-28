@@ -164,11 +164,11 @@
     <div class="panel-sidebar-glow-bottom" aria-hidden="true"></div>
     <div class="panel-sidebar-inner flex flex-col h-full">
         <div class="panel-sidebar-header flex items-center gap-3 px-6 py-5">
-            <div class="panel-sidebar-logo-mark w-10 h-10 rounded-xl {{ $panelSidebarFlat ? '' : 'bg-gradient-to-br ' . ($isPlatformPanel ? 'from-slate-600 to-slate-800' : ($isStudentPanel || in_array($role, $studentPanelRoles, true) ? 'from-emerald-500 to-teal-600' : 'from-indigo-500 via-violet-500 to-purple-600')) }} flex items-center justify-center {{ $panelSidebarFlat ? '' : 'shadow-lg ring-2 ring-white/60 ' . ($isPlatformPanel ? 'shadow-slate-500/25' : ($isStudentPanel || in_array($role, $studentPanelRoles, true) ? 'shadow-emerald-500/25' : 'shadow-indigo-500/30')) }}">
-                <span class="text-white font-bold text-lg">{{ $isPlatformPanel ? 'P' : ($isStudentPanel || in_array($role, $studentPanelRoles, true) ? 'S' : 'L') }}</span>
+            <div class="panel-sidebar-logo-mark shrink-0 overflow-hidden rounded-xl bg-white border border-slate-200/80 {{ $panelSidebarFlat ? '' : 'shadow-sm ring-1 ring-slate-100' }}">
+                <x-brand-logo :height="40" :link="false" class="p-1" />
             </div>
             <div>
-                <h1 class="text-slate-800 font-bold text-lg tracking-tight">StudyNest</h1>
+                <h1 class="text-slate-800 font-bold text-lg tracking-tight">{{ \App\Support\Brand::name() }}</h1>
                 <p class="text-xs font-semibold panel-sidebar-brand-sub">{{ $panelTitle }}</p>
             </div>
         </div>
@@ -348,11 +348,11 @@
         <button type="button" @click="mobileOpen = !mobileOpen; $nextTick(() => initNavScroll())" class="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <div class="panel-sidebar-logo-mark w-9 h-9 rounded-lg flex items-center justify-center shrink-0 {{ $panelSidebarFlat ? '' : 'bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 shadow-md ring-2 ring-white/60' }}">
-            <span class="text-white font-bold">L</span>
+        <div class="panel-sidebar-logo-mark shrink-0 overflow-hidden rounded-lg bg-white border border-slate-200/80 {{ $panelSidebarFlat ? '' : 'shadow-sm ring-1 ring-slate-100' }}">
+            <x-brand-logo :height="36" :link="false" class="p-0.5" />
         </div>
         <div class="min-w-0">
-            <p class="text-sm font-bold text-slate-800 truncate" style="font-family: Inter, sans-serif;">StudyNest</p>
+            <p class="text-sm font-bold text-slate-800 truncate" style="font-family: Inter, sans-serif;">{{ \App\Support\Brand::name() }}</p>
             <p class="text-[10px] font-medium panel-sidebar-brand-sub truncate">{{ $panelTitle }}</p>
         </div>
         <div class="ml-auto flex items-center gap-2 shrink-0">

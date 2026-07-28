@@ -2,6 +2,7 @@
 
 return [
     'brand' => 'StudyNest',
+    'logo' => 'images/studynest_logo.jpeg',
     'tagline' => 'The Most Secure LMS to Sell Courses Online',
     'email' => 'hello@studynest.com',
     'phone' => '080 4736 1000',

@@ -4,6 +4,10 @@
 @section('page-title', 'Parent ↔ Learner Links')
 @section('breadcrumb', 'Users / Parent Portal')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
@@ -33,56 +37,70 @@
         <button class="panel-btn-primary">Create link</button>
     </form>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         <div class="px-6 py-4 border-b border-slate-100 font-semibold text-slate-800">Active links</div>
-        <table class="w-full text-sm panel-table">
-            <thead><tr><th class="px-6 py-3 text-left">Parent</th><th class="px-6 py-3 text-left">Learner</th><th class="px-6 py-3 text-left">Status</th><th></th></tr></thead>
-            <tbody>
-            @forelse($links as $link)
-                <tr>
-                    <td class="px-6 py-3">
-                        <div class="font-medium">{{ $link->parent?->name }}</div>
-                        <div class="text-xs text-slate-500">{{ $link->parent?->email }}</div>
-                    </td>
-                    <td class="px-6 py-3">
-                        <div class="font-medium">{{ $link->learner?->name }}</div>
-                        <div class="text-xs text-slate-500">{{ $link->learner?->email }}</div>
-                    </td>
-                    <td class="px-6 py-3">{{ $link->status }}</td>
-                    <td class="px-6 py-3 text-right">
-                        <form method="POST" action="{{ route('admin.parent-links.destroy', $link) }}" onsubmit="return confirm('Remove this link?')">@csrf @method('DELETE')
-                            <button class="text-xs text-rose-600 font-semibold">Remove</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No links yet.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $links->links() }}</div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card rounded-2xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 font-semibold text-slate-800">Parent accounts</div>
-            @if($parents->count())
-            <table class="w-full text-sm panel-table">
+        @if($links->count())
+        <div class="overflow-x-auto">
+            <table id="parentLinksTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-3">Parent</th>
+                        <th class="px-6 py-3">Learner</th>
+                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    @foreach($parents as $parent)
-                    <tr>
-                        <td class="px-6 py-4">
-                            <p class="font-medium">{{ $parent->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $parent->email }}</p>
-                            @if($parent->linkedLearners->count())
-                                <p class="text-xs text-slate-400 mt-1">Linked: {{ $parent->linkedLearners->pluck('name')->join(', ') }}</p>
-                            @endif
+                    @foreach($links as $link)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-3">
+                            <div class="font-medium text-slate-800">{{ $link->parent?->name }}</div>
+                            <div class="text-xs text-slate-500">{{ $link->parent?->email }}</div>
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="font-medium text-slate-800">{{ $link->learner?->name }}</div>
+                            <div class="text-xs text-slate-500">{{ $link->learner?->email }}</div>
+                        </td>
+                        <td class="px-6 py-3 text-slate-600">{{ $link->status }}</td>
+                        <td class="px-6 py-3 text-right">
+                            <form method="POST" action="{{ route('admin.parent-links.destroy', $link) }}" onsubmit="return confirm('Remove this link?')">@csrf @method('DELETE')
+                                <button class="text-xs text-rose-600 font-semibold">Remove</button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
-            <div class="px-6 py-4 border-t">{{ $parents->links() }}</div>
+        </div>
+        @else
+        <div class="px-6 py-8 text-center text-slate-500">No links yet.</div>
+        @endif
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+            <div class="px-6 py-4 border-b border-slate-100 font-semibold text-slate-800">Parent accounts</div>
+            @if($parents->count())
+            <div class="overflow-x-auto">
+                <table id="parentsTable" class="w-full text-sm panel-table display" style="width:100%">
+                    <thead>
+                        <tr class="text-left">
+                            <th class="px-6 py-3">Name</th>
+                            <th class="px-6 py-3">Email</th>
+                            <th class="px-6 py-3">Linked learners</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($parents as $parent)
+                        <tr class="hover:bg-indigo-50/40">
+                            <td class="px-6 py-4 font-medium text-slate-800">{{ $parent->name }}</td>
+                            <td class="px-6 py-4 text-slate-500">{{ $parent->email }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $parent->linkedLearners->count() ? $parent->linkedLearners->pluck('name')->join(', ') : '—' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
             <x-empty-state title="No parent accounts" description="Create users with the Parent role first." />
             @endif
@@ -93,7 +111,7 @@
             <ul class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
                 @forelse($learners as $learner)
                     <li class="px-6 py-3 text-sm">
-                        <span class="font-medium">{{ $learner->name }}</span>
+                        <span class="font-medium text-slate-800">{{ $learner->name }}</span>
                         <span class="text-slate-500">· {{ $learner->email }}</span>
                     </li>
                 @empty
@@ -104,3 +122,52 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($links->count())
+    <x-admin.datatable-scripts table-id="parentLinksTable" entity="parent links" :order-column="0" order-direction="desc" :action-column="3" export-file-name="parent-links" />
+@elseif($parents->count())
+    <x-admin.datatable-scripts table-id="parentsTable" entity="parents" :order-column="0" order-direction="asc" export-file-name="parents" />
+@endif
+@if($links->count() && $parents->count())
+<script>
+(function () {
+    if (!window.jQuery || !jQuery.fn.DataTable) return;
+    const $table = jQuery('#parentsTable');
+    if (!$table.length || jQuery.fn.DataTable.isDataTable($table)) return;
+    $table.addClass('cell-border row-border');
+    $table.DataTable({
+        autoWidth: true,
+        order: [[0, 'asc']],
+        pageLength: 10,
+        lengthChange: false,
+        dom: '<"dt-toolbar"Bf>rt<"dt-footer"ip>',
+        buttons: [{
+            extend: 'excelHtml5',
+            text: 'Export Excel',
+            title: null,
+            filename: function () {
+                return 'parents-' + new Date().toISOString().slice(0, 10);
+            },
+            exportOptions: {
+                columns: ':visible',
+                format: {
+                    body: function (data) {
+                        return jQuery('<div>').html(data).text().trim();
+                    }
+                }
+            }
+        }],
+        language: {
+            search: 'Search:',
+            info: 'Showing _START_ to _END_ of _TOTAL_ parents',
+            infoEmpty: 'No parents available',
+            infoFiltered: '(filtered from _MAX_ total parents)',
+            zeroRecords: 'No matching parents found',
+            paginate: { previous: 'Previous', next: 'Next' }
+        }
+    });
+})();
+</script>
+@endif
+@endpush

@@ -3,6 +3,10 @@
 @section('page-title', 'Jobs & Internships')
 @section('breadcrumb', 'Placements / Jobs')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
@@ -25,25 +29,39 @@
             <div class="md:col-span-3"><button class="px-5 py-2.5 rounded-xl panel-btn-primary">Post listing</button></div>
         </form>
     </div>
-    <div class="glass-card rounded-2xl overflow-hidden">
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">Title</th><th class="px-6 py-4">Company</th><th class="px-6 py-4">Type</th><th class="px-6 py-4">Apps</th>
-            </tr></thead>
-            <tbody>
-            @forelse($jobs as $job)
-                <tr>
-                    <td class="px-6 py-4 text-white">{{ $job->title }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $job->company?->name }}</td>
-                    <td class="px-6 py-4 text-slate-400 capitalize">{{ $job->type }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $job->applications_count }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No listings.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $jobs->links() }}</div>
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+        @if($jobs->count())
+        <div class="overflow-x-auto">
+            <table id="placementJobsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">Title</th>
+                        <th class="px-6 py-4">Company</th>
+                        <th class="px-6 py-4">Type</th>
+                        <th class="px-6 py-4">Apps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($jobs as $job)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 font-medium text-slate-800">{{ $job->title }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $job->company?->name }}</td>
+                        <td class="px-6 py-4 text-slate-600 capitalize">{{ $job->type }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $job->applications_count }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <x-empty-state title="No listings." description="Post a job or internship listing above." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($jobs->count())
+    <x-admin.datatable-scripts table-id="placementJobsTable" entity="jobs" :order-column="0" order-direction="desc" export-file-name="placement-jobs" />
+@endif
+@endpush

@@ -55,7 +55,7 @@ class CrmController extends Controller
                 ->orWhere('phone', 'like', "%{$s}%"));
         }
 
-        $leads = $query->latest()->paginate(20)->withQueryString();
+        $leads = $query->latest()->limit(500)->get();
         $counselors = $this->counselorsQuery()->orderBy('name')->get();
         $stages = Lead::stages();
 
@@ -235,7 +235,7 @@ class CrmController extends Controller
             $query->where('status', 'pending');
         }
 
-        $followUps = $query->orderBy('due_at')->paginate(25)->withQueryString();
+        $followUps = $query->orderBy('due_at')->limit(500)->get();
 
         return view('admin.crm.follow-ups', compact('followUps'));
     }
@@ -245,7 +245,7 @@ class CrmController extends Controller
         $logs = LeadCallLog::with(['lead', 'user'])
             ->whereHas('lead', fn ($q) => $this->constrainCrmLeadQuery($q))
             ->latest('called_at')
-            ->paginate(30);
+            ->limit(500)->get();
 
         return view('admin.crm.call-logs', compact('logs'));
     }

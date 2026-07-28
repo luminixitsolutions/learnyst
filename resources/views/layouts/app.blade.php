@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — {{ config('app.name', 'StudyNest') }}</title>
+    <link rel="icon" href="{{ \App\Support\Brand::logoUrl() }}" type="image/jpeg">
+    <link rel="apple-touch-icon" href="{{ \App\Support\Brand::logoUrl() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -617,7 +619,7 @@
             background: var(--panel-sidebar-active-bg, #f0fdfa) !important;
         }
         body.panel-sidebar-flat .panel-sidebar-logo-mark {
-            background: var(--theme-gradient, var(--panel-sidebar-accent-gradient)) !important;
+            background: #ffffff !important;
             box-shadow: none;
         }
 

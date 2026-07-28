@@ -23,7 +23,7 @@ class BranchController extends Controller
             ->withCount(['users', 'orders'])
             ->with('admins')
             ->latest()
-            ->paginate(20);
+            ->get();
 
         return view('admin.branches.index', compact('branches'));
     }

@@ -32,7 +32,7 @@ class MarketingController extends Controller
             ->with('courses')
             ->withCount('orders')
             ->latest()
-            ->paginate(15);
+            ->get();
 
         $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
 
@@ -87,7 +87,7 @@ class MarketingController extends Controller
             ->with('segment')
             ->withCount('sends')
             ->latest()
-            ->paginate(15);
+            ->get();
 
         $segments = Segment::where('is_active', true)->orderBy('title')->get();
 
@@ -165,7 +165,7 @@ class MarketingController extends Controller
             });
         }
 
-        $leads = $query->latest()->paginate(20)->withQueryString();
+        $leads = $query->latest()->limit(500)->get();
         $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
         $counselors = $this->counselorsQuery()->orderBy('name')->get(['id', 'name', 'email']);
 

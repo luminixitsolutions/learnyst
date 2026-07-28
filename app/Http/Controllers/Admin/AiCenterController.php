@@ -20,7 +20,7 @@ class AiCenterController extends Controller
     public function index()
     {
         $config = $this->ai->getConfig(Auth::id());
-        $drafts = $this->owned(AiGeneration::query())->latest()->paginate(20);
+        $drafts = $this->owned(AiGeneration::query())->latest()->get();
         $features = AiGeneration::features();
 
         return view('admin.ai.index', compact('config', 'drafts', 'features'));

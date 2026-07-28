@@ -48,7 +48,7 @@ class FinanceController extends Controller
         if ($request->filled('to')) {
             $query->whereDate('entry_date', '<=', $request->to);
         }
-        $entries = $query->latest('entry_date')->paginate(30)->withQueryString();
+        $entries = $query->latest('entry_date')->limit(500)->get();
         $accounts = $this->owned(FinanceAccount::query())->where('is_active', true)->orderBy('name')->get();
 
         return view('admin.finance.ledger', compact('entries', 'accounts'));
@@ -139,7 +139,7 @@ class FinanceController extends Controller
             if ($request->filled('to')) {
                 $q->whereDate('entry_date', '<=', $request->to);
             }
-            $entries = $q->paginate(40)->withQueryString();
+            $entries = $q->limit(500)->get();
         }
 
         return view('admin.finance.book', [
@@ -153,7 +153,7 @@ class FinanceController extends Controller
 
     public function receipts()
     {
-        $receipts = $this->owned(FinanceReceipt::query())->with(['order', 'user'])->latest('receipt_date')->paginate(30);
+        $receipts = $this->owned(FinanceReceipt::query())->with(['order', 'user'])->latest('receipt_date')->limit(500)->get();
 
         return view('admin.finance.receipts', compact('receipts'));
     }

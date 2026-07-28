@@ -12,7 +12,7 @@ class CheckoutConsentController extends Controller
 {
     public function index(Request $request)
     {
-        $consents = CheckoutConsent::withCount('orderConsents')->orderBy('sort_order')->paginate(15);
+        $consents = CheckoutConsent::withCount('orderConsents')->orderBy('sort_order')->get();
         $totalAcceptances = OrderConsent::where('accepted', true)->count();
 
         return view('admin.checkout-consents.index', compact('consents', 'totalAcceptances'));

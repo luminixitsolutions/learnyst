@@ -4,6 +4,10 @@
 @section('page-title', 'Checkout Consents')
 @section('breadcrumb', 'Manage checkout consent forms')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <x-page-header title="Consent Forms">
@@ -18,11 +22,12 @@
         </a>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($consents->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="consentsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4 font-medium">Title</th>
                         <th class="px-6 py-4 font-medium">Required</th>
                         <th class="px-6 py-4 font-medium">Status</th>
@@ -41,7 +46,7 @@
                         <td class="px-6 py-4"><x-badge :type="$consent->is_required ? 'warning' : 'default'">{{ $consent->is_required ? 'Required' : 'Optional' }}</x-badge></td>
                         <td class="px-6 py-4"><x-badge :type="$consent->is_active ? 'success' : 'danger'">{{ $consent->is_active ? 'Active' : 'Inactive' }}</x-badge></td>
                         <td class="px-6 py-4 text-slate-500">{{ $consent->sort_order ?? '—' }}</td>
-                        <td class="px-6 py-4 text-white">{{ $consent->order_consents_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $consent->order_consents_count }}</td>
                         <td class="px-6 py-4 text-right">
                             <a href="{{ route('admin.checkout-consents.edit', $consent) }}" class="text-indigo-600 hover:text-indigo-800 text-sm mr-3">Edit</a>
                             <form method="POST" action="{{ route('admin.checkout-consents.destroy', $consent) }}" class="inline">@csrf @method('DELETE')
@@ -53,10 +58,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $consents->links() }}</div>
         @else
         <x-empty-state title="No consent forms" description="Add consent forms to display during checkout." :action="route('admin.checkout-consents.create')" actionLabel="Add Consent" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($consents->count())
+    <x-admin.datatable-scripts table-id="consentsTable" entity="consent forms" :order-column="3" order-direction="asc" :action-column="5" export-file-name="checkout-consents" />
+@endif
+@endpush

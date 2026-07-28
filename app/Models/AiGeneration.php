@@ -23,6 +23,12 @@ class AiGeneration extends Model
     {
         return [
             'course_outline' => 'Course outline generator',
+            'course_details' => 'Course details generator',
+            'assignment_details' => 'Assignment details generator',
+            'quiz_details' => 'Quiz details generator',
+            'live_class_details' => 'Live class details generator',
+            'instructor_bio' => 'Instructor bio generator',
+            'sub_admin_details' => 'Sub-admin profile generator',
             'quiz' => 'Quiz / MCQ generator',
             'notes' => 'Notes generator',
             'assignment' => 'Assignment generator',

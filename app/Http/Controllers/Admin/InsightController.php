@@ -242,11 +242,11 @@ class InsightController extends Controller
 
     public function freshTrial(Request $request)
     {
-        $records = $this->trialQuery($request, 'trial')->paginate(30)->withQueryString();
+        $records = $this->trialQuery($request, 'trial')->limit(500)->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('fresh-trial', ['Learner', 'Email', 'Product', 'Enrolled', 'Last Access', 'Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->user?->name, $e->user?->email, $e->course?->title,
                     $e->enrolled_at?->format('Y-m-d'), $e->user?->last_login_at?->format('Y-m-d'), $e->status,
                 ]));
@@ -259,11 +259,11 @@ class InsightController extends Controller
     {
         $records = $this->trialQuery($request, 'trial')
             ->whereHas('user.orders', fn ($q) => $q->where('payment_status', 'paid'))
-            ->paginate(30)->withQueryString();
+            ->limit(500)->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('upsell-trial', ['Learner', 'Email', 'Trial Product', 'Purchased', 'Last Access', 'Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->user?->name, $e->user?->email, $e->course?->title,
                     $e->user?->orders()->where('payment_status', 'paid')->latest()->first()?->order_number,
                     $e->user?->last_login_at?->format('Y-m-d'), $e->status,
@@ -281,10 +281,10 @@ class InsightController extends Controller
             ->when($request->search, fn ($q, $s) => $q->whereHas('user', fn ($u) => $u->where('email', 'like', "%{$s}%")))
             ->when($request->last_access, fn ($q, $d) => $q->whereHas('user', fn ($u) => $u->whereDate('last_login_at', $d)))
             ->latest('expires_at')
-            ->paginate(30)->withQueryString();
+            ->limit(500)->get();
         if ($request->boolean('export')) {
             return $this->exportCsv('renewal-trial', ['Learner', 'Email', 'Product', 'Expiry', 'Last Access', 'Renewal Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->user?->name, $e->user?->email, $e->course?->title,
                     $e->expires_at?->format('Y-m-d'), $e->user?->last_login_at?->format('Y-m-d'),
                     $e->expires_at?->isPast() ? 'Expired' : 'Active',
@@ -296,11 +296,11 @@ class InsightController extends Controller
 
     public function freeUsers(Request $request)
     {
-        $records = $this->trialQuery($request, 'free')->paginate(30)->withQueryString();
+        $records = $this->trialQuery($request, 'free')->limit(500)->get();
 
         if ($request->boolean('export')) {
             return $this->exportCsv('free-users', ['Learner', 'Email', 'Free Product', 'Enrolled', 'Last Access', 'Upsell Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->user?->name, $e->user?->email, $e->course?->title,
                     $e->enrolled_at?->format('Y-m-d'), $e->user?->last_login_at?->format('Y-m-d'),
                     $e->user?->orders()->where('payment_status', 'paid')->exists() ? 'Upsold' : 'Pending',
@@ -321,10 +321,10 @@ class InsightController extends Controller
             ->with(['course', 'instructor'])
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest('starts_at')
-            ->paginate(30)->withQueryString();
+            ->limit(500)->get();
         if ($request->boolean('export')) {
             return $this->exportCsv('live-classes', ['Class', 'Instructor', 'Start', 'End', 'Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->title, $e->instructor?->name, $e->starts_at?->format('Y-m-d H:i'), $e->ends_at?->format('Y-m-d H:i'), $e->status,
                 ]));
         }
@@ -363,10 +363,10 @@ class InsightController extends Controller
         )
             ->when($request->search, fn ($q, $s) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->latest('updated_at')
-            ->paginate(30)->withQueryString();
+            ->limit(500)->get();
         if ($request->boolean('export')) {
             return $this->exportCsv('test-takes', ['Learner', 'Test', 'Score', 'Attempt Date', 'Status'],
-                $records->getCollection()->map(fn ($e) => [
+                $records->map(fn ($e) => [
                     $e->user?->name,
                     $e->course?->title,
                     $e->meta['mock_test_score'] ?? $e->meta['test_series_score'] ?? '—',
@@ -391,10 +391,10 @@ class InsightController extends Controller
             })
             ->when($request->search, fn ($q, $s) => $q->where('source', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"))
             ->latest()
-            ->paginate(30)->withQueryString();
+            ->limit(500)->get();
         if ($request->boolean('export')) {
             return $this->exportCsv('cta-insights', ['CTA/Source', 'Page', 'Clicks', 'Views', 'Conversion', 'Last Date'],
-                $records->getCollection()->map(fn ($l) => [
+                $records->map(fn ($l) => [
                     $l->source ?? 'Direct', $l->course?->title ?? 'Homepage', 1, 1,
                     $l->status === 'converted' ? '100%' : '0%', $l->updated_at->format('Y-m-d'),
                 ]));

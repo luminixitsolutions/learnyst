@@ -101,6 +101,7 @@ class WebsiteContentService
         return match ($key) {
             'brand' => [
                 'name' => config('website.brand', 'StudyNest'),
+                'logo' => config('website.logo', 'images/studynest_logo.jpeg'),
                 'tagline' => config('website.tagline', 'The Most Secure LMS to Sell Courses Online'),
                 'email' => config('website.email', 'hello@studynest.com'),
                 'phone' => config('website.phone', '080 4736 1000'),
@@ -347,6 +348,9 @@ class WebsiteContentService
         $brand = self::get('brand');
         if (! empty($brand['name'])) {
             config(['website.brand' => $brand['name']]);
+        }
+        if (! empty($brand['logo'])) {
+            config(['website.logo' => $brand['logo']]);
         }
         if (! empty($brand['tagline'])) {
             config(['website.tagline' => $brand['tagline']]);

@@ -24,7 +24,7 @@ class CertificateController extends Controller
                     ->orWhereHas('user', fn ($u) => $u->where('created_by', $this->currentUserId()));
             })
             ->latest()
-            ->paginate(20);
+            ->get();
         $templates = CertificateTemplate::all();
 
         return view('admin.certificates.index', compact('certificates', 'templates'));

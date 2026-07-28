@@ -11,8 +11,8 @@
                 <div class="widget widget_text kingster-widget">
                     <div class="textwidget">
                         <p>
-                            <strong style="font-size:20px;color:#fff;">{{ config('website.brand') }}</strong><br />
-                            <span class="gdlr-core-space-shortcode" style="margin-top:18px;display:block;"></span>
+                            <x-brand-logo :height="44" :link="route('home')" class="learnyst-footer-logo" style="margin-bottom:12px;" />
+                            <span class="gdlr-core-space-shortcode" style="margin-top:12px;display:block;"></span>
                             @foreach(config('website.address') as $line)
                                 {{ $line }}<br />
                             @endforeach

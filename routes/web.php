@@ -231,6 +231,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('exit-platform-view', [PlatformCompanyController::class, 'exitPanel'])->name('exit-platform-view');
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    Route::post('courses/ai-analyze', [AdminCourseController::class, 'aiAnalyze'])->name('courses.ai-analyze');
     Route::resource('courses', AdminCourseController::class);
     Route::get('courses/{course}/builder', [AdminCourseController::class, 'builder'])->name('courses.builder');
     Route::post('courses/{course}/duplicate', [AdminCourseController::class, 'duplicate'])->name('courses.duplicate');
@@ -301,6 +302,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::resource('website-sections', WebsiteSectionController::class)->except(['show']);
     Route::get('website-sections-preview', [WebsiteSectionController::class, 'preview'])->name('website-sections.preview');
 
+    Route::post('live-classes/ai-analyze', [LiveClassController::class, 'aiAnalyze'])->name('live-classes.ai-analyze');
     Route::resource('live-classes', LiveClassController::class)->except(['show']);
     Route::get('live-classes/{liveClass}/attendance', [GamificationController::class, 'attendances'])->name('live-classes.attendance');
     Route::post('live-classes/{liveClass}/attendance', [GamificationController::class, 'markAttendance'])->name('gamification.attendances.mark');
@@ -393,6 +395,8 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('hr/employees/{employee}/documents', [HrController::class, 'storeDocument'])->name('hr.documents.store');
     Route::get('hr/attendance', [HrController::class, 'attendance'])->name('hr.attendance');
     Route::post('hr/attendance', [HrController::class, 'storeAttendance'])->name('hr.attendance.store');
+    Route::post('hr/attendance/punch-in', [HrController::class, 'punchIn'])->name('hr.attendance.punch-in');
+    Route::post('hr/attendance/punch-out', [HrController::class, 'punchOut'])->name('hr.attendance.punch-out');
     Route::get('hr/leaves', [HrController::class, 'leaves'])->name('hr.leaves');
     Route::post('hr/leaves', [HrController::class, 'storeLeave'])->name('hr.leaves.store');
     Route::post('hr/leaves/{leave}/review', [HrController::class, 'reviewLeave'])->name('hr.leaves.review');
@@ -422,10 +426,12 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('library/import', [DigitalLibraryController::class, 'importExisting'])->name('library.import');
     Route::delete('library/{libraryItem}', [DigitalLibraryController::class, 'destroy'])->name('library.destroy');
 
+    Route::post('quizzes/ai-analyze', [QuizController::class, 'aiAnalyze'])->name('quizzes.ai-analyze');
     Route::get('quizzes/{lesson}/edit', [QuizController::class, 'edit'])->name('quizzes.edit');
     Route::put('quizzes/{lesson}', [QuizController::class, 'update'])->name('quizzes.update');
     Route::delete('quizzes/{lesson}', [QuizController::class, 'destroy'])->name('quizzes.destroy');
     Route::resource('quizzes', QuizController::class)->only(['index', 'create', 'store']);
+    Route::post('assignments/ai-analyze', [AssignmentController::class, 'aiAnalyze'])->name('assignments.ai-analyze');
     Route::get('assignments/{lesson}/edit', [AssignmentController::class, 'edit'])->name('assignments.edit');
     Route::put('assignments/{lesson}', [AssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('assignments/{lesson}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
@@ -516,6 +522,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::post('batches/{batch}/learners', [AdminBatchController::class, 'addLearner'])->name('batches.learners.add');
     Route::delete('batches/{batch}/learners/{user}', [AdminBatchController::class, 'removeLearner'])->name('batches.learners.remove');
 
+    Route::post('instructors/ai-analyze', [InstructorController::class, 'aiAnalyze'])->name('instructors.ai-analyze');
     Route::resource('instructors', InstructorController::class);
     Route::post('instructors/{instructor}/courses', [InstructorController::class, 'assignCourse'])->name('instructors.courses.assign');
     Route::delete('instructors/{instructor}/courses/{course}', [InstructorController::class, 'removeCourse'])->name('instructors.courses.remove');
@@ -523,6 +530,7 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
 
     Route::get('sub-admins', [SubAdminController::class, 'index'])->name('sub-admins.index');
     Route::get('sub-admins/wizard', [SubAdminWizardController::class, 'create'])->name('sub-admins.wizard');
+    Route::post('sub-admins/wizard/ai-analyze', [SubAdminWizardController::class, 'aiAnalyze'])->name('sub-admins.wizard.ai-analyze');
     Route::get('sub-admins/wizard/step/{step}', [SubAdminWizardController::class, 'step'])->whereNumber('step')->name('sub-admins.wizard.step');
     Route::post('sub-admins/wizard/step/{step}', [SubAdminWizardController::class, 'storeStep'])->whereNumber('step')->name('sub-admins.wizard.store');
     Route::post('sub-admins/wizard/finish', [SubAdminWizardController::class, 'finish'])->name('sub-admins.wizard.finish');

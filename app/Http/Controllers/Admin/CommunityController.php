@@ -20,7 +20,7 @@ class CommunityController extends Controller
 
     public function index(Request $request)
     {
-        $communities = $this->owned(Community::query())->withCount('members', 'posts')->latest()->paginate(15);
+        $communities = $this->owned(Community::query())->withCount('members', 'posts')->latest()->get();
 
         return view('admin.communities.index', compact('communities'));
     }

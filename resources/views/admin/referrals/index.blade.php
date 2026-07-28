@@ -4,6 +4,10 @@
 @section('page-title', 'Referral Program')
 @section('breadcrumb', 'Sales / Referrals')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     @if(session('success'))
@@ -58,27 +62,28 @@
         </div>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h3 class="text-lg font-bold text-slate-800">Referral Codes</h3>
         </div>
+        @if($codes->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
+            <table id="referralCodesTable" class="w-full text-sm panel-table display" style="width:100%">
                 <thead>
-                    <tr class="text-left text-slate-500">
+                    <tr class="text-left">
                         <th class="px-6 py-3">Learner</th>
                         <th class="px-6 py-3">Code</th>
                         <th class="px-6 py-3">Uses</th>
                         <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Actions</th>
+                        <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($codes as $code)
-                    <tr>
-                        <td class="px-6 py-3">{{ $code->user?->name }}</td>
+                    @foreach($codes as $code)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-3 text-slate-800">{{ $code->user?->name }}</td>
                         <td class="px-6 py-3 font-mono text-emerald-700">{{ $code->code }}</td>
-                        <td class="px-6 py-3">{{ $code->uses_count }}@if($code->max_uses)/{{ $code->max_uses }}@endif ({{ $code->referrals_count }} referrals)</td>
+                        <td class="px-6 py-3 text-slate-600">{{ $code->uses_count }}@if($code->max_uses)/{{ $code->max_uses }}@endif ({{ $code->referrals_count }} referrals)</td>
                         <td class="px-6 py-3"><x-badge :type="$code->is_active ? 'success' : 'danger'">{{ $code->is_active ? 'Active' : 'Inactive' }}</x-badge></td>
                         <td class="px-6 py-3">
                             <form method="POST" action="{{ route('admin.referrals.codes.toggle', $code) }}">@csrf
@@ -86,16 +91,16 @@
                             </form>
                         </td>
                     </tr>
-                    @empty
-                    <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No referral codes yet.</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4">{{ $codes->links() }}</div>
+        @else
+        <x-empty-state title="No referral codes yet." />
+        @endif
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 class="text-lg font-bold text-slate-800">Referral Report</h3>
             <form method="GET" class="flex gap-2">
@@ -109,26 +114,27 @@
                 <button class="panel-btn-secondary">Filter</button>
             </form>
         </div>
+        @if($referrals->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
+            <table id="referralsTable" class="w-full text-sm panel-table display" style="width:100%">
                 <thead>
-                    <tr class="text-left text-slate-500">
+                    <tr class="text-left">
                         <th class="px-6 py-3">Referrer</th>
                         <th class="px-6 py-3">Referred</th>
                         <th class="px-6 py-3">Code</th>
                         <th class="px-6 py-3">Rewards</th>
                         <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3">Date</th>
-                        <th class="px-6 py-3"></th>
+                        <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($referrals as $referral)
-                    <tr>
-                        <td class="px-6 py-3">{{ $referral->referrer?->name }}</td>
-                        <td class="px-6 py-3">{{ $referral->referred?->name }}</td>
+                    @foreach($referrals as $referral)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-3 text-slate-800">{{ $referral->referrer?->name }}</td>
+                        <td class="px-6 py-3 text-slate-800">{{ $referral->referred?->name }}</td>
                         <td class="px-6 py-3 font-mono text-emerald-700">{{ $referral->referralCode?->code }}</td>
-                        <td class="px-6 py-3">₹{{ number_format($referral->referrer_reward, 0) }} / ₹{{ number_format($referral->referred_reward, 0) }}</td>
+                        <td class="px-6 py-3 text-slate-600">₹{{ number_format($referral->referrer_reward, 0) }} / ₹{{ number_format($referral->referred_reward, 0) }}</td>
                         <td class="px-6 py-3"><x-badge :type="match($referral->status){'rewarded'=>'success','pending'=>'warning','qualified'=>'info',default=>'danger'}">{{ ucfirst($referral->status) }}</x-badge></td>
                         <td class="px-6 py-3 text-slate-500">{{ $referral->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-3">
@@ -136,16 +142,74 @@
                             <form method="POST" action="{{ route('admin.referrals.reward', $referral) }}">@csrf
                                 <button class="text-sm text-emerald-700 hover:underline">Reward</button>
                             </form>
+                            @else
+                            <span class="text-slate-400 text-sm">—</span>
                             @endif
                         </td>
                     </tr>
-                    @empty
-                    <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500">No referrals recorded yet.</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4">{{ $referrals->links() }}</div>
+        @else
+        <x-empty-state title="No referrals recorded yet." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($codes->count())
+    <x-admin.datatable-scripts table-id="referralCodesTable" entity="referral codes" :order-column="0" order-direction="desc" :action-column="4" export-file-name="referral-codes" />
+    @if($referrals->count())
+    <script>
+    (function () {
+        if (!window.jQuery || !jQuery.fn.DataTable) return;
+        if (jQuery.fn.DataTable.isDataTable('#referralsTable')) return;
+        const $table = jQuery('#referralsTable');
+        $table.addClass('cell-border row-border');
+        $table.find('thead th').eq(6).addClass('col-actions');
+        $table.DataTable({
+            autoWidth: true,
+            order: [[5, 'desc']],
+            pageLength: 10,
+            lengthChange: false,
+            dom: '<"dt-toolbar"Bf>rt<"dt-footer"ip>',
+            buttons: [{
+                extend: 'excelHtml5',
+                text: 'Export Excel',
+                title: null,
+                filename: function () {
+                    return 'referrals-' + new Date().toISOString().slice(0, 10);
+                },
+                exportOptions: {
+                    columns: ':not(:eq(6))',
+                    format: {
+                        body: function (data) {
+                            return jQuery('<div>').html(data).text().trim();
+                        }
+                    }
+                }
+            }],
+            columnDefs: [{
+                targets: [6],
+                orderable: false,
+                searchable: false,
+                className: 'dt-col-actions text-right',
+            }],
+            language: {
+                search: 'Search:',
+                info: 'Showing _START_ to _END_ of _TOTAL_ referrals',
+                infoEmpty: 'No referrals available',
+                infoFiltered: '(filtered from _MAX_ total referrals)',
+                zeroRecords: 'No matching referrals found',
+                paginate: { previous: 'Previous', next: 'Next' }
+            }
+        });
+    })();
+    </script>
+    @endif
+@elseif($referrals->count())
+    <x-admin.datatable-scripts table-id="referralsTable" entity="referrals" :order-column="5" order-direction="desc" :action-column="6" export-file-name="referrals" />
+@endif
+@endpush

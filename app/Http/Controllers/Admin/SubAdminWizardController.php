@@ -11,16 +11,21 @@ use App\Models\Role;
 use App\Models\SubAdminScope;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\AiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class SubAdminWizardController extends Controller
 {
     use ScopesToCurrentUser;
+
+    public function __construct(protected AiService $ai) {}
 
     protected function sessionKey(): string
     {
@@ -32,6 +37,54 @@ class SubAdminWizardController extends Controller
         Session::forget($this->sessionKey());
 
         return redirect()->route('admin.sub-admins.wizard.step', 1);
+    }
+
+    public function aiAnalyze(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'designation' => ['required', 'string', 'max:255'],
+            'brief' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $emailDomain = Str::after((string) Auth::user()?->email, '@') ?: null;
+
+        try {
+            $details = $this->ai->generateSubAdminDetails(
+                Auth::user(),
+                $validated['name'],
+                $validated['designation'],
+                $validated['brief'] ?? null,
+                $emailDomain
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->errors()['ai'][0] ?? 'AI request failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        \App\Models\AiGeneration::create([
+            'created_by' => Auth::id(),
+            'user_id' => Auth::id(),
+            'feature' => 'sub_admin_details',
+            'title' => $validated['name'].' — '.$validated['designation'],
+            'prompt' => 'Name: '.$validated['name']
+                ."\nDesignation: ".$validated['designation']
+                .(! empty($validated['brief']) ? "\nBrief: ".$validated['brief'] : ''),
+            'output' => json_encode($details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            'status' => 'draft',
+            'meta' => ['source' => 'sub_admin_wizard_step1'],
+        ]);
+
+        ActivityLogger::log('ai_sub_admin_details', 'AI filled sub-admin details for: '.$validated['name']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Profile notes generated from designation. Review and continue.',
+            'data' => $details,
+        ]);
     }
 
     public function step(int $step)
@@ -72,6 +125,8 @@ class SubAdminWizardController extends Controller
                 'phone' => ['nullable', 'string'],
                 'password' => ['required', Password::defaults()],
                 'avatar' => ['nullable', 'image', 'max:2048'],
+                'expertise' => ['nullable', 'string', 'max:255'],
+                'bio' => ['nullable', 'string'],
                 'social_links' => ['nullable', 'array'],
             ]),
             2 => $data['role_id'] = $request->validate(['role_id' => ['required', 'exists:roles,id']])['role_id'],
@@ -122,6 +177,8 @@ class SubAdminWizardController extends Controller
             'phone' => $data['details']['phone'] ?? null,
             'password' => Hash::make($data['details']['password']),
             'avatar' => $data['details']['avatar_path'] ?? null,
+            'expertise' => $data['details']['expertise'] ?? null,
+            'bio' => $data['details']['bio'] ?? null,
             'social_links' => $data['details']['social_links'] ?? [],
             'role_id' => $roleId,
             'is_active' => true,

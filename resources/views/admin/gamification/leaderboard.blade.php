@@ -4,6 +4,10 @@
 @section('page-title', 'Leaderboard')
 @section('breadcrumb', 'Gamification / Leaderboard')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-4">
@@ -18,30 +22,42 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">#</th>
-                <th class="px-6 py-4">Learner</th>
-                <th class="px-6 py-4">XP</th>
-                @unless($courseId)<th class="px-6 py-4">Level</th><th class="px-6 py-4">Streak</th>@endunless
-            </tr></thead>
-            <tbody>
-                @forelse($rows as $i => $row)
-                <tr>
-                    <td class="px-6 py-4 text-slate-400">{{ $i + 1 }}</td>
-                    <td class="px-6 py-4 text-white">{{ $row->user?->name ?? '—' }}</td>
-                    <td class="px-6 py-4 text-emerald-400 font-semibold">{{ $courseId ? ($row->total_xp ?? 0) : $row->xp }}</td>
-                    @unless($courseId)
-                    <td class="px-6 py-4 text-slate-400">{{ $row->level }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $row->current_streak }}</td>
-                    @endunless
-                </tr>
-                @empty
-                <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No rankings yet.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+        @if($rows->count())
+        <div class="overflow-x-auto">
+            <table id="leaderboardTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">#</th>
+                        <th class="px-6 py-4">Learner</th>
+                        <th class="px-6 py-4">XP</th>
+                        @unless($courseId)<th class="px-6 py-4">Level</th><th class="px-6 py-4">Streak</th>@endunless
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($rows as $i => $row)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 text-slate-500">{{ $i + 1 }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-800">{{ $row->user?->name ?? '—' }}</td>
+                        <td class="px-6 py-4 text-emerald-600 font-semibold">{{ $courseId ? ($row->total_xp ?? 0) : $row->xp }}</td>
+                        @unless($courseId)
+                        <td class="px-6 py-4 text-slate-600">{{ $row->level }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $row->current_streak }}</td>
+                        @endunless
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <x-empty-state title="No rankings yet." description="Leaderboard rankings will appear as learners earn XP." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($rows->count())
+    <x-admin.datatable-scripts table-id="leaderboardTable" entity="rankings" :order-column="2" order-direction="desc" export-file-name="leaderboard" />
+@endif
+@endpush

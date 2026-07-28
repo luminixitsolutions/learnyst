@@ -4,6 +4,10 @@
 @section('page-title', 'Certificates')
 @section('breadcrumb', 'Issued certificates')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
@@ -27,18 +31,19 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($certificates->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="certificatesTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4">Certificate #</th>
                         <th class="px-6 py-4">Learner</th>
                         <th class="px-6 py-4">Course</th>
                         <th class="px-6 py-4">Issued</th>
                         <th class="px-6 py-4">Expires</th>
                         <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4"></th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,7 +51,7 @@
                     @php $lifecycle = app(\App\Services\CertificateLifecycleService::class); @endphp
                     <tr class="hover:bg-indigo-50/40">
                         <td class="px-6 py-4 text-indigo-600 font-mono text-xs">{{ $certificate->certificate_number }}</td>
-                        <td class="px-6 py-4 text-white">{{ $certificate->user?->name }}</td>
+                        <td class="px-6 py-4 text-slate-800">{{ $certificate->user?->name }}</td>
                         <td class="px-6 py-4 text-slate-500">{{ $certificate->course?->title ?? '—' }}</td>
                         <td class="px-6 py-4 text-slate-500">{{ $certificate->issued_at?->format('M d, Y') }}</td>
                         <td class="px-6 py-4 text-slate-500">{{ $certificate->expires_at?->format('M d, Y') ?? '—' }}</td>
@@ -57,10 +62,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $certificates->links() }}</div>
         @else
         <x-empty-state title="No certificates issued yet" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($certificates->count())
+    <x-admin.datatable-scripts table-id="certificatesTable" entity="certificates" :order-column="0" order-direction="desc" :action-column="6" export-file-name="certificates" />
+@endif
+@endpush

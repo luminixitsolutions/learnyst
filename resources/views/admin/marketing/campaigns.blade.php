@@ -4,10 +4,14 @@
 @section('page-title', 'Campaigns')
 @section('breadcrumb', 'Marketing / Campaigns')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
-        <h3 class="text-lg font-bold text-white mb-4">Create Campaign</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Create Campaign</h3>
         <form method="POST" action="{{ route('admin.marketing.campaigns.store') }}" class="space-y-4">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -36,35 +40,36 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($campaigns->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="campaignsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4">Title</th>
                         <th class="px-6 py-4">Channel</th>
                         <th class="px-6 py-4">Segment</th>
                         <th class="px-6 py-4">Status</th>
                         <th class="px-6 py-4">Sent / Fail</th>
                         <th class="px-6 py-4">Scheduled</th>
-                        <th class="px-6 py-4"></th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($campaigns as $campaign)
-                    <tr>
-                        <td class="px-6 py-4 text-white font-medium">{{ $campaign->title }}</td>
-                        <td class="px-6 py-4 text-slate-400 capitalize">{{ str_replace('_', ' + ', $campaign->channel) }}</td>
-                        <td class="px-6 py-4 text-slate-400">{{ $campaign->segment?->title ?? 'Open leads' }}</td>
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 text-slate-800 font-medium">{{ $campaign->title }}</td>
+                        <td class="px-6 py-4 text-slate-600 capitalize">{{ str_replace('_', ' + ', $campaign->channel) }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $campaign->segment?->title ?? 'Open leads' }}</td>
                         <td class="px-6 py-4"><x-badge type="info">{{ ucfirst($campaign->status) }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-400">{{ $campaign->sent_count }}/{{ $campaign->failed_count }}</td>
-                        <td class="px-6 py-4 text-slate-400">{{ $campaign->scheduled_at?->format('M d, Y h:i A') ?? '—' }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $campaign->sent_count }}/{{ $campaign->failed_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $campaign->scheduled_at?->format('M d, Y h:i A') ?? '—' }}</td>
                         <td class="px-6 py-4 space-x-3 whitespace-nowrap">
-                            <a href="{{ route('admin.marketing.campaigns.sends', $campaign) }}" class="text-emerald-400 text-sm hover:underline">Logs</a>
+                            <a href="{{ route('admin.marketing.campaigns.sends', $campaign) }}" class="text-emerald-600 text-sm hover:underline">Logs</a>
                             @if(! in_array($campaign->status, ['sent', 'sending'], true))
                             <form method="POST" action="{{ route('admin.marketing.campaigns.send', $campaign) }}" class="inline">
                                 @csrf
-                                <button type="submit" class="text-sky-400 text-sm hover:underline" onclick="return confirm('Dispatch this campaign now?')">Send</button>
+                                <button type="submit" class="text-sky-600 text-sm hover:underline" onclick="return confirm('Dispatch this campaign now?')">Send</button>
                             </form>
                             @endif
                         </td>
@@ -73,10 +78,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-700">{{ $campaigns->links() }}</div>
         @else
         <x-empty-state title="No campaigns yet" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($campaigns->count())
+    <x-admin.datatable-scripts table-id="campaignsTable" entity="campaigns" :order-column="0" order-direction="desc" :action-column="6" export-file-name="campaigns" />
+@endif
+@endpush

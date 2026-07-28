@@ -9,6 +9,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; padding: 40px; max-width: 800px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #10b981; }
         .logo { font-size: 24px; font-weight: 700; color: #059669; }
+        .logo img { height: 48px; width: auto; display: block; object-fit: contain; }
         .invoice-title { font-size: 28px; font-weight: 700; text-align: right; }
         .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
         .meta h4 { font-size: 12px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
@@ -29,7 +30,9 @@
     </div>
 
     <div class="header">
-        <div class="logo">StudyNest</div>
+        <div class="logo">
+            <img src="{{ \App\Support\Brand::logoUrl() }}" alt="{{ \App\Support\Brand::name() }}">
+        </div>
         <div>
             <div class="invoice-title">INVOICE</div>
             <p style="text-align: right; color: #64748b; margin-top: 4px;">#{{ $order->order_number }}</p>

@@ -5,6 +5,7 @@
     'orderDirection' => 'asc',
     'actionColumn' => null,
     'exportFileName' => null,
+    'pageLength' => 10,
 ])
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -17,11 +18,13 @@
     if (!window.jQuery || !jQuery.fn.DataTable) return;
 
     const actionColumn = {{ $actionColumn !== null ? (int) $actionColumn : 'null' }};
+    const pageLength = {{ (int) $pageLength }};
     const columnDefs = [];
     const narrowHeaders = [
         'status', 'price', 'marks', 'quiz type', 'template', 'duration',
         'active', 'featured', 'visibility', 'role', 'amount', 'date',
         'phone', 'code', 'rating', 'priority', 'section', 'course',
+        'punch in', 'punch out', 'hours',
     ];
     let actionsTarget = null;
 
@@ -31,7 +34,7 @@
     $table.find('thead th').each(function (index) {
         const label = jQuery(this).text().trim().toLowerCase().replace(/\s+/g, ' ');
 
-        if (label === 'actions') {
+        if (label === 'actions' || label === 'punch') {
             actionsTarget = index;
             jQuery(this).addClass('col-actions');
             columnDefs.push({
@@ -79,11 +82,12 @@
         ? ':not(:eq(' + resolvedActionColumn + '))'
         : ':visible';
 
-    $table.DataTable({
+    const table = $table.DataTable({
         autoWidth: true,
         order: [[{{ (int) $orderColumn }}, '{{ $orderDirection }}']],
-        pageLength: 10,
+        pageLength: pageLength > 0 ? pageLength : 10,
         lengthChange: false,
+        paging: pageLength !== -1,
         dom: '<"dt-toolbar"Bf>rt<"dt-footer"ip>',
         buttons: [{
             extend: 'excelHtml5',
@@ -116,6 +120,17 @@
                 next: 'Next'
             }
         }
+    });
+
+    // Ensure form posts include all rows (not only current DataTables page)
+    $table.closest('form').on('submit', function () {
+        const $tbody = $table.children('tbody');
+        table.rows({ search: 'none' }).every(function () {
+            const node = this.node();
+            if (node && node.parentNode !== $tbody[0]) {
+                $tbody.append(node);
+            }
+        });
     });
 })();
 </script>

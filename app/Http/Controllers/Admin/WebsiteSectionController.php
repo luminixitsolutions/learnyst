@@ -12,7 +12,7 @@ class WebsiteSectionController extends Controller
 {
     public function index()
     {
-        $sections = WebsiteSection::orderBy('sort_order')->paginate(20);
+        $sections = WebsiteSection::orderBy('sort_order')->get();
 
         return view('admin.website-sections.index', compact('sections'));
     }

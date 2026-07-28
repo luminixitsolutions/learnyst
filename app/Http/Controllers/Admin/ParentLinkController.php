@@ -26,7 +26,7 @@ class ParentLinkController extends Controller
             ->when($parentRole, fn ($q) => $q->where('role_id', $parentRole->id))
             ->with(['linkedLearners'])
             ->orderBy('name')
-            ->paginate(15, ['*'], 'parents_page');
+            ->get();
 
         $parentOptions = User::query()
             ->when($parentRole, fn ($q) => $q->where('role_id', $parentRole->id))
@@ -39,7 +39,7 @@ class ParentLinkController extends Controller
             ->limit(100)
             ->get(['id', 'name', 'email']);
 
-        $links = ParentLearnerLink::with(['parent', 'learner'])->latest()->paginate(20, ['*'], 'links_page');
+        $links = ParentLearnerLink::with(['parent', 'learner'])->latest()->get();
 
         return view('admin.parents.index', compact('parents', 'parentOptions', 'learners', 'links'));
     }

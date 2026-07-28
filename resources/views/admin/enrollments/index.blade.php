@@ -4,6 +4,10 @@
 @section('page-title', 'Enrollments')
 @section('breadcrumb', 'Manage learner enrollments')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6" x-data="{ assignModal: false, enrollmentType: '{{ old('enrollment_type', 'course') }}' }">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -30,11 +34,12 @@
         </button>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($enrollments->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="enrollmentsTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4 font-medium">Learner</th>
                         <th class="px-6 py-4 font-medium">Type</th>
                         <th class="px-6 py-4 font-medium">Target</th>
@@ -52,7 +57,7 @@
                             <p class="text-xs text-slate-500">{{ $enrollment->user?->email }}</p>
                         </td>
                         <td class="px-6 py-4"><x-badge type="info">{{ ucfirst($enrollment->enrollment_type) }}</x-badge></td>
-                        <td class="px-6 py-4 text-slate-300">
+                        <td class="px-6 py-4 text-slate-600">
                             @if($enrollment->enrollment_type === 'course')
                                 {{ $enrollment->course?->title ?? '—' }}
                             @elseif($enrollment->enrollment_type === 'batch')
@@ -81,7 +86,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $enrollments->links() }}</div>
         @else
         <x-empty-state title="No enrollments found" description="Assign enrollments to learners to get started." />
         @endif
@@ -93,14 +97,14 @@
         <div class="relative w-full max-w-2xl glass-card rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-slate-800">Assign Enrollment</h3>
-                <button type="button" @click="assignModal = false" class="text-slate-500 hover:text-white">
+                <button type="button" @click="assignModal = false" class="text-slate-500 hover:text-slate-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <form method="POST" action="{{ route('admin.enrollments.store') }}" class="space-y-5">
                 @csrf
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-300">Learners <span class="text-red-400">*</span></label>
+                    <label class="block text-sm font-medium text-slate-600">Learners <span class="text-red-500">*</span></label>
                     <select name="user_ids[]" multiple required size="6"
                             class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                         @foreach($learners as $learner)
@@ -108,11 +112,11 @@
                         @endforeach
                     </select>
                     <p class="text-xs text-slate-500">Hold Ctrl/Cmd to select multiple learners</p>
-                    @error('user_ids')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    @error('user_ids')<p class="text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-300">Enrollment Type <span class="text-red-400">*</span></label>
+                    <label class="block text-sm font-medium text-slate-600">Enrollment Type <span class="text-red-500">*</span></label>
                     <select name="enrollment_type" x-model="enrollmentType" required
                             class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                         <option value="course">Course</option>
@@ -165,7 +169,7 @@
                 </x-form-input>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                    <button type="button" @click="assignModal = false" class="px-4 py-2 rounded-xl text-sm text-slate-500 hover:text-white">Cancel</button>
+                    <button type="button" @click="assignModal = false" class="px-4 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-800">Cancel</button>
                     <button type="submit" class="px-5 py-2.5 rounded-xl panel-btn-primary">Assign</button>
                 </div>
             </form>
@@ -173,3 +177,9 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($enrollments->count())
+    <x-admin.datatable-scripts table-id="enrollmentsTable" entity="enrollments" :order-column="0" order-direction="desc" :action-column="6" export-file-name="enrollments" />
+@endif
+@endpush

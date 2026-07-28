@@ -3,6 +3,10 @@
 @section('page-title', 'Payroll')
 @section('breadcrumb', 'HR / Payroll')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
@@ -14,25 +18,39 @@
             <div class="flex items-end"><button class="px-5 py-2.5 rounded-xl panel-btn-primary">Run payroll</button></div>
         </form>
     </div>
-    <div class="glass-card rounded-2xl overflow-hidden">
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">Period</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Slips</th><th class="px-6 py-4"></th>
-            </tr></thead>
-            <tbody>
-            @forelse($runs as $run)
-                <tr>
-                    <td class="px-6 py-4 text-white">{{ $run->periodLabel() }}</td>
-                    <td class="px-6 py-4"><x-badge type="info">{{ $run->status }}</x-badge></td>
-                    <td class="px-6 py-4 text-slate-400">{{ $run->slips_count }}</td>
-                    <td class="px-6 py-4"><a href="{{ route('admin.hr.payroll.show', $run) }}" class="text-emerald-400 text-sm">View</a></td>
-                </tr>
-            @empty
-                <tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No payroll runs.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $runs->links() }}</div>
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
+        @if($runs->count())
+        <div class="overflow-x-auto">
+            <table id="payrollTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">Period</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Slips</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($runs as $run)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 font-medium text-slate-800">{{ $run->periodLabel() }}</td>
+                        <td class="px-6 py-4"><x-badge type="info">{{ $run->status }}</x-badge></td>
+                        <td class="px-6 py-4 text-slate-600">{{ $run->slips_count }}</td>
+                        <td class="px-6 py-4"><a href="{{ route('admin.hr.payroll.show', $run) }}" class="text-emerald-600 text-sm">View</a></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <x-empty-state title="No payroll runs." description="Run payroll using the form above." />
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($runs->count())
+    <x-admin.datatable-scripts table-id="payrollTable" entity="payroll runs" :order-column="0" order-direction="desc" :action-column="3" export-file-name="payroll-runs" />
+@endif
+@endpush

@@ -4,10 +4,14 @@
 @section('page-title', 'Badges')
 @section('breadcrumb', 'Gamification / Badges')
 
+@push('styles')
+    <x-admin.datatable-styles />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="glass-card rounded-2xl p-6">
-        <h3 class="text-lg font-bold text-white mb-4">Create Badge</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Create Badge</h3>
         <form method="POST" action="{{ route('admin.gamification.badges.store') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @csrf
             <x-form-input label="Name" name="name" required />
@@ -24,8 +28,8 @@
             <x-form-input label="Description" name="description" type="textarea" class="md:col-span-3" />
             <label class="flex items-center gap-2 md:col-span-3">
                 <input type="hidden" name="is_active" value="0">
-                <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-600 bg-slate-800 text-emerald-500">
-                <span class="text-sm text-slate-300">Active</span>
+                <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300 bg-white text-emerald-500">
+                <span class="text-sm text-slate-600">Active</span>
             </label>
             <div class="md:col-span-3">
                 <button type="submit" class="px-5 py-2.5 rounded-xl panel-btn-primary">Create Badge</button>
@@ -33,36 +37,45 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($badges->count())
-        <table class="w-full text-sm panel-table">
-            <thead><tr class="text-left">
-                <th class="px-6 py-4">Badge</th>
-                <th class="px-6 py-4">Criteria</th>
-                <th class="px-6 py-4">Awarded</th>
-                <th class="px-6 py-4">Bonus XP</th>
-                <th class="px-6 py-4"></th>
-            </tr></thead>
-            <tbody>
-                @foreach($badges as $badge)
-                <tr>
-                    <td class="px-6 py-4 text-white font-medium">{{ $badge->name }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $badge->criteria_type }} ≥ {{ $badge->criteria_value }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $badge->users_count }}</td>
-                    <td class="px-6 py-4 text-slate-400">{{ $badge->xp_reward }}</td>
-                    <td class="px-6 py-4">
-                        <form method="POST" action="{{ route('admin.gamification.badges.destroy', $badge) }}">@csrf @method('DELETE')
-                            <button type="submit" class="text-red-400 text-sm" onclick="return confirm('Delete badge?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        <div class="px-6 py-4">{{ $badges->links() }}</div>
+        <div class="overflow-x-auto">
+            <table id="badgesTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-6 py-4">Badge</th>
+                        <th class="px-6 py-4">Criteria</th>
+                        <th class="px-6 py-4">Awarded</th>
+                        <th class="px-6 py-4">Bonus XP</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($badges as $badge)
+                    <tr class="hover:bg-indigo-50/40">
+                        <td class="px-6 py-4 text-slate-800 font-medium">{{ $badge->name }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $badge->criteria_type }} ≥ {{ $badge->criteria_value }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $badge->users_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $badge->xp_reward }}</td>
+                        <td class="px-6 py-4">
+                            <form method="POST" action="{{ route('admin.gamification.badges.destroy', $badge) }}">@csrf @method('DELETE')
+                                <button type="submit" class="text-red-500 text-sm" onclick="return confirm('Delete badge?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         @else
         <x-empty-state title="No badges yet" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($badges->count())
+    <x-admin.datatable-scripts table-id="badgesTable" entity="badges" :order-column="0" order-direction="desc" :action-column="4" export-file-name="badges" />
+@endif
+@endpush

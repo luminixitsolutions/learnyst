@@ -5,6 +5,7 @@
 @section('breadcrumb', 'Classification / Categories')
 
 @push('styles')
+    <x-admin.datatable-styles />
 <style>
     .action-icon-btn {
         display: inline-flex;
@@ -42,8 +43,8 @@
             <x-form-input label="Description" name="description" />
             <label class="flex items-center gap-2 pb-2">
                 <input type="hidden" name="is_active" value="0">
-                <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-600 bg-slate-800 text-brand-500">
-                <span class="text-sm text-slate-300">Active</span>
+                <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300 bg-white text-brand-500">
+                <span class="text-sm text-slate-600">Active</span>
             </label>
             <div class="md:col-span-4">
                 <button type="submit" class="px-5 py-2.5 rounded-xl panel-btn-primary">Add Category</button>
@@ -51,11 +52,12 @@
         </form>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden">
+    <div class="glass-card rounded-2xl overflow-hidden panel-datatable-wrapper">
         @if($categories->count())
         <div class="overflow-x-auto">
-            <table class="w-full text-sm panel-table">
-                <thead><tr class="text-left">
+            <table id="categoriesTable" class="w-full text-sm panel-table display" style="width:100%">
+                <thead>
+                    <tr class="text-left">
                         <th class="px-6 py-4">Name</th>
                         <th class="px-6 py-4">Icon</th>
                         <th class="px-6 py-4">Courses</th>
@@ -78,7 +80,7 @@
                             </form>
                         </td>
                         <td class="px-6 py-4 text-slate-500">{{ $category->icon ?? '—' }}</td>
-                        <td class="px-6 py-4">{{ $category->courses_count }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $category->courses_count }}</td>
                         <td class="px-6 py-4"><x-badge :type="$category->is_active ? 'success' : 'danger'">{{ $category->is_active ? 'Active' : 'Inactive' }}</x-badge></td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-2">
@@ -105,10 +107,15 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-slate-200">{{ $categories->links() }}</div>
         @else
         <x-empty-state title="No categories yet" />
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if($categories->count())
+    <x-admin.datatable-scripts table-id="categoriesTable" entity="categories" :order-column="0" order-direction="asc" :action-column="4" export-file-name="categories" />
+@endif
+@endpush

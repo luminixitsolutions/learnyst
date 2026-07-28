@@ -12,7 +12,7 @@
         <div class="kingster-header-container-inner clearfix">
             <div class="kingster-logo kingster-item-pdlr">
                 <div class="kingster-logo-inner">
-                    <a href="{{ route('home') }}"><span class="learnyst-brand-text">{{ config('website.brand') }}</span></a>
+                    <x-brand-logo :height="52" class="learnyst-brand-logo" />
                 </div>
             </div>
             <div class="kingster-navigation kingster-item-pdlr clearfix">

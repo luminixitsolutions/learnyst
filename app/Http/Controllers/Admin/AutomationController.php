@@ -20,7 +20,7 @@ class AutomationController extends Controller
 
     public function index()
     {
-        $workflows = $this->owned(AutomationWorkflow::query())->latest()->paginate(20);
+        $workflows = $this->owned(AutomationWorkflow::query())->latest()->get();
         $triggers = AutomationWorkflow::triggers();
 
         return view('admin.automations.index', compact('workflows', 'triggers'));

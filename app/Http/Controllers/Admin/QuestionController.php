@@ -46,7 +46,7 @@ class QuestionController extends Controller
             default => $query->latest(),
         };
 
-        $questions = $query->paginate(20)->withQueryString();
+        $questions = $query->limit(500)->get();
 
         return view('admin.questions.index', compact('questions', 'sort'));
     }

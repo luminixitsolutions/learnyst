@@ -8,13 +8,17 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\ScheduledEvent;
 use App\Services\ActivityLogger;
+use App\Services\AiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class LiveClassController extends Controller
 {
     use ScopesToCurrentUser;
+
+    public function __construct(protected AiService $ai) {}
 
     public function index(Request $request)
     {
@@ -34,6 +38,63 @@ class LiveClassController extends Controller
             'courses' => $this->owned(Course::query())->orderBy('title')->get(),
             'batches' => Batch::whereIn('course_id', $this->ownedCourseIds())->orderBy('title')->get(),
             'instructors' => $this->ownedUsersQuery('instructor')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function aiAnalyze(Request $request)
+    {
+        $ownedCourseIds = $this->ownedCourseIds();
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'brief' => ['nullable', 'string', 'max:2000'],
+            'course_id' => ['nullable', Rule::in($ownedCourseIds)],
+        ]);
+
+        $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title'])
+            ->map(fn ($c) => ['id' => $c->id, 'title' => $c->title])
+            ->all();
+
+        $courseTitle = null;
+        if (! empty($validated['course_id'])) {
+            $courseTitle = collect($courses)->firstWhere('id', (int) $validated['course_id'])['title'] ?? null;
+        }
+
+        try {
+            $details = $this->ai->generateLiveClassDetails(
+                Auth::user(),
+                $validated['title'],
+                $validated['brief'] ?? null,
+                $courseTitle,
+                $courses
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->errors()['ai'][0] ?? 'AI request failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        \App\Models\AiGeneration::create([
+            'created_by' => Auth::id(),
+            'user_id' => Auth::id(),
+            'feature' => 'live_class_details',
+            'title' => $validated['title'],
+            'prompt' => 'Title: '.$validated['title']
+                .(! empty($courseTitle) ? "\nCourse: ".$courseTitle : '')
+                .(! empty($validated['brief']) ? "\nBrief: ".$validated['brief'] : ''),
+            'output' => json_encode($details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            'status' => 'draft',
+            'meta' => ['source' => 'live_class_create_form'],
+        ]);
+
+        ActivityLogger::log('ai_live_class_details', 'AI filled live class details for: '.$validated['title']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Live class details generated. Add your meeting link, then save.',
+            'data' => $details,
         ]);
     }
 

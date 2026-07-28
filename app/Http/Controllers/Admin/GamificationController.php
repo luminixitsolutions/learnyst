@@ -59,7 +59,7 @@ class GamificationController extends Controller
 
     public function badges()
     {
-        $badges = $this->owned(Badge::query())->withCount('users')->latest()->paginate(20);
+        $badges = $this->owned(Badge::query())->withCount('users')->latest()->get();
 
         return view('admin.gamification.badges', compact('badges'));
     }
@@ -97,7 +97,7 @@ class GamificationController extends Controller
 
     public function challenges()
     {
-        $challenges = $this->owned(Challenge::query())->latest()->paginate(20);
+        $challenges = $this->owned(Challenge::query())->latest()->get();
         $actions = collect(XpRule::defaultRules())->pluck('label', 'action_key');
 
         return view('admin.gamification.challenges', compact('challenges', 'actions'));

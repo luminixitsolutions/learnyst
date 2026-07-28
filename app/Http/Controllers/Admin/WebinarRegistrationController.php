@@ -23,7 +23,7 @@ class WebinarRegistrationController extends Controller
             $query->where('webinar_id', $request->webinar_id);
         }
 
-        $registrations = $query->latest()->paginate(30)->withQueryString();
+        $registrations = $query->latest()->limit(500)->get();
         $webinars = $this->owned(Webinar::query())->orderBy('title')->get(['id', 'title']);
 
         return view('admin.webinar-registrations.index', compact('registrations', 'webinars'));

@@ -23,7 +23,7 @@ class DigitalLibraryController extends Controller
         if ($request->filled('type')) {
             $query->where('item_type', $request->type);
         }
-        $items = $query->latest()->paginate(20)->withQueryString();
+        $items = $query->latest()->get();
         $types = LibraryItem::types();
         $courses = $this->owned(Course::query())->orderBy('title')->get(['id', 'title']);
 

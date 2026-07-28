@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Certificate — {{ config('app.name', 'StudyNest') }}</title>
     <meta name="description" content="Verify the authenticity of a StudyNest certificate using its unique certificate number.">
+    <link rel="icon" href="{{ \App\Support\Brand::logoUrl() }}" type="image/jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     <style>
@@ -342,7 +343,7 @@
 
 <div class="cv-page">
     <a href="{{ route('home') }}" class="cv-brand">
-        <span class="cv-brand-mark">L</span>
+        <img src="{{ \App\Support\Brand::logoUrl() }}" alt="{{ \App\Support\Brand::name() }}" class="cv-brand-logo" style="height:48px;width:auto;object-fit:contain;border-radius:10px;">
         <span>
             <span class="cv-brand-text">{{ config('app.name', 'StudyNest') }}</span>
             <span class="cv-brand-sub">Credential Verification</span>

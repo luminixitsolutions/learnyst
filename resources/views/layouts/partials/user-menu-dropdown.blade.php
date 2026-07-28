@@ -15,6 +15,8 @@
             }
             if ($menuCompany && method_exists($menuCompany, 'logoUrl') && $menuCompany->logoUrl()) {
                 $displayAvatar = $menuCompany->logoUrl();
+            } else {
+                $displayAvatar = \App\Support\Brand::logoUrl();
             }
         } catch (\Throwable $e) {
             // keep user defaults

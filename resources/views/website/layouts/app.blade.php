@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', config('website.brand') . ' – ' . config('website.tagline'))</title>
     <meta name="description" content="@yield('meta_description', 'All-in-one platform to create, market and sell courses, mock tests & live classes securely from your own website and mobile apps.')">
+    <link rel="icon" href="{{ \App\Support\Brand::logoUrl() }}" type="image/jpeg">
+    <link rel="apple-touch-icon" href="{{ \App\Support\Brand::logoUrl() }}">
 
     <link rel="stylesheet" href="{{ asset('website/plugins/goodlayers-core/plugins/combine/style.css') }}" type="text/css" media="all" />
     <link rel="stylesheet" href="{{ asset('website/plugins/goodlayers-core/include/css/page-builder.css') }}" type="text/css" media="all" />
     <link rel="stylesheet" href="{{ asset('website/css/style-core.css') }}" type="text/css" media="all" />
     <link rel="stylesheet" href="{{ asset('website/css/kingster-style-custom.css') }}" type="text/css" media="all" />
-    <link rel="stylesheet" href="{{ asset('website/css/learnyst-home.css') }}?v=46" type="text/css" media="all" />
+    <link rel="stylesheet" href="{{ asset('website/css/learnyst-home.css') }}?v=47" type="text/css" media="all" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     @stack('styles')
 </head>
