@@ -82,6 +82,14 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardController;
 use App\Http\Controllers\Instructor\AiController as InstructorAiController;
+use App\Http\Controllers\Instructor\CourseController as InstructorCourseController;
+use App\Http\Controllers\Instructor\LiveClassController as InstructorLiveClassController;
+use App\Http\Controllers\Instructor\AssessmentController as InstructorAssessmentController;
+use App\Http\Controllers\Instructor\StudentController as InstructorStudentController;
+use App\Http\Controllers\Instructor\DiscussionController as InstructorDiscussionController;
+use App\Http\Controllers\Instructor\CertificateController as InstructorCertificateController;
+use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
+use App\Http\Controllers\Admin\WebsiteBuilderController;
 use App\Http\Controllers\Learner\CommunityController as LearnerCommunityController;
 use App\Http\Controllers\Learner\CourseController as LearnerCourseController;
 use App\Http\Controllers\Learner\CertificateRenewalController as LearnerCertificateRenewalController;
@@ -138,9 +146,11 @@ Route::get('/solutions/{slug}', [WebsiteController::class, 'solution'])->name('w
 Route::get('/customers/{slug}', [WebsiteController::class, 'customer'])->name('website.customer');
 Route::get('/companies', [CompanyDirectoryController::class, 'index'])->name('website.companies.index');
 Route::get('/companies/{slug}', [CompanyDirectoryController::class, 'show'])->name('website.companies.show');
+Route::get('/companies/{slug}/pages/{pageSlug}', [CompanyDirectoryController::class, 'page'])->name('website.companies.page');
 Route::get('/companies/{slug}/blogs/{blogSlug}', [CompanyDirectoryController::class, 'blog'])->name('website.companies.blog');
 Route::post('/companies/{slug}/reviews', [CompanyDirectoryController::class, 'storeReview'])->name('website.companies.reviews.store');
 Route::post('/companies/{slug}/enquiries', [CompanyDirectoryController::class, 'storeEnquiry'])->name('website.companies.enquiries.store');
+Route::post('/companies/{slug}/newsletter', [CompanyDirectoryController::class, 'storeNewsletter'])->name('website.companies.newsletter.store');
 Route::get('/comparison/{slug}', [WebsiteController::class, 'comparison'])->name('website.comparison');
 Route::get('/help-center', [WebsiteController::class, 'helpCenter'])->name('website.help-center');
 Route::get('/whats-new', [WebsiteController::class, 'whatsNew'])->name('website.whats-new');
@@ -556,6 +566,28 @@ Route::prefix('company')->name('admin.')->middleware(['auth', 'role:admin,sub-ad
     Route::get('notification-center', [NotificationCenterController::class, 'index'])->middleware('permission:notifications,view')->name('notifications.index');
     Route::put('notification-center', [NotificationCenterController::class, 'update'])->middleware('permission:notifications,edit')->name('notifications.update');
     Route::get('parent-links', [ParentLinkController::class, 'index'])->middleware('permission:parent,view')->name('parent-links.index');
+    Route::post('parent-links', [ParentLinkController::class, 'store'])->middleware('permission:parent,view')->name('parent-links.store');
+    Route::delete('parent-links/{link}', [ParentLinkController::class, 'destroy'])->middleware('permission:parent,view')->name('parent-links.destroy');
+
+    Route::prefix('website-builder')->name('website-builder.')->middleware('permission:settings,view')->group(function () {
+        Route::get('/', [WebsiteBuilderController::class, 'index'])->name('index');
+        Route::get('pages/create', [WebsiteBuilderController::class, 'createPage'])->name('pages.create');
+        Route::post('pages', [WebsiteBuilderController::class, 'storePage'])->name('pages.store');
+        Route::get('pages/{page}/edit', [WebsiteBuilderController::class, 'editPage'])->name('pages.edit');
+        Route::put('pages/{page}', [WebsiteBuilderController::class, 'updatePage'])->name('pages.update');
+        Route::delete('pages/{page}', [WebsiteBuilderController::class, 'destroyPage'])->name('pages.destroy');
+        Route::post('pages/{page}/blocks', [WebsiteBuilderController::class, 'storeBlock'])->name('blocks.store');
+        Route::put('blocks/{block}', [WebsiteBuilderController::class, 'updateBlock'])->name('blocks.update');
+        Route::delete('blocks/{block}', [WebsiteBuilderController::class, 'destroyBlock'])->name('blocks.destroy');
+        Route::post('pages/{page}/blocks/reorder', [WebsiteBuilderController::class, 'reorderBlocks'])->name('blocks.reorder');
+        Route::get('menus', [WebsiteBuilderController::class, 'menus'])->name('menus');
+        Route::post('menus', [WebsiteBuilderController::class, 'storeMenu'])->name('menus.store');
+        Route::put('menus/{menu}', [WebsiteBuilderController::class, 'updateMenu'])->name('menus.update');
+        Route::delete('menus/{menu}', [WebsiteBuilderController::class, 'destroyMenu'])->name('menus.destroy');
+        Route::post('menus/reorder', [WebsiteBuilderController::class, 'reorderMenus'])->name('menus.reorder');
+        Route::get('seo', [WebsiteBuilderController::class, 'seo'])->name('seo');
+        Route::put('seo', [WebsiteBuilderController::class, 'updateSeo'])->name('seo.update');
+    });
 
     Route::get('marketing/coupons', [MarketingController::class, 'coupons'])->name('marketing.coupons');
     Route::post('marketing/coupons', [MarketingController::class, 'storeCoupon'])->name('marketing.coupons.store');
@@ -832,6 +864,45 @@ Route::get('/admin/{path}', function (string $path) {
 
 Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor'])->group(function () {
     Route::get('/', [InstructorDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('courses', [InstructorCourseController::class, 'index'])->name('courses.index');
+    Route::get('courses/create', [InstructorCourseController::class, 'create'])->name('courses.create');
+    Route::post('courses', [InstructorCourseController::class, 'store'])->name('courses.store');
+    Route::get('courses/{course}', [InstructorCourseController::class, 'show'])->name('courses.show');
+    Route::get('courses/{course}/edit', [InstructorCourseController::class, 'edit'])->name('courses.edit');
+    Route::put('courses/{course}', [InstructorCourseController::class, 'update'])->name('courses.update');
+    Route::post('courses/{course}/sections', [InstructorCourseController::class, 'storeSection'])->name('courses.sections.store');
+    Route::post('courses/{course}/sections/{section}/lessons', [InstructorCourseController::class, 'storeLesson'])->name('courses.lessons.store');
+    Route::put('courses/{course}/lessons/{lesson}', [InstructorCourseController::class, 'updateLesson'])->name('courses.lessons.update');
+
+    Route::get('live-classes', [InstructorLiveClassController::class, 'index'])->name('live-classes.index');
+    Route::get('live-classes/create', [InstructorLiveClassController::class, 'create'])->name('live-classes.create');
+    Route::post('live-classes', [InstructorLiveClassController::class, 'store'])->name('live-classes.store');
+    Route::get('live-classes/{event}', [InstructorLiveClassController::class, 'show'])->name('live-classes.show');
+    Route::get('live-classes/{event}/edit', [InstructorLiveClassController::class, 'edit'])->name('live-classes.edit');
+    Route::put('live-classes/{event}', [InstructorLiveClassController::class, 'update'])->name('live-classes.update');
+    Route::post('live-classes/{event}/attendance', [InstructorLiveClassController::class, 'markAttendance'])->name('live-classes.attendance');
+
+    Route::get('assessments', [InstructorAssessmentController::class, 'index'])->name('assessments.index');
+    Route::get('assessments/create', [InstructorAssessmentController::class, 'create'])->name('assessments.create');
+    Route::post('assessments', [InstructorAssessmentController::class, 'store'])->name('assessments.store');
+    Route::get('assessments/{lesson}/submissions', [InstructorAssessmentController::class, 'submissions'])->name('assessments.submissions');
+    Route::post('assessments/submissions/{submission}/grade', [InstructorAssessmentController::class, 'grade'])->name('assessments.grade');
+
+    Route::get('students', [InstructorStudentController::class, 'index'])->name('students.index');
+    Route::get('students/{user}', [InstructorStudentController::class, 'show'])->name('students.show');
+
+    Route::get('discussions', [InstructorDiscussionController::class, 'index'])->name('discussions.index');
+    Route::get('discussions/{discussion}', [InstructorDiscussionController::class, 'show'])->name('discussions.show');
+    Route::post('discussions/{discussion}/reply', [InstructorDiscussionController::class, 'reply'])->name('discussions.reply');
+    Route::post('discussions/{discussion}/resolve', [InstructorDiscussionController::class, 'resolve'])->name('discussions.resolve');
+
+    Route::get('certificates', [InstructorCertificateController::class, 'index'])->name('certificates.index');
+    Route::get('certificates/create', [InstructorCertificateController::class, 'create'])->name('certificates.create');
+    Route::post('certificates', [InstructorCertificateController::class, 'store'])->name('certificates.store');
+
+    Route::get('reports', [InstructorReportController::class, 'index'])->name('reports.index');
+
     Route::get('/ai', [InstructorAiController::class, 'index'])->name('ai.index');
     Route::post('/ai/generate', [InstructorAiController::class, 'generate'])->name('ai.generate');
 });
@@ -887,4 +958,12 @@ Route::prefix('alumni')->name('alumni.')->middleware(['auth', 'role:alumni'])->g
 Route::prefix('parent')->name('parent.')->middleware(['auth', 'role:parent'])->group(function () {
     Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
     Route::get('/learners', [ParentDashboardController::class, 'learners'])->name('learners');
+    Route::get('/learners/{learner}', [ParentDashboardController::class, 'learnerShow'])->name('learners.show');
+    Route::get('/attendance', [ParentDashboardController::class, 'attendance'])->name('attendance');
+    Route::get('/performance', [ParentDashboardController::class, 'performance'])->name('performance');
+    Route::get('/progress', [ParentDashboardController::class, 'progress'])->name('progress');
+    Route::get('/fees', [ParentDashboardController::class, 'fees'])->name('fees');
+    Route::get('/notifications', [ParentDashboardController::class, 'notifications'])->name('notifications');
+    Route::get('/certificates', [ParentDashboardController::class, 'certificates'])->name('certificates');
+    Route::get('/certificates/{certificate}/download', [ParentDashboardController::class, 'downloadCertificate'])->name('certificates.download');
 });

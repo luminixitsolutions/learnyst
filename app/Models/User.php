@@ -176,6 +176,22 @@ class User extends Authenticatable
         return $this->hasMany(Certificate::class);
     }
 
+    public function linkedLearners()
+    {
+        return $this->belongsToMany(User::class, 'parent_learner_links', 'parent_user_id', 'learner_user_id')
+            ->withPivot(['company_id', 'status', 'created_by'])
+            ->withTimestamps()
+            ->wherePivot('status', 'active');
+    }
+
+    public function parents()
+    {
+        return $this->belongsToMany(User::class, 'parent_learner_links', 'learner_user_id', 'parent_user_id')
+            ->withPivot(['company_id', 'status', 'created_by'])
+            ->withTimestamps()
+            ->wherePivot('status', 'active');
+    }
+
     public function badges()
     {
         return $this->belongsToMany(Badge::class, 'badge_user')

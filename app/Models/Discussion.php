@@ -11,7 +11,7 @@ class Discussion extends Model
 
     protected $fillable = [
         'title', 'body', 'user_id', 'course_id', 'batch_id',
-        'community_id', 'is_locked', 'is_reported', 'replies_count',
+        'community_id', 'is_locked', 'is_reported', 'is_resolved', 'resolved_at', 'resolved_by', 'replies_count',
     ];
 
     protected function casts(): array
@@ -19,6 +19,8 @@ class Discussion extends Model
         return [
             'is_locked' => 'boolean',
             'is_reported' => 'boolean',
+            'is_resolved' => 'boolean',
+            'resolved_at' => 'datetime',
         ];
     }
 

@@ -69,6 +69,11 @@ class CourseLesson extends Model
         return $this->hasOne(LiveClass::class);
     }
 
+    public function submissions()
+    {
+        return $this->hasMany(AssignmentSubmission::class, 'course_lesson_id');
+    }
+
     public function typeLabel(): string
     {
         if ($this->lesson_type === 'pdf' && ($this->settings['sub_type'] ?? null) === 'slides') {

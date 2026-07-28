@@ -82,6 +82,67 @@ class CompanyDirectoryController extends Controller
         ));
     }
 
+    public function page(Request $request, string $slug, string $pageSlug)
+    {
+        WebsiteContentService::applyBrandToConfig();
+
+        $preview = false;
+        if ($request->boolean('preview') && Auth::check()) {
+            $user = Auth::user();
+            if ($user->isSuperAdmin()) {
+                $preview = true;
+            } elseif ($user->isCompanyStaff()) {
+                try {
+                    $ownCompany = CompanyService::resolveForUser($user);
+                    $preview = $ownCompany->slug === $slug;
+                } catch (\Throwable $e) {
+                    $preview = false;
+                }
+            }
+        }
+
+        $company = $preview
+            ? CompanyService::findBySlug($slug)
+            : CompanyService::findPublicBySlug($slug);
+        abort_unless($company, 404);
+
+        $pageQuery = \App\Models\CompanyWebsitePage::query()
+            ->where('company_id', $company->id)
+            ->where('slug', $pageSlug);
+
+        if (! $preview) {
+            $pageQuery->where('status', 'published');
+        }
+
+        $page = $pageQuery->with(['enabledBlocks'])->firstOrFail();
+
+        $menus = [
+            'header' => \App\Models\CompanyWebsiteMenu::with('page')
+                ->where('company_id', $company->id)
+                ->where('location', 'header')
+                ->where('is_enabled', true)
+                ->orderBy('sort_order')
+                ->get(),
+            'footer' => \App\Models\CompanyWebsiteMenu::with('page')
+                ->where('company_id', $company->id)
+                ->where('location', 'footer')
+                ->where('is_enabled', true)
+                ->orderBy('sort_order')
+                ->get(),
+        ];
+
+        $courses = Course::query()
+            ->published()
+            ->where('created_by', $company->owner_user_id)
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $brandCss = app(\App\Services\CompanyBrandingService::class)->cssVariables($company);
+
+        return view('website.companies.page', compact('company', 'page', 'menus', 'courses', 'brandCss', 'preview'));
+    }
+
     public function blog(string $slug, string $blogSlug)
     {
         WebsiteContentService::applyBrandToConfig();
@@ -172,9 +233,48 @@ class CompanyDirectoryController extends Controller
             $enquiry
         );
 
+        $redirect = $request->input('_redirect');
+        if ($redirect && str_starts_with($redirect, url('/'))) {
+            return redirect()->to($redirect)->with('success', 'Enquiry sent! The academy will contact you soon.');
+        }
+
         return redirect()
             ->to(route('website.companies.show', $company->slug).'#contact')
             ->with('success', 'Enquiry sent! The academy will contact you soon.')
             ->with('enquiry_company', $company->slug);
+    }
+
+    public function storeNewsletter(Request $request, string $slug)
+    {
+        $company = CompanyService::findPublicBySlug($slug);
+        abort_unless($company, 404);
+
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'name' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        Lead::create([
+            'created_by' => $company->owner_user_id,
+            'name' => $data['name'] ?? 'Newsletter subscriber',
+            'email' => $data['email'],
+            'phone' => null,
+            'course_id' => null,
+            'source' => 'newsletter:'.$company->slug,
+            'status' => 'new',
+            'stage' => 'new',
+            'notes' => 'Newsletter signup from website builder',
+        ]);
+
+        ActivityLogger::log('newsletter_signup', "Newsletter signup for {$company->name}: {$data['email']}");
+
+        $redirect = $request->input('_redirect');
+        if ($redirect && str_starts_with($redirect, url('/'))) {
+            return redirect()->to($redirect)->with('success', 'Thanks for subscribing!');
+        }
+
+        return redirect()
+            ->to(route('website.companies.show', $company->slug))
+            ->with('success', 'Thanks for subscribing!');
     }
 }

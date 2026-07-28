@@ -14,6 +14,9 @@ return [
             'items' => [
                 ['label' => 'Institute Profile', 'route' => 'admin.company-profile.edit', 'permission' => 'settings.view'],
                 ['label' => 'My Profile Page', 'route' => 'admin.company-profile.preview', 'permission' => 'settings.view', 'target' => '_blank'],
+                ['label' => 'Website Builder', 'route' => 'admin.website-builder.index', 'permission' => 'settings.view', 'active_routes' => [
+                    'admin.website-builder.*',
+                ]],
                 ['label' => 'Testimonials', 'route' => 'admin.company-page.testimonials', 'permission' => 'settings.view'],
                 ['label' => 'Reviews', 'route' => 'admin.company-page.reviews', 'permission' => 'settings.view'],
                 ['label' => 'Enquiries', 'route' => 'admin.company-page.enquiries', 'permission' => 'settings.view'],
