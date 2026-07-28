@@ -157,7 +157,7 @@ class AutomationService
             'type' => 'award_coupon',
             'coupon' => $coupon?->code,
             'note' => $coupon
-                ? "Coupon {$coupon->code} reserved for {$context['email'] ?? 'recipient'} (manual redeem)."
+                ? 'Coupon '.$coupon->code.' reserved for '.($context['email'] ?? 'recipient').' (manual redeem).'
                 : 'Coupon not found',
         ];
     }

@@ -50,10 +50,12 @@ class LiveClassController extends Controller
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'meeting_url' => ['nullable', 'url', 'max:500'],
-            'platform' => ['nullable', 'string', 'max:50'],
+            'platform' => ['nullable', 'string', 'in:zoom,google_meet,youtube,microsoft_teams,other'],
             'status' => ['required', 'in:scheduled,live,completed,cancelled'],
             'recording_url' => ['nullable', 'url', 'max:500'],
         ]);
+
+        $validated['platform'] = $validated['platform'] ?? 'zoom';
 
         $event = ScheduledEvent::create([
             ...$validated,
@@ -110,11 +112,12 @@ class LiveClassController extends Controller
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'meeting_url' => ['nullable', 'url', 'max:500'],
-            'platform' => ['nullable', 'string', 'max:50'],
+            'platform' => ['nullable', 'string', 'in:zoom,google_meet,youtube,microsoft_teams,other'],
             'status' => ['required', 'in:scheduled,live,completed,cancelled'],
             'recording_url' => ['nullable', 'url', 'max:500'],
         ]);
 
+        $validated['platform'] = $validated['platform'] ?? 'zoom';
         $event->update($validated);
 
         ActivityLogger::log('instructor_live_class_updated', "Live class updated: {$event->title}", $event);

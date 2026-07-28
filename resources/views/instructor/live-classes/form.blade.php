@@ -17,7 +17,12 @@
 </div>
 <x-form-input label="Meeting URL" name="meeting_url" :value="old('meeting_url',$event->meeting_url)" />
 <x-form-input label="Recording URL" name="recording_url" :value="old('recording_url',$event->recording_url)" />
-<div><label class="block text-sm font-semibold mb-1">Platform</label><input name="platform" class="panel-input w-full" value="{{ old('platform',$event->platform ?? 'zoom') }}"></div>
+<div><label class="block text-sm font-semibold mb-1">Platform</label>
+<select name="platform" class="panel-input w-full">
+@foreach(['zoom'=>'Zoom','google_meet'=>'Google Meet','youtube'=>'YouTube','microsoft_teams'=>'Microsoft Teams','other'=>'Other'] as $val=>$label)
+<option value="{{ $val }}" @selected(old('platform',$event->platform ?? 'zoom')===$val)>{{ $label }}</option>
+@endforeach
+</select></div>
 <div><label class="block text-sm font-semibold mb-1">Status</label>
 <select name="status" class="panel-input w-full">@foreach(['scheduled','live','completed','cancelled'] as $s)<option value="{{ $s }}" @selected(old('status',$event->status)===$s)>{{ ucfirst($s) }}</option>@endforeach</select></div>
 <button class="panel-btn-primary">Save</button>

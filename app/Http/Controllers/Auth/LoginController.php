@@ -34,7 +34,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        return $this->attemptLogin($request, ['admin', 'sub-admin', 'counselor'], 'company');
+        return $this->attemptLogin($request, ['admin', 'sub-admin', 'counselor', 'instructor', 'parent'], 'company');
     }
 
     public function loginPlatform(Request $request)
@@ -85,7 +85,7 @@ class LoginController extends Controller
             throw ValidationException::withMessages([
                 'email' => $panel === 'platform'
                     ? __('This account cannot access Platform Admin. Use the institute login instead.')
-                    : __('This account cannot access the Institute Panel. Use the platform admin login at /admin/login.'),
+                    : __('This account cannot access the Institute Panel. Learners should use /student/login. Platform admins should use /admin/login.'),
             ]);
         }
 

@@ -79,7 +79,7 @@ class StudentAuthController extends Controller
         $cookie = $this->security->afterSuccessfulLogin($user, $request, 'password');
 
         return redirect()->to(
-            $this->resolveRedirect($request) ?? route('learner.dashboard')
+            $this->resolveRedirect($request) ?? $this->dashboardFor($user)
         )->cookie($cookie);
     }
 

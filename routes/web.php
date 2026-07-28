@@ -157,6 +157,8 @@ Route::get('/whats-new', [WebsiteController::class, 'whatsNew'])->name('website.
 Route::get('/blogs', [WebsiteController::class, 'blogs'])->name('website.blogs');
 Route::get('/blogs/{slug}', [WebsiteController::class, 'blogShow'])->name('website.blog.show');
 Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('website.pricing');
+Route::get('/about', fn () => redirect('/about-us', 301));
+Route::get('/contact', fn () => redirect('/help-center', 301));
 Route::get('/{slug}', [WebsiteController::class, 'page'])
     ->where('slug', 'about-us|product-demo|drm-security|corporate-lms|ai|careers|privacy-policy|terms-and-conditions|support-migration|guides')
     ->name('website.page');
